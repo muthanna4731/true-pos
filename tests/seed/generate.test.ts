@@ -6,7 +6,7 @@ import { clock, istDate } from '../../src/domain/time';
 import { parseBillNumber } from '../../src/domain/billNumber';
 import type { Product } from '../../src/domain/types';
 import { generateSeed, type SeedData } from '../../src/seed/generate';
-import { advanceClock, loadSeedIfEmpty, resetDemo, restoreClock } from '../../src/seed/load';
+import { advanceClock, DEMO_SEED, loadSeedIfEmpty, resetDemo, restoreClock } from '../../src/seed/load';
 import { mulberry32 } from '../../src/seed/rng';
 
 const TODAY = '2026-10-29';
@@ -29,11 +29,6 @@ const find = (description: string) => seed.products.find((p) => p.description ==
 const stockOf = (store: string, productId: string) =>
   seed.movements.filter((m) => m.storeCode === store && m.productId === productId).reduce((s, m) => s + m.qty, 0);
 
-beforeAll(() => {
-  seed = generateSeed({ seed: 1, today: TODAY });
-  byId = new Map(seed.products.map((p) => [p.id, p]));
-});
-
 describe('mulberry32', () => {
   it('repeats for a seed, differs across seeds, and stays in [0, 1)', () => {
     const a = mulberry32(7);
@@ -53,11 +48,17 @@ describe('sha256Hex', () => {
   });
 });
 
-describe('generateSeed', () => {
+// seed 1 is the test fixture; DEMO_SEED is what ships, so the calibration ranges must hold for both.
+describe.each([1, DEMO_SEED])('generateSeed (seed %i)', (seedNo) => {
+  beforeAll(() => {
+    seed = generateSeed({ seed: seedNo, today: TODAY });
+    byId = new Map(seed.products.map((p) => [p.id, p]));
+  });
+
   it('is deterministic: two calls give identical JSON (compared as strings, not deep-equal)', () => {
-    const again = generateSeed({ seed: 1, today: TODAY });
+    const again = generateSeed({ seed: seedNo, today: TODAY });
     expect(JSON.stringify(again) === JSON.stringify(seed)).toBe(true);
-    expect(JSON.stringify(generateSeed({ seed: 2, today: TODAY })) === JSON.stringify(seed)).toBe(false);
+    expect(JSON.stringify(generateSeed({ seed: seedNo + 1, today: TODAY })) === JSON.stringify(seed)).toBe(false);
   });
 
   it('builds the ten stores, the staff and the PIN hashes', () => {
@@ -140,15 +141,21 @@ describe('generateSeed', () => {
     expect(activeLines).toBeGreaterThanOrEqual(60);
   });
 
-  it('beer purchases carry an expiry date, and nothing else does', () => {
+  it('only beer carries an expiry date; opening stock is all kind opening, and every purchase has a GRN', () => {
     const withExpiry = seed.movements.filter((m) => m.expiresOn);
     expect(withExpiry.length).toBeGreaterThan(0);
     for (const m of withExpiry) expect(byId.get(m.productId)!.category).toBe('BEER');
-    const grnBeer = seed.movements.find((m) => m.kind === 'purchase' && m.ref.startsWith('GRN-') && byId.get(m.productId)!.category === 'BEER')!;
-    expect(grnBeer.expiresOn).toBe(istDate(grnBeer.at).replace(/^(\d{4})-(\d{2})/, (_x, y, mo) => {
-      const m = Number(mo) + 6;
-      return m > 12 ? `${Number(y) + 1}-${String(m - 12).padStart(2, '0')}` : `${y}-${String(m).padStart(2, '0')}`;
-    }));
+    const opening = seed.movements.filter((m) => m.ref === 'OPENING');
+    expect(opening.every((m) => m.kind === 'opening')).toBe(true);
+    expect(opening.some((m) => m.expiresOn)).toBe(true);
+    const grnIds = new Set(seed.grns.map((g) => g.id));
+    const purchases = seed.movements.filter((m) => m.kind === 'purchase');
+    expect(purchases.length).toBeGreaterThan(0);
+    for (const m of purchases) expect(grnIds.has(m.ref)).toBe(true);
+    const grnBeer = purchases.find((m) => byId.get(m.productId)!.category === 'BEER' && m.storeCode === 'TSTS1')!;
+    const [y, mo, d] = istDate(grnBeer.at).split('-').map(Number);
+    const due = new Date(Date.UTC(y, mo - 1 + 6, d)).toISOString().slice(0, 10);
+    expect(grnBeer.expiresOn).toBe(due);
   });
 
   it('bill numbers are legal and none copies the real TS1 series', () => {
@@ -206,6 +213,10 @@ describe('generateSeed', () => {
     expect(share('card')).toBeGreaterThan(0.03);
     expect(share('card')).toBeLessThan(0.07);
     for (const l of seed.billLines) if (l.qty === 5) expect(byId.get(l.productId)!.sizeMl).toBe(90);
+  });
+
+  it('line quantities are only 1, 2 or 5', () => {
+    expect(new Set(seed.billLines.map((l) => l.qty))).toEqual(new Set([1, 2, 5]));
   });
 
   it('bills fall between 10:00 and 22:30 IST and peak at 18:00-21:00', () => {
@@ -334,6 +345,9 @@ describe('generateSeed', () => {
     // 4. a TS5 beer purchase expires in 20 days with stock left
     const near = seed.movements.find((m) => m.storeCode === 'TSTS5' && m.kind === 'purchase' && m.expiresOn === '2026-11-18')!;
     expect(byId.get(near.productId)!.category).toBe('BEER');
+    expect(near.ref).not.toBe('OPENING');
+    expect(seed.grns.find((g) => g.id === near.ref)).toMatchObject({ storeCode: 'TSTS5' });
+    expect(istDate(near.at) < TODAY).toBe(true);
     expect(stockOf('TSTS5', near.productId)).toBeGreaterThan(0);
 
     // 5. TS4 never locked yesterday, though every other shop did

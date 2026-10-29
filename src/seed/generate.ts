@@ -1,5 +1,6 @@
 import { billNumber } from '../domain/billNumber';
 import { sha256Hex } from '../domain/hash';
+import { minLevel } from '../domain/orders';
 import { financialYear } from '../domain/time';
 import type {
   Bill,
@@ -77,8 +78,6 @@ const ZIPF_S = 1.1;
 const DAY_FACTOR = [1.0, 0.88, 0.88, 0.93, 1.0, 1.15, 1.2]; // Sunday first
 const DELIVERY_EVERY_DAYS = 6;
 const REFILL_CASES = 8;
-const TRANSFER_MIN_CASES = 3;
-const TRANSFER_FILL_CASES = 6;
 const OFFER_CODE = 'EFKA102';
 
 /** What the active list of a store is made of (the two forced 90 ml packs, Efkays 180 and KF Strong come on top). */
@@ -297,8 +296,9 @@ export function generateSeed(opts: SeedOpts): SeedData {
   const openStock = (storeCode: string, p: Product, qty: number, expiresOn?: string) => {
     if (qty <= 0) return;
     const beer = p.category === 'BEER';
-    move(storeCode, p.id, qty, beer ? 'purchase' : 'opening', 'OPENING', openAt, beer ? (expiresOn ?? openingExpiry) : undefined);
+    move(storeCode, p.id, qty, 'opening', 'OPENING', openAt, beer ? (expiresOn ?? openingExpiry) : undefined);
   };
+  let plantedBeer: Product | undefined;
   let hubTotal = 0;
   for (const c of ctxs) {
     const code = c.store.code;
@@ -328,15 +328,12 @@ export function generateSeed(opts: SeedOpts): SeedData {
     }
     const items = shelf(k);
     if (code === 'TSTS5') {
-      // Planted: a beer purchase that expires in 20 days, with stock left (an inactive beer, so it never sells).
-      const beer = products.find((p) => p.category === 'BEER' && !act.has(p.id) && p.id !== corona500.id)!;
-      const at = items.findIndex((x) => x.p.id === beer.id);
+      // Planted (delivered later, see plantShortDatedBeer): an inactive beer, so it never sells. It has no opening stock.
+      plantedBeer = products.find((p) => p.category === 'BEER' && !act.has(p.id) && p.id !== corona500.id)!;
+      const at = items.findIndex((x) => x.p.id === plantedBeer!.id);
       if (at >= 0) items.splice(at, 1);
-      for (const x of items) openStock(code, x.p, x.qty);
-      openStock(code, beer, 24, plantedExpiry);
-    } else {
-      for (const x of items) openStock(code, x.p, x.qty);
     }
+    for (const x of items) openStock(code, x.p, x.qty);
     if (c.store.isHub) hubTotal = items.reduce((s, x) => s + x.qty, 0);
   }
 
@@ -411,6 +408,29 @@ export function generateSeed(opts: SeedOpts): SeedData {
     return grn;
   };
 
+  // Planted: TS5 takes in a short-dated beer lot (a real dated purchase with its own GRN) that expires in 20 days.
+  const plantShortDatedBeer = (date: string) => {
+    const beer = plantedBeer!;
+    const at = istAt(date, 8 * 60 + 45);
+    const id = `GRN-${date.replaceAll('-', '')}-TS5`;
+    const expected = 24;
+    const unitPrice = purchaseOf.get(beer.id)!;
+    const invoiceAmount = expected * unitPrice;
+    grns.push({
+      id,
+      storeCode: 'TSTS5',
+      type: 'ksbcl',
+      status: 'received',
+      supplierId: 'SUP-KSBCL',
+      invoiceNo: uniqueDigits('SMYH26'),
+      receivedAt: at,
+      invoiceAmount,
+      tcs: Math.round(invoiceAmount * 0.02),
+      lines: [{ productId: beer.id, expected, counted: expected, short: 0, broken: 0, unitPrice }],
+    });
+    move('TSTS5', beer.id, expected, 'purchase', id, at, plantedExpiry);
+  };
+
   const sendTransfer = (t: Transfer, date: string, receive: boolean) => {
     const out = istAt(date, receive ? 9 * 60 : 14 * 60);
     t.dispatchedAt = out;
@@ -424,30 +444,56 @@ export function generateSeed(opts: SeedOpts): SeedData {
     }
   };
 
-  const dailyTransfers = (date: string, daysAgo: number) => {
+  // Bottles sold per store, product and day index, so a shop's recent average can set its reorder level.
+  const unitsByDay = new Map<string, number>();
+  const avgDaily = (c: StoreCtx, p: Product, rank: number, dayIndex: number): number => {
+    if (dayIndex === 0) {
+      const share = 1 / Math.pow(rank + 1, ZIPF_S) / c.cumWeights[ACTIVE_COUNT - 1]; // no history yet: expected sales
+      return HUB_BILLS_PER_DAY * c.scale * MEAN_LINES * share * (p.sizeMl === 90 ? 1.6 : 1.2);
+    }
+    const from = Math.max(0, dayIndex - 7);
+    let sum = 0;
+    for (let d = from; d < dayIndex; d++) sum += unitsByDay.get(`${c.store.code}|${p.id}|${d}`) ?? 0;
+    return sum / (dayIndex - from);
+  };
+
+  const dailyTransfers = (date: string, daysAgo: number, dayIndex: number) => {
     const toNext = ((((daysAgo - 2) % DELIVERY_EVERY_DAYS) + DELIVERY_EVERY_DAYS) % DELIVERY_EVERY_DAYS) + 1;
     const spare = new Map<string, number>();
     hubCtx.active.forEach((p, r) => {
       const reserve = Math.ceil(hubDailyUnits(r) * (toNext + 1));
       spare.set(p.id, Math.max(0, have(HUB, p.id) - reserve));
     });
-    const wanting = shuffle(ctxs.slice(1)).flatMap((c) => {
-      const lines = c.active
-        .filter((p) => have(c.store.code, p.id) < TRANSFER_MIN_CASES * p.caseSize)
-        .map((p) => ({ productId: p.id, qty: Math.min(TRANSFER_FILL_CASES * p.caseSize - have(c.store.code, p.id), spare.get(p.id) ?? 0) }))
-        .filter((l) => l.qty > 0);
-      return lines.length ? [{ c, lines }] : [];
-    });
+    // Below the reorder level: top up to twice that level, in whole cases, from what the hub can spare.
+    // On a quiet day, when fewer than two shops can be served, shops also ask for a routine top-up on
+    // products under a wider multiple of the level, so the hub still dispatches 2-4 transfers every day.
     const count = ri(2, 4);
+    const plan = (trigger: number) => {
+      const left = new Map(spare);
+      const planned: { c: StoreCtx; lines: Transfer['lines'] }[] = [];
+      for (const c of shuffle(ctxs.slice(1))) {
+        if (planned.length >= count) break;
+        const lines: Transfer['lines'] = [];
+        c.active.forEach((p, rank) => {
+          if (lines.length >= 14) return;
+          const level = minLevel(avgDaily(c, p, rank, dayIndex));
+          const onShelf = have(c.store.code, p.id);
+          if (onShelf >= trigger * level) return;
+          const wantCases = Math.ceil((2 * level - onShelf) / p.caseSize);
+          const cases = Math.min(wantCases, Math.floor((left.get(p.id) ?? 0) / p.caseSize));
+          if (cases <= 0) return;
+          lines.push({ productId: p.id, qty: cases * p.caseSize });
+          left.set(p.id, left.get(p.id)! - cases * p.caseSize);
+        });
+        if (lines.length) planned.push({ c, lines });
+      }
+      return planned;
+    };
+    let planned = plan(1);
+    for (let trigger = 2; planned.length < 2 && trigger <= 6; trigger++) planned = plan(trigger);
     let i = 0;
-    for (const w of wanting) {
-      if (i >= count) break;
-      const lines = w.lines
-        .map((l) => ({ ...l, qty: Math.min(l.qty, spare.get(l.productId)!) }))
-        .filter((l) => l.qty > 0)
-        .slice(0, 14);
-      if (!lines.length) continue;
-      for (const l of lines) spare.set(l.productId, spare.get(l.productId)! - l.qty);
+    for (const w of planned) {
+      const lines = w.lines;
       i += 1;
       const t: Transfer = {
         id: `TR-${date.replaceAll('-', '')}-${i}`,
@@ -506,7 +552,7 @@ export function generateSeed(opts: SeedOpts): SeedData {
 
   interface Cell { bills: number; net: Paise; cash: Paise; upi: Paise; card: Paise }
 
-  const sellDay = (c: StoreCtx, date: string, daysAgo: number): Cell => {
+  const sellDay = (c: StoreCtx, date: string, daysAgo: number, dayIndex: number): Cell => {
     const code = c.store.code;
     const weekday = new Date(dayMs(date)).getUTCDay();
     const nBills = Math.max(1, Math.round(HUB_BILLS_PER_DAY * c.scale * DAY_FACTOR[weekday] * (1 + 0.06 * normal())));
@@ -534,7 +580,8 @@ export function generateSeed(opts: SeedOpts): SeedData {
           if (!chosen) continue;
           const r = rng();
           const want = chosen.sizeMl === 90 ? (r < 0.7 ? 1 : r < 0.9 ? 2 : 5) : r < 0.8 ? 1 : 2;
-          const qty = Math.min(want, have(code, chosen.id));
+          // Only 1, 2 or 5 (5 on 90 ml): when the shelf is short of the wanted quantity, drop to the largest that fits.
+          const qty = (chosen.sizeMl === 90 ? [5, 2, 1] : [2, 1]).find((q) => q <= want && q <= have(code, chosen!.id))!;
           lines.push({ p: chosen, qty });
           move(code, chosen.id, -qty, 'sale', '', at); // ref filled in below
         }
@@ -552,6 +599,7 @@ export function generateSeed(opts: SeedOpts): SeedData {
       for (const { p, qty } of lines) {
         const offer = p.id === efkays180.id;
         const d = offer ? 500 * qty : 0;
+        unitsByDay.set(`${code}|${p.id}|${dayIndex}`, (unitsByDay.get(`${code}|${p.id}|${dayIndex}`) ?? 0) + qty);
         gross += mrpOf(p) * qty;
         discount += d;
         billLines.push({
@@ -597,11 +645,12 @@ export function generateSeed(opts: SeedOpts): SeedData {
     const date = addDays(firstDay, i);
     const daysAgo = days - i;
     if (daysAgo % DELIVERY_EVERY_DAYS === 1) deliverGrn(date);
-    dailyTransfers(date, daysAgo);
+    if (i === 1) plantShortDatedBeer(date);
+    dailyTransfers(date, daysAgo, i);
     if (daysAgo === 2) plantTransfer(date);
 
     for (const c of ctxs) {
-      const cell = sellDay(c, date, daysAgo);
+      const cell = sellDay(c, date, daysAgo, i);
       const code = c.store.code;
 
       // An occasional breakage or similar, written off after closing.
@@ -644,7 +693,7 @@ export function generateSeed(opts: SeedOpts): SeedData {
   }
 
   // The last two deliveries are not paid for yet.
-  for (const g of grns.slice(0, -2)) {
+  for (const g of grns.filter((x) => x.storeCode === HUB).slice(0, -2)) {
     supplierPayments.push({ supplierId: 'SUP-KSBCL', amount: g.invoiceAmount + g.tcs, paidOn: addDays(g.receivedAt.slice(0, 10), 10), ref: g.invoiceNo });
   }
 
