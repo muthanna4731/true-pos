@@ -1,19 +1,34 @@
 import Dexie, { type Table } from 'dexie';
-import type { Bill, BillLine, Offer, Payment, Price, Product, StockMovement, Store, User } from '../domain/types';
-
-/** Tables whose record types arrive with later tasks stay loose until then. */
-type Row = Record<string, unknown>;
+import type {
+  Bill,
+  BillLine,
+  Claim,
+  Count,
+  DayClose,
+  Grn,
+  Indent,
+  LoyaltyLedgerRow,
+  LoyaltyMember,
+  Loss,
+  Offer,
+  Payment,
+  Price,
+  Product,
+  Reward,
+  Shift,
+  StockMovement,
+  Store,
+  Supplier,
+  SupplierPayment,
+  Transfer,
+  User,
+} from '../domain/types';
 
 /** Next bill sequence for `[storeCode, counter]`. Practice bills use `counter + 100`. */
 export interface CounterRow {
   storeCode: string;
   counter: number;
   next: number;
-}
-
-export interface DayCloseRow {
-  storeCode: string;
-  date: string;
 }
 
 /** A change waiting to be sent to the server. `synced` is 0 or 1 (booleans are not index keys). */
@@ -43,24 +58,24 @@ export class TruePosDB extends Dexie {
   bills!: Table<Bill, string>;
   billLines!: Table<BillLine, number>;
   payments!: Table<Payment, number>;
-  shifts!: Table<Row, string>;
-  dayCloses!: Table<DayCloseRow, [string, string]>;
+  shifts!: Table<Shift, string>;
+  dayCloses!: Table<DayClose, [string, string]>;
   counters!: Table<CounterRow, [string, number]>;
   offers!: Table<Offer, string>;
-  indents!: Table<Row, string>;
-  grns!: Table<Row, string>;
-  transfers!: Table<Row, string>;
-  counts!: Table<Row, string>;
-  losses!: Table<Row, number>;
-  claims!: Table<Row, string>;
-  suppliers!: Table<Row, string>;
-  supplierPayments!: Table<Row, number>;
+  indents!: Table<Indent, string>;
+  grns!: Table<Grn, string>;
+  transfers!: Table<Transfer, string>;
+  counts!: Table<Count, string>;
+  losses!: Table<Loss, number>;
+  claims!: Table<Claim, string>;
+  suppliers!: Table<Supplier, string>;
+  supplierPayments!: Table<SupplierPayment, number>;
   outbox!: Table<OutboxRow, number>;
   loyaltyQueue!: Table<LoyaltyQueueItem, number>;
   kv!: Table<KvRow, string>;
-  loyaltyMembers!: Table<Row, string>;
-  loyaltyLedger!: Table<Row, number>;
-  rewards!: Table<Row, string>;
+  loyaltyMembers!: Table<LoyaltyMember, string>;
+  loyaltyLedger!: Table<LoyaltyLedgerRow, number>;
+  rewards!: Table<Reward, string>;
 
   constructor(name = 'true-pos') {
     super(name);
@@ -98,7 +113,7 @@ export class TruePosDB extends Dexie {
 export const db = new TruePosDB();
 
 /** Empty every table (the schema stays). Reopens the database if a test closed it. */
-export async function resetDb(): Promise<void> {
-  if (!db.isOpen()) await db.open();
-  await db.transaction('rw', db.tables, () => Promise.all(db.tables.map((t) => t.clear())));
+export async function resetDb(target: TruePosDB = db): Promise<void> {
+  if (!target.isOpen()) await target.open();
+  await target.transaction('rw', target.tables, () => Promise.all(target.tables.map((t) => t.clear())));
 }

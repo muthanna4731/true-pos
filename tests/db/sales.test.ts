@@ -120,14 +120,14 @@ describe('recordSale', () => {
   });
 
   it('refuses a closed day, by IST date', async () => {
-    await db.dayCloses.put({ storeCode: 'TSTS1', date: '2026-10-29' });
+    await db.dayCloses.put({ storeCode: 'TSTS1', date: '2026-10-29', lockedAt: NOON_IST, totals: {} });
     await expect(recordSale(sale())).rejects.toBeInstanceOf(DayClosedError);
     expect(await db.bills.count()).toBe(0);
     await expect(recordSale(sale({ storeCode: 'TSTS2' }))).resolves.toBeTruthy();
   });
 
   it('closed-day check uses the IST day, not the UTC day', async () => {
-    await db.dayCloses.put({ storeCode: 'TSTS1', date: '2026-04-01' });
+    await db.dayCloses.put({ storeCode: 'TSTS1', date: '2026-04-01', lockedAt: NOON_IST, totals: {} });
     vi.setSystemTime(new Date('2026-03-31T18:30:00Z')); // 1 April in IST, still 31 March in UTC
     await expect(recordSale(sale())).rejects.toBeInstanceOf(DayClosedError);
     vi.setSystemTime(new Date('2026-03-31T18:29:00Z'));
