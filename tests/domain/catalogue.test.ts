@@ -7,6 +7,7 @@ import {
   exciseGroup,
   parseDailySheet,
   parseDailySheetLine,
+  SHORT_NAME_OVERRIDES,
   shortNameOf,
   sizeOf,
 } from '../../src/domain/catalogue';
@@ -164,16 +165,38 @@ describe('shortNameOf', () => {
   });
 
   it('does not match an override inside a longer word', () => {
-    expect(shortNameOf('CORONADO WHISKY 750 - BTL')).toBe('Coronado 750');
+    expect(shortNameOf('CORONADO WHISKY 750 - BTL')).toBe('Coronado Whi 750');
     expect(shortNameOf('CORONA EXTRA BEER 330 - BTL')).toBe('Cor 330');
+  });
+
+  it('matches an override anywhere in the brand, not only at the start', () => {
+    expect(shortNameOf('SEAGRAMS IMPERIAL BLUE SUPERIOR GRAIN WHISKY 180 - BTL')).toBe('IB 180');
+    expect(shortNameOf('SEAGRAMS ROYAL STAG DELUXE WHISKY 750 - BTL')).toBe('Royal 750');
   });
 
   it('falls back to the first two words in Title Case', () => {
     expect(shortNameOf('PAUL JOHN MITHUNA INDIAN SINGLE MALT WHISKY 750 - BTL')).toBe('Paul John 750');
   });
 
-  it('drops to one word when two words plus size would not fit', () => {
-    expect(shortNameOf('BACARDI CARTA BLANCA SUPERIOR WHITE RUM 750 - BTL')).toBe('Bacardi 750');
+  it('shortens the second word to fit instead of dropping it', () => {
+    expect(shortNameOf('BACARDI CARTA BLANCA SUPERIOR WHITE RUM 750 - BTL')).toBe('Bacardi Cart 750');
+    expect(shortNameOf('ROYAL CHALLENGE PREMIUM WHISKY 750 - BTL')).toBe('Royal Challe 750');
+    expect(shortNameOf('ROYAL RANTHAMBORE HERITAGE WHISKY 750 - BTL')).toBe('Royal Rantha 750');
+    expect(shortNameOf('MAGIC MOMENTS DAZZLE VODKA 750 - BTL')).toBe('Magic Moment 750');
+  });
+
+  it('drops the second word only when almost nothing of it would fit', () => {
+    expect(shortNameOf('GLENFIDDICH SPECIAL RESERVE WHISKY 1000 - BTL')).toBe('Glenfiddich 1000');
+  });
+
+  it('skips a leading THE or A', () => {
+    expect(shortNameOf('THE GLENLIVET SINGLE MALT SCOTCH WHISKY 700 - BTL')).toBe('Glenlivet 700');
+    expect(shortNameOf('THE KADAMBA INDIAN SINGLE MALT WHISKY 750 - BTL')).toBe('Kadamba Indi 750');
+    expect(shortNameOf('THE WHISKY')).toBe('The Whisky');
+  });
+
+  it('keeps single-word names whole', () => {
+    expect(shortNameOf('MURANO RUM 180 - BTL')).toBe('Murano Rum 180');
   });
 
   it('keeps a qualifier only if it still fits in 16 characters', () => {
@@ -196,6 +219,14 @@ describe('shortNameOf', () => {
     expect(tooLong.map((p) => p.shortName)).toEqual([]);
     // the stored short name is what shortNameOf gives today
     for (const p of products) expect(shortNameOf(p.description)).toBe(p.shortName);
+  });
+
+  it('uses every override at least once', () => {
+    const { products } = catalogue as { products: Product[] };
+    const unused = SHORT_NAME_OVERRIDES.filter(
+      ([key]) => !products.some((p) => ` ${p.brand} `.includes(` ${key} `)),
+    ).map(([key]) => key);
+    expect(unused).toEqual([]);
   });
 });
 

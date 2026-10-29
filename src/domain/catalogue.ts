@@ -89,7 +89,7 @@ export function caseSizeFor(sizeMl: number | null, pack: Pack): number {
   }
 }
 
-const SHORT_NAME_OVERRIDES: ReadonlyArray<readonly [string, string]> = [
+export const SHORT_NAME_OVERRIDES: ReadonlyArray<readonly [string, string]> = [
   ['ORIGINAL CHOICE', 'OC'],
   ['HAYWARDS', 'Hay'],
   ['KINGFISHER', 'KF'],
@@ -106,40 +106,66 @@ const SHORT_NAME_OVERRIDES: ReadonlyArray<readonly [string, string]> = [
   ['8 PM', '8PM'],
 ];
 
+// Words skipped at the front of a name so "THE GLENLIVET" becomes "Glenlivet".
+const LEADING_ARTICLES = new Set(['THE', 'A']);
+// A second word cut shorter than this reads as noise, so the name drops to one word.
+const MIN_SECOND_WORD = 3;
+
 const QUALIFIERS = new Set(['STRONG', 'ULTRA', 'PREMIUM']);
 
 const titleCase = (w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+
+/** Finds the override whose key sits on word boundaries anywhere in the brand (earliest, then longest). */
+function findOverride(brand: string): { abbr: string; after: string } | null {
+  const padded = ` ${brand} `;
+  let best: { at: number; key: string; abbr: string } | null = null;
+  for (const [key, abbr] of SHORT_NAME_OVERRIDES) {
+    const at = padded.indexOf(` ${key} `);
+    if (at < 0) continue;
+    if (!best || at < best.at || (at === best.at && key.length > best.key.length)) best = { at, key, abbr };
+  }
+  return best && { abbr: best.abbr, after: brand.slice(best.at + best.key.length) };
+}
+
+/** First two words in Title Case, the second one shortened to fit `room` characters. */
+function fitTwoWords(words: string[], room: number): string {
+  const first = titleCase(words[0] ?? '');
+  const second = words[1];
+  if (second === undefined) return first.slice(0, room);
+  if (first.length + 1 + second.length <= room) return `${first} ${titleCase(second)}`;
+  const avail = room - first.length - 1;
+  if (avail < MIN_SECOND_WORD) return first.slice(0, room);
+  return `${first} ${titleCase(second).slice(0, avail)}`;
+}
 
 /** Compact name for tiles and receipt lines, e.g. "KF Strong 650". Always 16 characters or fewer. */
 export function shortNameOf(desc: string): string {
   const brand = brandOf(desc);
   const { sizeMl } = sizeOf(desc);
   const suffix = sizeMl === null ? '' : ` ${sizeMl}`;
+  const room = MAX_SHORT_NAME - suffix.length;
 
   let base: string;
   let rest: string[];
-  const override = SHORT_NAME_OVERRIDES.find(([key]) => brand === key || brand.startsWith(`${key} `));
+  const override = findOverride(brand);
   if (override) {
-    base = override[1];
-    rest = brand.slice(override[0].length).split(/\s+/).filter(Boolean);
+    base = override.abbr;
+    rest = override.after.split(/\s+/).filter(Boolean);
   } else {
-    const words = brand.split(/\s+/).filter(Boolean);
-    base = words.slice(0, 2).map(titleCase).join(' ');
+    let words = brand.split(/\s+/).filter(Boolean);
+    if (words.length > 2 && LEADING_ARTICLES.has(words[0]!)) words = words.slice(1);
+    base = fitTwoWords(words, room);
     rest = words.slice(2);
   }
+  if (base.length > room) base = base.slice(0, room);
 
   let name = base;
   for (const w of rest) {
     if (!QUALIFIERS.has(w)) continue;
     const next = `${name} ${titleCase(w)}`;
-    if (next.length + suffix.length <= MAX_SHORT_NAME) name = next;
+    if (next.length <= room) name = next;
   }
-  if (name.length + suffix.length <= MAX_SHORT_NAME) return name + suffix;
-
-  // Too long even without qualifiers: try one word, then cut hard.
-  const room = MAX_SHORT_NAME - suffix.length;
-  const firstWord = base.split(' ')[0]!;
-  return (firstWord.length <= room ? firstWord : firstWord.slice(0, room)) + suffix;
+  return name + suffix;
 }
 
 function hsnOf(sub: string): string {
