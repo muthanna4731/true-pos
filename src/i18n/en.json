@@ -1,0 +1,12 @@
+{
+  "total": "TOTAL {amount}",
+  "cash": "Cash",
+  "upi": "UPI",
+  "card": "Card",
+  "split": "Split",
+  "endShift": "End shift",
+  "noMatch": "No match",
+  "online": "Online",
+  "offline": "Offline",
+  "syncProblem": "Sync problem"
+}

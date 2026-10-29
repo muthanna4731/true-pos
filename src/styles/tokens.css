@@ -1,0 +1,25 @@
+:root {
+  /* Surfaces */
+  --bg: #f4f0e6;
+  --ink: #111111;
+  --accent: #4da2ff;
+
+  /* Status */
+  --ok: #2e7d32;
+  --warn: #f2b705;
+  --bad: #c62828;
+  --practice: #ff7a00;
+
+  /* Tile colours by type */
+  --beer: #e9a23b;
+  --whisky: #8b5a2b;
+  --rum: #5b3a29;
+  --brandy: #a0522d;
+  --vodka: #9db4c0;
+  --gin: #6fa287;
+  --wine: #7b1e3a;
+  --other: #9e9e9e;
+
+  /* Touch */
+  --touch: 56px;
+}

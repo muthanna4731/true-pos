@@ -1,0 +1,13 @@
+{
+  "_note": "Kannada draft: needs a native speaker's check before real use.",
+  "total": "ಒಟ್ಟು {amount}",
+  "cash": "ನಗದು",
+  "upi": "UPI",
+  "card": "ಕಾರ್ಡ್",
+  "split": "ಹಂಚಿಕೆ",
+  "endShift": "ಶಿಫ್ಟ್ ಮುಗಿಸಿ",
+  "noMatch": "ಯಾವುದೂ ಸಿಗಲಿಲ್ಲ",
+  "online": "ಆನ್‌ಲೈನ್",
+  "offline": "ಆಫ್‌ಲೈನ್",
+  "syncProblem": "ಸಿಂಕ್ ಸಮಸ್ಯೆ"
+}
