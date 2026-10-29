@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { billNumber, parseBillNumber } from '../../src/domain/billNumber';
+import { billNumber, parseBillNumber, practiceBillNumber } from '../../src/domain/billNumber';
 
 describe('billNumber', () => {
   it('counter 1 is unpadded', () => {
@@ -15,6 +15,24 @@ describe('billNumber', () => {
   });
   it('always matches the allowed pattern', () => {
     expect(billNumber('TSGLD', 3, '25-26', 999999)).toMatch(/^[A-Z0-9/-]{1,20}$/);
+  });
+});
+
+describe('practiceBillNumber', () => {
+  it('counter 1 has a bare P and pads seq to 6', () => {
+    expect(practiceBillNumber('TSTS1', 1, '26-27', 1)).toBe('TSTS1P/26-27/000001');
+  });
+  it('counter 2+ puts the counter after the P', () => {
+    expect(practiceBillNumber('TSTS1', 2, '26-27', 12)).toBe('TSTS1P2/26-27/000012');
+  });
+  it('worst case is exactly 20 characters', () => {
+    const n = practiceBillNumber('TSGLD', 2, '26-27', 1);
+    expect(n).toBe('TSGLDP2/26-27/000001');
+    expect(n).toHaveLength(20);
+    expect(n).toMatch(/^[A-Z0-9/-]{1,20}$/);
+  });
+  it('throws when longer than 20 characters', () => {
+    expect(() => practiceBillNumber('TSGLD', 10, '26-27', 1)).toThrow('bill_number_too_long');
   });
 });
 

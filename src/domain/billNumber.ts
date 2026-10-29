@@ -11,6 +11,13 @@ export function billNumber(store: string, counter: number, fy: string, seq: numb
   return n;
 }
 
+/** Practice bill: `{store}P` (plus the counter after 1) in place of the store, seq always padded to 6. */
+export function practiceBillNumber(store: string, counter: number, fy: string, seq: number): string {
+  const n = `${store}P${counter > 1 ? counter : ''}/${fy}/${String(seq).padStart(6, '0')}`;
+  if (n.length > MAX_LEN || !ALLOWED.test(n)) throw new Error('bill_number_too_long');
+  return n;
+}
+
 export function parseBillNumber(n: string): { store: string; counter: number; fy: string; seq: number } {
   const m = PARSE.exec(n);
   if (!m) throw new Error('bad_bill_number');
