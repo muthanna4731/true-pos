@@ -154,3 +154,49 @@
   border-radius: 8px;
   background: var(--surface);
 }
+
+/* Stock, transfers, reports, products: tappable rows, filters, badges. */
+.row-tap {
+  cursor: pointer;
+}
+
+.row-tap:focus-visible {
+  outline: 3px solid var(--accent);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 2px solid var(--ink);
+  font-weight: 700;
+}
+
+.filters,
+.transfers .tabs,
+.reports .tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.filters button,
+.tabs button {
+  min-height: 56px;
+}
+
+[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.new-transfer,
+.losses section,
+.products section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}

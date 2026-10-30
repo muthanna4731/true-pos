@@ -238,3 +238,10 @@ export async function pushPrices(rows: Omit<Price, 'id' | 'pushedBy'>[], by: str
   await db.prices.bulkAdd(rows.map((r) => ({ ...r, pushedBy: by })));
   return rows.length;
 }
+
+/** Change the short name used on tiles and receipts. A blank name is refused. */
+export async function setShortName(productId: string, shortName: string): Promise<void> {
+  const name = shortName.trim();
+  if (name === '') throw new Error('bad_name');
+  if ((await db.products.update(productId, { shortName: name })) === 0) throw new Error('product_not_found');
+}

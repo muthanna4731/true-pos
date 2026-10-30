@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react'
 import { toCsv } from '../../domain/csv'
 import { formatINR } from '../../domain/money'
 import { formatDate } from '../../domain/time'
@@ -50,12 +51,15 @@ export default function ReportTable({
   rows,
   asOf,
   totals,
+  onRowClick,
 }: {
   title: string
   columns: Column[]
   rows: Row[]
   asOf: { now: string; dayClose?: { lockedAt: string } }
   totals?: Row
+  /** Makes each body row tappable (and reachable by keyboard). */
+  onRowClick?: (row: Row) => void
 }) {
   const numeric = (c: Column) => c.kind === 'number' || c.kind === 'money' || c.kind === 'litres'
   return (
@@ -84,7 +88,17 @@ export default function ReportTable({
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i}>
+            <tr
+              key={i}
+              {...(onRowClick && {
+                className: 'row-tap',
+                tabIndex: 0,
+                onClick: () => onRowClick(r),
+                onKeyDown: (e: KeyboardEvent<HTMLTableRowElement>) => {
+                  if (e.key === 'Enter') onRowClick(r)
+                },
+              })}
+            >
               {columns.map((c) => (
                 <td key={c.key} className={numeric(c) ? 'num' : undefined}>
                   {display(r[c.key], c.kind)}
