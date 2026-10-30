@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { db } from '../../db/db'
 import { draftGrn } from '../../db/stockOps'
+import { isOnOrder } from '../../domain/orders'
 import { formatDate } from '../../domain/time'
 import { t } from '../../i18n'
 import { useSession } from '../shell/session'
@@ -27,7 +28,7 @@ export default function StockArrived() {
     if (!code) return undefined
     const grns = await db.grns.where('storeCode').equals(code).toArray()
     const invoiced = new Set(grns.flatMap((g) => (g.indentId ? [g.indentId] : [])))
-    const indents = await db.indents.where('storeCode').equals(code).filter((i) => i.status === 'placed' && !invoiced.has(i.id)).toArray()
+    const indents = await db.indents.where('storeCode').equals(code).filter((i) => isOnOrder(i) && !invoiced.has(i.id)).toArray()
     return { drafts: grns.filter((g) => g.status === 'draft'), indents }
   }, [code])
 

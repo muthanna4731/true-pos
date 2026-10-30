@@ -692,6 +692,15 @@ export function generateSeed(opts: SeedOpts): SeedData {
     }
   }
 
+  // Planted: an order placed at the hub yesterday and not delivered yet, so Orders and Deliveries have one pending.
+  indents.push({
+    id: uniqueDigits('INDMYH26'),
+    storeCode: HUB,
+    placedAt: istAt(yesterday, 15 * 60),
+    status: 'placed',
+    lines: hubCtx.active.slice(0, 3).map((p) => ({ productId: p.id, cases: 2 })),
+  });
+
   // The last two deliveries are not paid for yet.
   for (const g of grns.filter((x) => x.storeCode === HUB).slice(0, -2)) {
     supplierPayments.push({ supplierId: 'SUP-KSBCL', amount: g.invoiceAmount + g.tcs, paidOn: addDays(g.receivedAt.slice(0, 10), 10), ref: g.invoiceNo });

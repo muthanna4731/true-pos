@@ -1,0 +1,156 @@
+/* Office screens: to-do home, orders, deliveries. Flat colours, 56 px minimum targets. */
+
+.office-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.todo-list,
+.order-list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.todo,
+.order-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.todo-text {
+  flex: 1 1 260px;
+  font-weight: 600;
+}
+
+.todo-low_stock .todo-text::before,
+.todo-delivery_short .todo-text::before,
+.todo-transfer_stuck .todo-text::before,
+.todo-negative_stock .todo-text::before,
+.todo-day_not_closed .todo-text::before {
+  content: '! ';
+  color: var(--bad);
+}
+
+.todo-beer_expiry .todo-text::before,
+.todo-count_off .todo-text::before {
+  content: '* ';
+  color: var(--warn);
+}
+
+.todo-empty {
+  padding: 16px;
+  color: var(--ok);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.office-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.office-tabs > button,
+.more-menu summary {
+  min-height: 56px;
+  min-width: 120px;
+}
+
+.more-menu summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.more-menu button {
+  display: block;
+  margin-top: 8px;
+}
+
+.orders .order-actions,
+.deliveries .tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.orders-table input {
+  width: 80px;
+  min-height: 56px;
+  text-align: right;
+}
+
+.order-status {
+  padding: 2px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.order-draft {
+  border-color: var(--warn);
+}
+
+.order-received {
+  border-color: var(--ok);
+}
+
+.field-error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.new-delivery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.deliveries-table,
+.orders-table,
+.delivery-detail .report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.deliveries-table th,
+.deliveries-table td,
+.orders-table th,
+.orders-table td,
+.delivery-detail th,
+.delivery-detail td {
+  padding: 8px;
+  border-bottom: 1px solid var(--ink);
+  text-align: left;
+}
+
+.deliveries-table .num,
+.orders-table .num,
+.delivery-detail .num {
+  text-align: right;
+}
+
+.claim-note {
+  margin-top: 24px;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+}

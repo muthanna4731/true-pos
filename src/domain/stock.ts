@@ -10,6 +10,16 @@ export function onHand(movements: StockMovement[], storeCode: string, productId:
   return forProduct(movements, storeCode, productId).reduce((sum, m) => sum + m.qty, 0);
 }
 
+/** Stock on hand for every store and product that has a movement, keyed `store|product`. One pass over the ledger. */
+export function onHandMap(movements: StockMovement[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const m of movements) {
+    const key = `${m.storeCode}|${m.productId}`;
+    out.set(key, (out.get(key) ?? 0) + m.qty);
+  }
+  return out;
+}
+
 /** One product's movements in one store, newest first (ties: later row first). */
 export function productHistory(movements: StockMovement[], storeCode: string, productId: string): StockMovement[] {
   return forProduct(movements, storeCode, productId).sort((a, b) =>

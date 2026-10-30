@@ -116,6 +116,27 @@ export function receiveGrn(grnId: string, lines: { productId: string; counted: n
 }
 
 /**
+ * File the claim for a delivery that came short or broken: every such line gets a claim for its short + broken
+ * bottles, marked filed. A line the shop's count already opened a claim for is moved to filed rather than doubled.
+ * Asking again changes nothing. Returns the claims of the delivery.
+ */
+export function raiseClaim(grnId: string): Promise<Claim[]> {
+  return db.transaction('rw', [db.grns, db.claims], async () => {
+    const grn = await db.grns.get(grnId);
+    if (!grn) throw new Error('grn_not_found');
+    const have = await db.claims.where('grnId').equals(grnId).toArray();
+    for (const line of grn.lines) {
+      const qty = Math.max(line.short ?? 0, 0) + (line.broken ?? 0);
+      if (qty === 0) continue;
+      const claim = have.find((c) => c.productId === line.productId);
+      if (!claim) await db.claims.add({ id: newId(), grnId, storeCode: grn.storeCode, productId: line.productId, qty, amount: qty * line.unitPrice, status: 'filed' });
+      else if (claim.status === 'open') await db.claims.update(claim.id, { status: 'filed' });
+    }
+    return db.claims.where('grnId').equals(grnId).toArray();
+  });
+}
+
+/**
  * Save a shelf count. Each line is compared with what the ledger says is on hand; any difference is written as a
  * `count_adjust` movement (negative for a shortage, positive for a surplus). Returns every line with its difference.
  */

@@ -28,6 +28,13 @@ export function istDate(iso: string): string {
   return `${year}-${month}-${day}`;
 }
 
+/** The instant an IST calendar day (`YYYY-MM-DD`) starts, as ISO UTC. */
+export function istDayStart(istDay: string): string {
+  const d = new Date(`${istDay}T00:00:00+05:30`);
+  if (Number.isNaN(d.getTime())) throw new Error('bad_day');
+  return d.toISOString();
+}
+
 /** `12 Aug 2026` in IST. */
 export function formatDate(iso: string): string {
   const { year, month, day } = istParts(iso);

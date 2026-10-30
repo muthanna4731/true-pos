@@ -157,12 +157,15 @@ export interface SupplierPayment {
   ref: string;
 }
 
-/** A KSBCL indent. `id` is the indent number, `INDMYH26` + 6 digits. */
+/**
+ * A KSBCL indent. `id` is the indent number, like `INDMYH26009468`; a draft has no number yet, so its id is `DRAFT-...`.
+ * `placedAt` is when it was last moved by hand (saved, placed). `received` is set only when the delivery is booked.
+ */
 export interface Indent {
   id: string;
   storeCode: string;
   placedAt: string;
-  status: 'placed' | 'received';
+  status: 'draft' | 'placed' | 'paid' | 'dispatched' | 'received';
   lines: { productId: string; cases: number }[];
 }
 

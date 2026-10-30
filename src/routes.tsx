@@ -6,6 +6,7 @@ import { useLang } from './i18n/useLang'
 import { useLoyaltyFlag } from './loyalty/flags'
 import BillScreen from './ui/bill/BillScreen'
 import ManagerRoutes from './ui/manager/ManagerRoutes'
+import OfficeRoutes from './ui/office/OfficeRoutes'
 import DemoPanel from './ui/shell/DemoPanel'
 import Login from './ui/shell/Login'
 import RoleGate from './ui/shell/RoleGate'
@@ -43,7 +44,7 @@ export function AppRoutes() {
           }
         />
         <Route path="/manager/*" element={<ManagerRoutes />} />
-        <Route path="/office/*" element={<Screen allow={['office']} title={t('home.office')} />} />
+        <Route path="/office/*" element={<OfficeRoutes />} />
         <Route path="/owner" element={<Screen allow={['owner']} title={t('home.owner')} />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
