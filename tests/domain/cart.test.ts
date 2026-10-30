@@ -62,10 +62,13 @@ describe('cartReducer', () => {
     expect('memberCode' in none).toBe(false);
   });
 
-  it('clear empties lines and member but keeps the clientId', () => {
+  it('clear empties lines and member and starts the next sale with the new clientId', () => {
     let c = cartReducer(empty, { type: 'add', productId: 'A' });
     c = cartReducer(c, { type: 'member', code: 'X' });
-    expect(cartReducer(c, { type: 'clear' })).toEqual({ clientId: 'c1', lines: [] });
+    const cleared = cartReducer(c, { type: 'clear', clientId: 'c2' });
+    expect(cleared).toEqual({ clientId: 'c2', lines: [] });
+    expect(cleared.clientId).not.toBe(c.clientId);
+    expect('memberCode' in cleared).toBe(false);
   });
 });
 

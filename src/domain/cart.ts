@@ -12,9 +12,10 @@ export type CartAction =
   | { type: 'setQty'; productId: string; qty: number }
   | { type: 'remove'; productId: string }
   | { type: 'member'; code?: string }
-  | { type: 'clear' };
+  /** Starts the next sale. `clientId` must be new for every sale (e.g. `crypto.randomUUID()`): `recordSale` returns the existing bill when it sees a repeated one. */
+  | { type: 'clear'; clientId: string };
 
-/** Pure cart update. `clear` empties lines and member but keeps `clientId`; a new sale starts a new Cart. */
+/** Pure cart update. `clear` empties lines and member and takes the new sale's `clientId` from the action. */
 export function cartReducer(c: Cart, a: CartAction): Cart {
   switch (a.type) {
     case 'add': {
@@ -44,7 +45,7 @@ export function cartReducer(c: Cart, a: CartAction): Cart {
       return a.code ? { ...rest, memberCode: a.code } : rest;
     }
     case 'clear':
-      return { clientId: c.clientId, lines: [] };
+      return { clientId: a.clientId, lines: [] };
   }
 }
 
