@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db, resetDb } from '../../src/db/db';
 import { priceAt, pushPrices } from '../../src/db/stockOps';
+import { priceInForce } from '../../src/domain/prices';
 
 const A = 'P0001';
 const row = (mrp: number, effectiveFrom: string) => ({ productId: A, mrp, purchase: mrp / 2, aroed: 0, cess: 0, effectiveFrom });
@@ -32,6 +33,9 @@ describe('pushPrices + priceAt', () => {
     await pushPrices([row(51000, '2026-04-01')], 'U2');
     expect(await db.prices.get(first.id!)).toEqual(first);
     expect(await db.prices.count()).toBe(2);
+    // A same-day correction wins everywhere, the till included.
+    expect((await priceAt(A, '2026-04-01')).mrp).toBe(51000);
+    expect(priceInForce(await db.prices.toArray(), '2026-04-01').get(A)).toBe(51000);
   });
 
   it('refuses a bad date and a product with no started price', async () => {
