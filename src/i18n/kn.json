@@ -109,5 +109,18 @@
   "receipt.practice": "ಅಭ್ಯಾಸ",
   "receipt.discount": "ರಿಯಾಯಿತಿ",
   "receipt.tax": "ತೆರಿಗೆ",
-  "receipt.total": "ಒಟ್ಟು"
+  "receipt.total": "ಒಟ್ಟು",
+  "loyalty.memberCode": "ಸದಸ್ಯ ಕೋಡ್",
+  "loyalty.add": "ಗ್ರಾಹಕರನ್ನು ಸೇರಿಸಿ",
+  "loyalty.remove": "ಗ್ರಾಹಕರನ್ನು ತೆಗೆಯಿರಿ",
+  "loyalty.points": "{n} ಪಾಯಿಂಟ್‌ಗಳು",
+  "loyalty.onePoint": "1 ಪಾಯಿಂಟ್",
+  "loyalty.linked": "ಗ್ರಾಹಕರನ್ನು ಸೇರಿಸಲಾಗಿದೆ. ಆನ್‌ಲೈನ್ ಆದಾಗ ಪಾಯಿಂಟ್‌ಗಳು ತೋರಿಸುತ್ತದೆ",
+  "loyalty.notFound": "ಈ ಕೋಡ್‌ನ ಸದಸ್ಯರು ಇಲ್ಲ",
+  "loyalty.use": "ಪಾಯಿಂಟ್ ಬಳಸಿ",
+  "loyalty.noRewards": "ಈಗ ಯಾವುದೇ ಬಹುಮಾನಗಳಿಲ್ಲ",
+  "loyalty.rewardButton": "{name} · {cost} ಪಾಯಿಂಟ್‌ಗಳು",
+  "loyalty.redeemed": "{name}: {cost} ಪಾಯಿಂಟ್‌ಗಳನ್ನು ಬಳಸಲಾಗಿದೆ",
+  "loyalty.notEnough": "ಸಾಕಷ್ಟು ಪಾಯಿಂಟ್‌ಗಳಿಲ್ಲ",
+  "loyalty.redeemFailed": "ಪಾಯಿಂಟ್ ಬಳಸಲಾಗಲಿಲ್ಲ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ"
 }

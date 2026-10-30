@@ -108,5 +108,18 @@
   "receipt.practice": "PRACTICE",
   "receipt.discount": "Discount",
   "receipt.tax": "Tax",
-  "receipt.total": "Total"
+  "receipt.total": "Total",
+  "loyalty.memberCode": "Member code",
+  "loyalty.add": "Add customer",
+  "loyalty.remove": "Remove customer",
+  "loyalty.points": "{n} points",
+  "loyalty.onePoint": "1 point",
+  "loyalty.linked": "Customer added. Points will show when online",
+  "loyalty.notFound": "No member with that code",
+  "loyalty.use": "Use points",
+  "loyalty.noRewards": "No rewards right now",
+  "loyalty.rewardButton": "{name} · {cost} points",
+  "loyalty.redeemed": "{name}: {cost} points used",
+  "loyalty.notEnough": "Not enough points",
+  "loyalty.redeemFailed": "Could not use points, try again"
 }

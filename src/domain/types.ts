@@ -250,6 +250,8 @@ export interface LoyaltyLedgerRow {
   storeCode: string;
   fy: string;
   billRef: string;
+  /** Set on a `redeem` row: the request that made it, so a retry deducts once. */
+  requestId?: string;
   at: string;
 }
 

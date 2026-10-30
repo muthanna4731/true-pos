@@ -12,6 +12,9 @@ export type LoyaltyErrorCode =
   | 'bill_out_of_range'
   | 'daily_limit'
   | 'insufficient_points'
+  | 'unknown_reward'
+  | 'reward_inactive'
+  | 'cost_changed'
   | 'network';
 
 export class LoyaltyError extends Error {
@@ -30,10 +33,13 @@ export interface LoyaltyClient {
   flags(): Promise<{ loyalty: boolean }>;
   /** `pos_member_info`: the masked name (see `maskName`) and the points balance. */
   memberInfo(code: string): Promise<{ maskedName: string; points: number }>;
-  /** `pos_earn`: points for a paid bill, using the real bill amount and number. */
-  earn(code: string, billRupees: number, billRef: string, storeCode: string): Promise<{ points: number }>;
-  /** `pos_redeem`: idempotent on `requestId`. */
-  redeem(code: string, rewardId: string, requestId: string, expectedCost: number): Promise<{ points: number }>;
+  /**
+   * `pos_earn`: points for a paid bill, using the real bill amount and number.
+   * `billRupees` is whole rupees, `Math.floor(net paise / 100)`.
+   */
+  earn(code: string, billRupees: number, billRef: string, storeCode: string): Promise<{ maskedName: string; pointsAdded: number; balance: number }>;
+  /** `pos_redeem`: idempotent on `requestId`. `balance` is the points left after the redeem. */
+  redeem(code: string, rewardId: string, requestId: string, expectedCost: number): Promise<{ balance: number }>;
   /** `pos_reverse`: take back the points of a voided bill. */
   reverse(billRef: string, storeCode: string): Promise<void>;
   /** The active rewards. */
@@ -42,7 +48,7 @@ export interface LoyaltyClient {
 
 let current: LoyaltyClient | null = null;
 
-/** Task 10 registers the demo stand-in here. Until then there is no client and loyalty reads as unknown. */
+/** The app registers the demo stand-in here at start-up. With no client, loyalty reads as unknown (off). */
 export function setLoyaltyClient(client: LoyaltyClient | null): void {
   current = client;
 }

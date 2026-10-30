@@ -7,8 +7,11 @@ import './styles/bill.css'
 import './styles/print.css'
 import App from './App'
 import { restoreLang } from './i18n'
+import { setLoyaltyClient } from './loyalty/client'
+import { DemoLoyaltyClient } from './loyalty/demoClient'
 
 restoreLang()
+setLoyaltyClient(new DemoLoyaltyClient())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

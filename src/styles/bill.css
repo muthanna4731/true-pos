@@ -324,6 +324,44 @@ button.tile {
   background: var(--accent);
 }
 
+/* Customer line */
+
+.customer-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.customer-input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch);
+  padding: 0 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 18px;
+}
+
+.customer-name {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.customer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.reward-button:disabled {
+  opacity: 0.5;
+}
+
 @media (max-width: 900px) {
   .bill-screen {
     grid-template-columns: 1fr;

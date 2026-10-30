@@ -8,6 +8,7 @@ import { formatINR } from '../../domain/money'
 import { clock, istDate } from '../../domain/time'
 import type { Bill, PayMode, Paise } from '../../domain/types'
 import { t } from '../../i18n'
+import { flushLoyaltyNow } from '../../loyalty/queue'
 import { useSession } from '../shell/session'
 import CashDialog from './CashDialog'
 import ModeIcon from './ModeIcon'
@@ -109,6 +110,8 @@ export default function PayButtons({ priced, cart, onPaid }: Props) {
       setDialog(null)
       setShown({ number: bill.number, auto: true })
       onPaid(bill)
+      // The earn was queued with the sale; send it now (offline, it stays queued).
+      if (bill.memberCode && bill.status === 'paid') flushLoyaltyNow()
     } catch (e) {
       setDialog(null)
       if (e instanceof DayClosedError) setClosedOn(today)

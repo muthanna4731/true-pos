@@ -5,6 +5,7 @@ import { db } from '../../db/db'
 import { topSellers } from '../../domain/sellers'
 import { clock, formatDate } from '../../domain/time'
 import { t } from '../../i18n'
+import { setLoyaltyEnabled } from '../../loyalty/demoClient'
 import { requestLoyaltyRefresh } from '../../loyalty/flags'
 import { advanceClock, resetDemo } from '../../seed/load'
 import { closeDemoPanel, openDemoPanel, useDemoPanelOpen, useSeedOptions } from './demoPanelState'
@@ -77,8 +78,8 @@ function PanelBody() {
   }, [store?.code])
 
   const setLoyalty = async (on: boolean): Promise<void> => {
-    // Task 10 also writes the stand-in client's config here.
-    await db.kv.put({ key: 'loyalty', value: on })
+    // Writes the stand-in server's config and the POS-side copy together.
+    await setLoyaltyEnabled(on)
     requestLoyaltyRefresh()
   }
 

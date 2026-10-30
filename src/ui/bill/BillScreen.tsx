@@ -9,10 +9,15 @@ import { newId } from '../../domain/id'
 import { onHand } from '../../domain/stock'
 import type { Bill, Product } from '../../domain/types'
 import { t } from '../../i18n'
+import { getLoyaltyClient, LoyaltyError } from '../../loyalty/client'
+import { isMemberCode, normalizeCode } from '../../loyalty/code'
+import { useLoyaltyFlag } from '../../loyalty/flags'
+import { flushLoyaltyNow } from '../../loyalty/queue'
 import { useSession } from '../shell/session'
 import { useScanner } from '../shell/useScanner'
 import Cart from './Cart'
 import CatalogueGrid from './CatalogueGrid'
+import CustomerLine from './CustomerLine'
 import PayButtons from './PayButtons'
 import SearchBox from './SearchBox'
 import TopTiles from './TopTiles'
@@ -39,16 +44,58 @@ export default function BillScreen() {
   // After a payment the next customer gets an empty cart and a fresh clientId.
   const onPaid = useCallback((_bill: Bill) => dispatch({ type: 'clear', clientId: newId() }), [])
 
+  const loyalty = useLoyaltyFlag()
+
+  /** Put a member on the bill. Does nothing while loyalty is off. `not_found` when the code is not a member. */
+  const attachMember = async (raw: string): Promise<'attached' | 'not_found' | 'off'> => {
+    if (!loyalty) return 'off'
+    const code = normalizeCode(raw)
+    if (!isMemberCode(code)) return 'not_found'
+    try {
+      await getLoyaltyClient()?.memberInfo(code)
+    } catch (e) {
+      // Offline, the customer is still added: the earn waits in the queue.
+      if (e instanceof LoyaltyError && e.code === 'member_not_found') return 'not_found'
+    }
+    dispatch({ type: 'member', code })
+    return 'attached'
+  }
+
+  const typedMember = async (raw: string): Promise<void> => {
+    if ((await attachMember(raw)) === 'not_found') setNotice(t('loyalty.notFound'))
+  }
+
   useScanner((code) => {
+    // The member QR carries a TS1: prefix: it is never looked up as a bottle.
+    if (/^TS1:/i.test(code.trim())) {
+      void typedMember(code)
+      return
+    }
     void db.products
       .where('barcode')
       .equals(code)
       .first()
-      .then((p) => {
+      .then(async (p) => {
         if (p && data.byId.has(p.id)) add(p.id)
-        else setNotice(t('bill.unknownCode', { code }))
+        else if (isMemberCode(code)) {
+          // A member code without the prefix: a member when loyalty is on, ignored without a word when it is off.
+          if (loyalty && (await attachMember(code)) === 'not_found') setNotice(t('bill.unknownCode', { code }))
+        } else setNotice(t('bill.unknownCode', { code }))
       })
   })
+
+  // Switched off while a customer is on the bill: the bill goes on without them.
+  const memberOnBill = cart.memberCode
+  useEffect(() => {
+    if (!loyalty && memberOnBill) dispatch({ type: 'member' })
+  }, [loyalty, memberOnBill])
+
+  // Earns and reversals waiting from an offline spell go out when the screen opens and when the network comes back.
+  useEffect(() => {
+    flushLoyaltyNow()
+    window.addEventListener('online', flushLoyaltyNow)
+    return () => window.removeEventListener('online', flushLoyaltyNow)
+  }, [])
 
   useEffect(() => {
     if (notice === null) return
@@ -114,7 +161,11 @@ export default function BillScreen() {
       </div>
       <aside className="bill-right">
         <Cart priced={priced} stock={stock} dispatch={dispatch} />
-        <div className="customer-slot" data-slot="customer" />
+        {loyalty && (
+          <div className="customer-slot" data-slot="customer">
+            <CustomerLine memberCode={cart.memberCode} onAttach={typedMember} onRemove={() => dispatch({ type: 'member' })} notify={setNotice} />
+          </div>
+        )}
         <p className="bill-total">{t('total', { amount: formatINR(priced.net) })}</p>
         <PayButtons priced={priced} cart={billable} onPaid={onPaid} />
       </aside>
