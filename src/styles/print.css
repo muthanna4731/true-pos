@@ -1,0 +1,30 @@
+/* Printing: only the 80 mm receipt comes out of the printer. */
+
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible;
+  }
+
+  .receipt-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+  }
+
+  .receipt {
+    width: 80mm;
+    padding: 4mm;
+    font-size: 12px;
+  }
+}

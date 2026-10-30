@@ -4,6 +4,7 @@ import './styles/tokens.css'
 import './styles/base.css'
 import './styles/shell.css'
 import './styles/bill.css'
+import './styles/print.css'
 import App from './App'
 import { restoreLang } from './i18n'
 

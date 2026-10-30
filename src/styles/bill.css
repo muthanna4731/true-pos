@@ -335,3 +335,300 @@ button.tile {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* Practice mode */
+
+.practice-band {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  background: var(--practice);
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Paying */
+
+.pay-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pay-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+button.pay-big {
+  min-height: 72px;
+  padding: 0 4px;
+  font-size: 18px;
+  background: var(--ink);
+  color: var(--on-dark);
+}
+
+button.pay-primary {
+  background: var(--accent);
+}
+
+.pay-buttons .link-button {
+  margin-top: 0;
+}
+
+.day-closed {
+  margin: 0;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--warn);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.pay-error {
+  margin: 0;
+  padding: 12px 16px;
+  border: 2px solid var(--bad);
+  border-radius: 8px;
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.pay-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(440px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.pay-amount {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.tender-buttons,
+.pay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tender-buttons button,
+.pay-actions button {
+  flex: 1;
+}
+
+.pay-dialog .keypad-display {
+  min-height: var(--touch);
+  margin: 0;
+  font-size: 28px;
+}
+
+.pay-dialog .keypad-keys {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pay-dialog .keypad-keys button {
+  width: auto;
+  height: var(--touch);
+}
+
+.give-back-amount {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+  min-height: var(--touch);
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.note-500 {
+  background: var(--other);
+}
+.note-200 {
+  background: var(--warn);
+}
+.note-100 {
+  background: var(--accent);
+}
+.note-50 {
+  background: var(--gin);
+}
+.note-20 {
+  background: var(--beer);
+}
+.note-10 {
+  background: var(--vodka);
+}
+
+.note-count {
+  font-size: 18px;
+}
+
+.coins {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.upi-hint {
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.upi-qr {
+  display: flex;
+  justify-content: center;
+  min-height: 240px;
+  background: var(--surface);
+}
+
+.upi-qr svg {
+  width: 240px;
+  height: 240px;
+}
+
+.split-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.split-row label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.split-row input {
+  min-height: var(--touch);
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 22px;
+}
+
+.split-left {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Receipt preview */
+
+.receipt-sheet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.receipt-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--on-dark);
+}
+
+.receipt-actions p {
+  margin: 0;
+}
+
+.receipt {
+  max-width: 100%;
+  padding: 8mm 4mm;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 13px;
+}
+
+.receipt p {
+  margin: 0 0 2px;
+}
+
+.receipt-store {
+  margin: 0 0 4px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.receipt-store ~ p {
+  text-align: center;
+}
+
+.receipt-practice {
+  margin-bottom: 8px;
+  padding: 4px;
+  background: var(--practice);
+  font-weight: 700;
+  text-align: center;
+}
+
+.receipt-number {
+  font-weight: 700;
+}
+
+.receipt-lines {
+  margin: 8px 0;
+  padding: 8px 0;
+  border-top: 1px dashed var(--ink);
+  border-bottom: 1px dashed var(--ink);
+  list-style: none;
+}
+
+.receipt-lines li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 8px;
+}
+
+.receipt .receipt-row {
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.receipt-total {
+  font-size: 16px;
+  font-weight: 700;
+}

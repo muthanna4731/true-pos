@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { db } from '../../db/db'
-import { cartReducer, priceCart, type Cart as CartState, type PricedCart } from '../../domain/cart'
+import { cartReducer, priceCart, type Cart as CartState } from '../../domain/cart'
 import { formatINR } from '../../domain/money'
 import { brandTiles } from '../../domain/sellers'
 import { searchProducts } from '../../domain/search'
@@ -13,24 +13,14 @@ import { useSession } from '../shell/session'
 import { useScanner } from '../shell/useScanner'
 import Cart from './Cart'
 import CatalogueGrid from './CatalogueGrid'
+import PayButtons from './PayButtons'
 import SearchBox from './SearchBox'
 import TopTiles from './TopTiles'
 import TypeTabs, { typeOf, type Tab } from './TypeTabs'
 import { useBillData } from './useBillData'
+import { usePractice } from './usePractice'
 
 const NOTICE_MS = 4000
-
-/** What the pay buttons (next task) are given. */
-interface PayButtonsProps {
-  priced: PricedCart
-  cart: CartState
-  onPaid(bill: Bill): void
-}
-
-/** Holds the place of the pay buttons until they are built. */
-function PaySlot(_props: PayButtonsProps) {
-  return <div className="pay-slot" data-slot="pay" />
-}
 
 const newCart = (): CartState => ({ clientId: newId(), lines: [] })
 
@@ -39,6 +29,7 @@ export default function BillScreen() {
   const { store } = useSession()
   const storeCode = store?.code
   const data = useBillData(storeCode)
+  const practice = usePractice()
   const [cart, dispatch] = useReducer(cartReducer, undefined, newCart)
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<Tab>('all')
@@ -105,6 +96,11 @@ export default function BillScreen() {
 
   return (
     <div className="bill-screen">
+      {practice === true && (
+        <div className="practice-band" role="status">
+          {t('practice.band')}
+        </div>
+      )}
       <div className="bill-left">
         <SearchBox value={query} onChange={setQuery} />
         {notice !== null && (
@@ -120,7 +116,7 @@ export default function BillScreen() {
         <Cart priced={priced} stock={stock} dispatch={dispatch} />
         <div className="customer-slot" data-slot="customer" />
         <p className="bill-total">{t('total', { amount: formatINR(priced.net) })}</p>
-        <PaySlot priced={priced} cart={billable} onPaid={onPaid} />
+        <PayButtons priced={priced} cart={billable} onPaid={onPaid} />
       </aside>
     </div>
   )
