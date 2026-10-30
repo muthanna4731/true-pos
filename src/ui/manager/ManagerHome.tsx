@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { loadDayTotals } from '../../db/dayData'
 import { db } from '../../db/db'
+import { setPractice } from '../../db/settings'
 import { formatINR } from '../../domain/money'
 import { isDayTotals } from '../../domain/reports'
 import { clock, istDate } from '../../domain/time'
@@ -100,7 +101,7 @@ export default function ManagerHome() {
             <button
               type="button"
               aria-pressed={practice}
-              onClick={() => void db.kv.put({ key: 'practice', value: !practice })}
+              onClick={() => void setPractice(!practice)}
             >
               {t('mgr.practice')}
             </button>

@@ -118,7 +118,41 @@ describe('receiveGrn', () => {
   });
 });
 
+describe('claim ids and duplicate lines', () => {
+  it('gives each claim its own generated id', async () => {
+    await receiveGrn('GRN-1', [{ productId: A, counted: 40, broken: 0 }, { productId: B, counted: 10, broken: 0 }], 'M1');
+    const ids = (await db.claims.toArray()).map((c) => c.id);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+    expect(ids.every((id) => !id.startsWith('CLM-'))).toBe(true);
+  });
+
+  it('refuses a delivery that lists a product twice, writing nothing', async () => {
+    await db.grns.add(grn({ id: 'GRN-DUP', lines: [{ productId: A, expected: 12, unitPrice: 1000 }, { productId: A, expected: 12, unitPrice: 1000 }] }));
+    await expect(receiveGrn('GRN-DUP', [{ productId: A, counted: 5, broken: 0 }], 'M1')).rejects.toThrow('duplicate_lines');
+    expect((await db.grns.get('GRN-DUP'))?.status).toBe('draft');
+    expect(await db.movements.where('ref').equals('GRN-DUP').count()).toBe(0);
+    expect(await db.claims.count()).toBe(0);
+  });
+
+  it('refuses counts that name the same product twice', async () => {
+    await expect(receiveGrn('GRN-1', [{ productId: A, counted: 1, broken: 0 }, { productId: A, counted: 2, broken: 0 }], 'M1')).rejects.toThrow('bad_count');
+    expect(await db.movements.count()).toBe(0);
+  });
+});
+
 describe('draftGrn', () => {
+  it('merges an order that lists the same product twice into one line', async () => {
+    await db.grns.clear();
+    await db.products.add({ id: A, caseSize: 12 } as never);
+    await db.indents.update('INDMYH26000001', { lines: [{ productId: A, cases: 2 }, { productId: A, cases: 3 }] });
+    const made = await db.grns.get(await draftGrn('INDMYH26000001', 'SMYH26123456'));
+    expect(made?.lines).toEqual([{ productId: A, expected: 60, unitPrice: 0 }]);
+    // and that delivery can be received without a clash
+    await receiveGrn(made!.id, [{ productId: A, counted: 50, broken: 1 }], 'M1');
+    expect(await db.claims.count()).toBe(1);
+  });
+
   it('turns a placed order into a delivery to count, with the invoice number and bottle counts', async () => {
     await db.grns.clear(); // the order has no delivery yet
     await db.products.bulkAdd([

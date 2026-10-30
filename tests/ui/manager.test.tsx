@@ -327,7 +327,7 @@ describe('bills', () => {
 
     await user.click(within(row).getByRole('button', { name: new RegExp(bill.number) }));
     const dialog = await screen.findByRole('dialog', { name: `Bill ${bill.number}` });
-    expect(within(dialog).getByText(OC.shortName)).toBeInTheDocument();
+    expect(await within(dialog).findByText(OC.shortName)).toBeInTheDocument();
     expect(within(dialog).getByText('×3')).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Reprint' }));
     expect(print).toHaveBeenCalledTimes(1);
@@ -409,6 +409,8 @@ describe('cashier end shift', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(await within(dialog).findByText('Shift closed')).toBeInTheDocument();
     expect((await db.shifts.get('SH-U1'))?.closedAt).toBe(NOON_IST);
+    expect(within(dialog).queryByText(/Day locked/)).toBeNull(); // only a manager's close locks the day
+    expect(await db.dayCloses.count()).toBe(0);
     expect(sessionStorage.getItem('session')).not.toBeNull();
 
     await user.click(within(dialog).getByRole('button', { name: 'Done' }));

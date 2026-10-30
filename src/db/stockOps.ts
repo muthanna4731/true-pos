@@ -31,10 +31,13 @@ export function draftGrn(indentId: string, invoiceNo: string): Promise<string> {
     const now = clock.now();
     const day = istDate(now);
     const lines: GrnLine[] = [];
-    for (const l of indent.lines) {
-      const product = await db.products.get(l.productId);
+    // An order that lists a product twice becomes one delivery line.
+    const cases = new Map<string, number>();
+    for (const l of indent.lines) cases.set(l.productId, (cases.get(l.productId) ?? 0) + l.cases);
+    for (const [productId, n] of cases) {
+      const product = await db.products.get(productId);
       if (!product) throw new Error('product_not_found');
-      lines.push({ productId: l.productId, expected: l.cases * product.caseSize, unitPrice: await purchasePrice(l.productId, day) });
+      lines.push({ productId, expected: n * product.caseSize, unitPrice: await purchasePrice(productId, day) });
     }
     const invoiceAmount = lines.reduce((s, l) => s + l.expected * l.unitPrice, 0);
     const grn: Grn = {
@@ -68,7 +71,9 @@ export function receiveGrn(grnId: string, lines: { productId: string; counted: n
     if (!grn) throw new Error('grn_not_found');
     if (grn.status === 'received') throw new Error('grn_received');
 
+    if (new Set(grn.lines.map((g) => g.productId)).size !== grn.lines.length) throw new Error('duplicate_lines');
     const given = new Map(lines.map((l) => [l.productId, l]));
+    if (given.size !== lines.length) throw new Error('bad_count');
     for (const l of lines) {
       if (!grn.lines.some((g) => g.productId === l.productId)) throw new Error('unknown_product');
       if (!validCount(l.counted) || !validCount(l.broken) || l.broken > l.counted) throw new Error('bad_count');
@@ -90,7 +95,7 @@ export function receiveGrn(grnId: string, lines: { productId: string; counted: n
       if (short > 0 || broken > 0) {
         const qty = Math.max(short, 0) + broken;
         claims.push({
-          id: `CLM-${grn.id}-${line.productId}`,
+          id: newId(),
           grnId: grn.id,
           storeCode: grn.storeCode,
           productId: line.productId,

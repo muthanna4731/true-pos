@@ -53,27 +53,32 @@ function validCount(n: number): boolean {
 }
 
 /**
- * Close a shift with the cash counted (notes by rupee value, plus coins in paise). When it is the last shop shift
- * still open for the day, the day is locked in the same transaction and its figures are saved. Safe to call twice.
+ * Close a shift with the cash counted (notes by rupee value, plus coins in paise). Only a manager's close can lock
+ * the day: when the closing shift is a manager's and no other shift of the shop that began on the same IST day is
+ * still open, the shift's own day is locked in the same transaction and its figures are saved. A cashier's close
+ * never locks. Safe to call twice.
  */
 export function closeShift(shiftId: string, counts: Record<number, number>, coins: Paise): Promise<ShiftClose> {
   if (!Object.values(counts).every(validCount) || !validCount(coins)) return Promise.reject(new Error('bad_count'));
-  return db.transaction('rw', [db.shifts, db.bills, db.payments, db.billLines, db.products, db.dayCloses], async () => {
+  return db.transaction('rw', [db.shifts, db.users, db.bills, db.payments, db.billLines, db.products, db.dayCloses], async () => {
     const shift = await db.shifts.get(shiftId);
     if (!shift) throw new Error('shift_not_found');
+    // The day a shift belongs to is the day it began, even if it is closed after midnight.
+    const day = istDate(shift.openedAt);
     if (shift.closedAt !== undefined) {
-      const locked = (await db.dayCloses.get([shift.storeCode, istDate(shift.closedAt)])) !== undefined;
+      const locked = (await db.dayCloses.get([shift.storeCode, day])) !== undefined;
       return { expected: shift.expected ?? 0, counted: shift.counted ?? 0, diff: shift.diff ?? 0, dayLocked: locked };
     }
 
     const now = clock.now();
-    const day = istDate(now);
     const expected = shift.floatPaise + (await shiftTakings(shiftId)).cash;
     const counted = cashFromNotes(counts, coins);
     const diff = counted - expected;
     await db.shifts.update(shiftId, { closedAt: now, counted, expected, diff });
 
-    // Shifts left open on an earlier day do not hold today's lock back.
+    if ((await db.users.get(shift.cashierId))?.role !== 'manager') return { expected, counted, diff, dayLocked: false };
+
+    // Shifts left open from another day do not hold this day's lock back.
     const othersOpen = await db.shifts
       .where('storeCode')
       .equals(shift.storeCode)
