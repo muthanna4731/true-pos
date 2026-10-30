@@ -249,7 +249,7 @@ describe('count shelf', () => {
     const input = await screen.findByRole('spinbutton', { name: `Counted ${STAG.shortName}` });
     expect(screen.queryByRole('spinbutton', { name: `Counted ${OC.shortName}` })).toBeNull();
     await user.type(input, '100');
-    expect(within(input.closest('li') as HTMLElement).getByText('Matches ✓')).toBeInTheDocument();
+    expect(await within(input.closest('li') as HTMLElement).findByText('Matches ✓')) // waits for the shelf figure.toBeInTheDocument();
   });
 });
 
@@ -278,7 +278,9 @@ describe('close shift', () => {
 
     await user.click(screen.getByRole('button', { name: 'Remove ₹200 note' }));
     await user.click(screen.getByRole('button', { name: 'Close' }));
-    expect(await screen.findByText('₹100 short')).toBeInTheDocument();
+    // Wait for the result view: the live "₹100 short" line above it is replaced by it, so it can't be the thing awaited.
+    expect(await screen.findByText('Shift closed')).toBeInTheDocument();
+    expect(screen.getByText('₹100 short')).toBeInTheDocument();
     expect(screen.queryByText(/Day locked/)).toBeNull();
     expect(await db.shifts.get('SH-U1')).toMatchObject({ expected: 100000, counted: 90000, diff: -10000 });
 
@@ -403,7 +405,7 @@ describe('cashier end shift', () => {
     await user.click(await screen.findByRole('button', { name: 'End shift' }));
 
     const dialog = await screen.findByRole('dialog', { name: 'Close shift' });
-    expect(within(dialog).getByText('Expected cash ₹1,000')).toBeInTheDocument();
+    expect(await within(dialog).findByText('Expected cash ₹1,000')).toBeInTheDocument(); // the figures load after the dialog opens
     for (let i = 0; i < 2; i++) await user.click(within(dialog).getByRole('button', { name: 'Add ₹500 note' }));
     expect(within(dialog).getByText('Matches ✓')).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
