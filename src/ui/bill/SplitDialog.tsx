@@ -3,6 +3,7 @@ import { validateSplit } from '../../domain/cash'
 import { formatINR, rupeesToPaise } from '../../domain/money'
 import type { PayMode, Paise } from '../../domain/types'
 import { t } from '../../i18n'
+import ModeIcon from './ModeIcon'
 
 interface Props {
   total: Paise
@@ -38,7 +39,10 @@ export default function SplitDialog({ total, busy, onPay, onCancel }: Props) {
         {MODES.map((mode) => (
           <div key={mode} className="split-row">
             <label>
-              <span>{t(mode)}</span>
+              <span className="split-mode">
+                <ModeIcon mode={mode} />
+                {t(mode)}
+              </span>
               <input
                 type="text"
                 inputMode="decimal"

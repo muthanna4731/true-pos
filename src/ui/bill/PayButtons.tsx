@@ -10,6 +10,7 @@ import type { Bill, PayMode, Paise } from '../../domain/types'
 import { t } from '../../i18n'
 import { useSession } from '../shell/session'
 import CashDialog from './CashDialog'
+import ModeIcon from './ModeIcon'
 import Receipt, { type ReceiptLine } from './Receipt'
 import SplitDialog from './SplitDialog'
 import UpiDialog from './UpiDialog'
@@ -134,12 +135,15 @@ export default function PayButtons({ priced, cart, onPaid }: Props) {
         <>
           <div className="pay-row">
             <button type="button" className="pay-big" disabled={paying} onClick={() => setDialog('cash')}>
+              <ModeIcon mode="cash" />
               {t('pay.cash', { amount: formatINR(priced.net) })}
             </button>
             <button type="button" className="pay-big" disabled={paying} onClick={() => setDialog('upi')}>
+              <ModeIcon mode="upi" />
               {t('pay.upi', { amount: formatINR(priced.net) })}
             </button>
             <button type="button" className="pay-big" disabled={paying} onClick={payAll('card')}>
+              <ModeIcon mode="card" />
               {t('pay.card', { amount: formatINR(priced.net) })}
             </button>
           </div>

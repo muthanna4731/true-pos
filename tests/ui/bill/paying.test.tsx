@@ -10,6 +10,9 @@ import BillScreen from '../../../src/ui/bill/BillScreen';
 import { RECEIPT_TIMING } from '../../../src/ui/bill/PayButtons';
 import { login, logout } from '../../../src/ui/shell/session';
 
+// The source default, read before any test changes it.
+const DEFAULT_MS = RECEIPT_TIMING.ms;
+
 // Wrap recordSale so a test can make one call fail; by default it runs the real thing.
 vi.mock('../../../src/db/sales', async (original) => {
   const real = await original<typeof import('../../../src/db/sales')>();
@@ -92,7 +95,6 @@ beforeEach(async () => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date(NOON_IST));
   vi.mocked(recordSale).mockClear();
-  RECEIPT_TIMING.ms = 4000;
   user = userEvent.setup();
   taps = 0;
   await seedFixture();
@@ -102,6 +104,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  RECEIPT_TIMING.ms = DEFAULT_MS;
   logout();
   vi.useRealTimers();
 });
@@ -293,7 +296,7 @@ describe('bill screen: paying', () => {
   });
 
   it('keeps the default receipt preview at 4 seconds', () => {
-    expect(RECEIPT_TIMING.ms).toBe(4000);
+    expect(DEFAULT_MS).toBe(4000);
   });
 
   it('gives two sales in a row different bill numbers and client ids', async () => {
