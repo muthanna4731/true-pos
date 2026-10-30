@@ -29,13 +29,14 @@ export function placeIndent(draftId: string, indentNo: string): Promise<void> {
 
 const NEXT: Partial<Record<Indent['status'], Indent['status']>> = { placed: 'paid', paid: 'dispatched' };
 
-/** Move a placed order to Paid, or a paid one to Dispatched. Received is set only when the delivery is booked. */
-export function advanceIndent(id: string): Promise<void> {
+/** Move a placed order to Paid, or a paid one to Dispatched. Received is set only when the delivery is booked.
+ *  `from` is the status the button showed, so a double tap cannot skip a step. */
+export function advanceIndent(id: string, from: 'placed' | 'paid'): Promise<void> {
   return db.transaction('rw', db.indents, async () => {
     const indent = await db.indents.get(id);
     if (!indent) throw new Error('indent_not_found');
     const next = NEXT[indent.status];
-    if (!next) throw new Error('cannot_advance');
+    if (!next || indent.status !== from) throw new Error('cannot_advance');
     await db.indents.update(id, { status: next });
   });
 }

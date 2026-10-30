@@ -188,7 +188,10 @@ export function generateTodos(input: TodoInput): Todo[] {
         kind: 'beer_expiry',
         storeCode: store,
         ref: `${key}|${expiresOn}`,
-        text: days > 0 ? t('todo.beerExpiry', { name: name(productId), shop: shop(store), n: days }) : t('todo.beerExpired', { name: name(productId), shop: shop(store) }),
+        text:
+          days > 0
+            ? t('todo.beerExpiry', { name: name(productId), shop: shop(store), n: days, days: plural(days, 'todo.day', 'todo.days') })
+            : t(days === 0 ? 'todo.beerToday' : 'todo.beerExpired', { name: name(productId), shop: shop(store) }),
         action: { label: t('todo.act.move'), to: '/office/stock' },
       });
     }

@@ -34,13 +34,16 @@ describe('indents', () => {
 
   it('moves placed to paid to dispatched, and no further: Received comes only from the delivery', async () => {
     const id = await saveDraftIndent('TSTS1', [{ productId: 'A', cases: 2 }]);
-    await expect(advanceIndent(id)).rejects.toThrow('cannot_advance'); // a draft is placed first
+    await expect(advanceIndent(id, 'placed')).rejects.toThrow('cannot_advance'); // a draft is placed first
     await placeIndent(id, 'INDMYH26009468');
-    await advanceIndent('INDMYH26009468');
+    await advanceIndent('INDMYH26009468', 'placed');
     expect((await db.indents.get('INDMYH26009468'))?.status).toBe('paid');
-    await advanceIndent('INDMYH26009468');
+    // A double tap on [Mark paid] must not skip to Dispatched.
+    await expect(advanceIndent('INDMYH26009468', 'placed')).rejects.toThrow('cannot_advance');
+    expect((await db.indents.get('INDMYH26009468'))?.status).toBe('paid');
+    await advanceIndent('INDMYH26009468', 'paid');
     expect((await db.indents.get('INDMYH26009468'))?.status).toBe('dispatched');
-    await expect(advanceIndent('INDMYH26009468')).rejects.toThrow('cannot_advance');
+    await expect(advanceIndent('INDMYH26009468', 'paid')).rejects.toThrow('cannot_advance');
   });
 });
 

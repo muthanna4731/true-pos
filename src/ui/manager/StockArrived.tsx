@@ -2,15 +2,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { db } from '../../db/db'
 import { draftGrn } from '../../db/stockOps'
-import { isOnOrder } from '../../domain/orders'
+import { isOnOrder, KSBCL_INV_RE } from '../../domain/orders'
 import { formatDate } from '../../domain/time'
 import { t } from '../../i18n'
 import { useSession } from '../shell/session'
 import PageHeader from './PageHeader'
 import ReceiveGrn from './ReceiveGrn'
-
-/** What a KSBCL invoice number looks like: SMYH26 and six digits. */
-const INVOICE_RE = /^SMYH26\d{6}$/
 
 type View = { kind: 'list' } | { kind: 'invoice'; indentId: string } | { kind: 'receive'; grnId: string }
 
@@ -122,7 +119,7 @@ function InvoiceForm({ indentId, onCreated, onBack }: { indentId: string; onCrea
 
   const next = async (): Promise<void> => {
     const no = text.trim().toUpperCase()
-    if (!INVOICE_RE.test(no)) {
+    if (!KSBCL_INV_RE.test(no)) {
       setError(t('stock.invoiceBad'))
       return
     }

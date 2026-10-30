@@ -215,6 +215,7 @@
   "todo.more": "+{n} ಇನ್ನಷ್ಟು",
   "todo.beerExpiry": "{shop}: {name} {n} ದಿನಗಳಲ್ಲಿ ಅವಧಿ ಮುಗಿಯುತ್ತದೆ",
   "todo.beerExpired": "{shop}: {name} ಅವಧಿ ಮುಗಿದಿದೆ",
+  "todo.beerToday": "{shop}: {name} ಇಂದು ಅವಧಿ ಮುಗಿಯುತ್ತದೆ",
   "todo.dayNotClosed": "{shop} ನಿನ್ನೆ ದಿನ ಮುಚ್ಚಿಲ್ಲ",
   "todo.act.order": "ಆರ್ಡರ್ ಮಾಡಿ",
   "todo.act.claim": "ಕ್ಲೈಮ್ ಮಾಡಿ",

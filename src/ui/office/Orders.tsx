@@ -45,12 +45,12 @@ function IndentRow({ indent }: { indent: Indent }) {
         </>
       )}
       {indent.status === 'placed' && (
-        <button type="button" onClick={() => void run(() => advanceIndent(indent.id))}>
+        <button type="button" onClick={() => void run(() => advanceIndent(indent.id, 'placed'))}>
           {t('orders.markPaid')}
         </button>
       )}
       {indent.status === 'paid' && (
-        <button type="button" onClick={() => void run(() => advanceIndent(indent.id))}>
+        <button type="button" onClick={() => void run(() => advanceIndent(indent.id, 'paid'))}>
           {t('orders.markDispatched')}
         </button>
       )}
@@ -67,6 +67,7 @@ export default function Orders() {
   const [picked, setPicked] = useState<string | null>(null)
   const [edits, setEdits] = useState<Record<string, string>>({})
   const [notice, setNotice] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const now = `${clock.now().slice(0, 16)}:00.000Z`
 
   const data = useLiveQuery(async () => {
@@ -104,12 +105,16 @@ export default function Orders() {
   }
 
   const saveDraft = async (): Promise<void> => {
+    if (saving) return
+    setSaving(true)
     try {
       await saveDraftIndent(shop.code, order)
       setEdits({})
       setNotice(t('orders.saved'))
     } catch (e) {
       setNotice(e instanceof Error && e.message === 'empty_order' ? t('orders.emptyOrder') : t('orders.failed'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -178,7 +183,7 @@ export default function Orders() {
         <button type="button" disabled={portalText === ''} onClick={() => void copy()}>
           {t('orders.copy')}
         </button>
-        <button type="button" disabled={suggested.length === 0} onClick={() => void saveDraft()}>
+        <button type="button" disabled={saving || suggested.length === 0} onClick={() => void saveDraft()}>
           {t('orders.saveDraft')}
         </button>
       </div>
