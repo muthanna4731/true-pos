@@ -33,13 +33,9 @@ export default function Login() {
 
   const submit = async (pin: string): Promise<boolean> => {
     if (!picked) return false
-    try {
-      const ok = await login(picked.id, pin)
-      if (ok) navigate(homeFor(picked.role), { replace: true })
-      return ok
-    } catch {
-      return false
-    }
+    const ok = await login(picked.id, pin) // a thrown error is shown by the PIN pad as a failure, not as a wrong PIN
+    if (ok) navigate(homeFor(picked.role), { replace: true })
+    return ok
   }
 
   return (

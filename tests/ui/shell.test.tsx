@@ -70,6 +70,16 @@ describe('loading', () => {
   });
 });
 
+describe('product name', () => {
+  it('stays "True POS" in Kannada', async () => {
+    const user = userEvent.setup();
+    renderAt('/login');
+    await screen.findByText('Who is working?');
+    await user.click(screen.getByRole('button', { name: 'ಕನ್ನಡ / EN' }));
+    expect(screen.getAllByText('True POS').length).toBeGreaterThan(0);
+  });
+});
+
 describe('login', () => {
   it('lands the cashier on /bill after PIN 1111', async () => {
     const user = userEvent.setup();
@@ -85,6 +95,18 @@ describe('login', () => {
     await loginAs(user, /^Cashier 1 /, '9999');
     expect(await screen.findByText('Wrong PIN')).toBeInTheDocument();
     expect(where()).toBe('/login');
+  });
+
+  it('shows a plain error, not "Wrong PIN", when login fails for another reason', async () => {
+    const user = userEvent.setup();
+    renderAt('/login');
+    await user.click(await screen.findByRole('button', { name: /^Cashier 1 / }));
+    vi.spyOn(db.users, 'get').mockRejectedValueOnce(new Error('disk full'));
+    for (const digit of '1111') await user.click(screen.getByRole('button', { name: digit }));
+    expect(await screen.findByText('Something went wrong, try again')).toBeInTheDocument();
+    expect(screen.queryByText('Wrong PIN')).not.toBeInTheDocument();
+    expect(where()).toBe('/login');
+    vi.restoreAllMocks();
   });
 
   it('shows only one shop\'s people when a store is preselected', async () => {

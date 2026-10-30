@@ -10,7 +10,7 @@
   "online": "ಆನ್‌ಲೈನ್",
   "offline": "ಆಫ್‌ಲೈನ್",
   "syncProblem": "ಸಿಂಕ್ ಸಮಸ್ಯೆ",
-  "appName": "ಟ್ರೂ ಪಿಒಎಸ್",
+  "appName": "True POS",
   "loading": "ಅಂಗಡಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
   "loadFailed": "ಅಂಗಡಿಯ ಡೇಟಾ ತೆರೆಯಲಾಗಲಿಲ್ಲ",
   "login.pickUser": "ಯಾರು ಕೆಲಸ ಮಾಡುತ್ತಿದ್ದಾರೆ?",
@@ -55,5 +55,7 @@
   "demo.advance": "ಮರುದಿನ",
   "demo.today": "ಇಂದು {date}",
   "demo.reset": "ಡೆಮೊ ಡೇಟಾ ಮರುಹೊಂದಿಸಿ",
-  "demo.resetting": "ಮರುಹೊಂದಿಸಲಾಗುತ್ತಿದೆ…"
+  "demo.resetting": "ಮರುಹೊಂದಿಸಲಾಗುತ್ತಿದೆ…",
+  "login.error": "ಏನೋ ತಪ್ಪಾಯಿತು, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+  "retry": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ"
 }

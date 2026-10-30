@@ -11,7 +11,7 @@ button,
   padding: 0 20px;
   border: 2px solid var(--ink);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   font-weight: 600;
   cursor: pointer;
@@ -19,7 +19,7 @@ button,
 
 button[aria-pressed='true'] {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-dark);
 }
 
 button:disabled {
@@ -31,7 +31,7 @@ button:disabled {
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
-  background: #fff;
+  background: var(--surface);
   border-bottom: 2px solid var(--ink);
 }
 
@@ -73,7 +73,7 @@ button:disabled {
 
 .sync-ok {
   background: var(--ok);
-  color: #fff;
+  color: var(--on-dark);
 }
 
 .sync-offline {
@@ -83,7 +83,7 @@ button:disabled {
 
 .sync-problem {
   background: var(--bad);
-  color: #fff;
+  color: var(--on-dark);
 }
 
 .login,
@@ -201,7 +201,7 @@ button:disabled {
   align-items: flex-start;
   padding: 16px;
   overflow-y: auto;
-  background: rgba(17, 17, 17, 0.6);
+  background: var(--scrim);
 }
 
 .demo-panel {

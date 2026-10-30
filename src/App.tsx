@@ -23,9 +23,11 @@ function loadOnce(opts: SeedOptions): Promise<void> {
 export function SeedGate({ seed = {}, children }: { seed?: SeedOptions; children: ReactNode }) {
   useLang()
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let alive = true
+    setState('loading')
     loadOnce(seed).then(
       () => alive && setState('ready'),
       () => alive && setState('failed'),
@@ -34,10 +36,19 @@ export function SeedGate({ seed = {}, children }: { seed?: SeedOptions; children
       alive = false
     }
     // The seed options are fixed for the life of the app.
-  }, [])
+  }, [attempt])
 
   if (state === 'loading') return <p className="loading">{t('loading')}</p>
-  if (state === 'failed') return <p className="loading">{t('loadFailed')}</p>
+  if (state === 'failed') {
+    return (
+      <p className="loading">
+        {t('loadFailed')}{' '}
+        <button type="button" onClick={() => setAttempt((n) => n + 1)}>
+          {t('retry')}
+        </button>
+      </p>
+    )
+  }
   return <SeedOptionsContext.Provider value={seed}>{children}</SeedOptionsContext.Provider>
 }
 

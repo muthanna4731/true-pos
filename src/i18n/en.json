@@ -54,5 +54,7 @@
   "demo.advance": "Next day",
   "demo.today": "Today is {date}",
   "demo.reset": "Reset demo data",
-  "demo.resetting": "Resetting…"
+  "demo.resetting": "Resetting…",
+  "login.error": "Something went wrong, try again",
+  "retry": "Retry"
 }

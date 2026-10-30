@@ -7,6 +7,7 @@ const PIN_LENGTH = 4
 export default function PinPad({ onSubmit }: { onSubmit: (pin: string) => Promise<boolean> }) {
   const [pin, setPin] = useState('')
   const [wrong, setWrong] = useState(false)
+  const [failed, setFailed] = useState(false)
   const busy = useRef(false)
   const alive = useRef(true)
 
@@ -20,6 +21,7 @@ export default function PinPad({ onSubmit }: { onSubmit: (pin: string) => Promis
   const press = (digit: string): void => {
     if (busy.current) return
     setWrong(false)
+    setFailed(false)
     const next = pin + digit
     if (next.length < PIN_LENGTH) {
       setPin(next)
@@ -28,11 +30,18 @@ export default function PinPad({ onSubmit }: { onSubmit: (pin: string) => Promis
     setPin(next)
     busy.current = true
     onSubmit(next)
-      .then((ok) => {
-        if (ok || !alive.current) return
-        setWrong(true)
-        setPin('')
-      })
+      .then(
+        (ok) => {
+          if (ok || !alive.current) return
+          setWrong(true)
+          setPin('')
+        },
+        () => {
+          if (!alive.current) return
+          setFailed(true)
+          setPin('')
+        },
+      )
       .finally(() => {
         busy.current = false
       })
@@ -71,7 +80,7 @@ export default function PinPad({ onSubmit }: { onSubmit: (pin: string) => Promis
         ))}
       </div>
       <p className="pin-wrong" role="alert">
-        {wrong ? t('login.wrongPin') : ''}
+        {wrong ? t('login.wrongPin') : failed ? t('login.error') : ''}
       </p>
       <div className="pin-keys">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (

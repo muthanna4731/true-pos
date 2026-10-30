@@ -3,6 +3,9 @@
   --bg: #f4f0e6;
   --ink: #111111;
   --accent: #4da2ff;
+  --surface: #ffffff;
+  --on-dark: #ffffff;
+  --scrim: rgba(17, 17, 17, 0.6);
 
   /* Status */
   --ok: #2e7d32;
