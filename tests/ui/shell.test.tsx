@@ -86,7 +86,7 @@ describe('login', () => {
     renderAt('/login');
     await loginAs(user, /^Cashier 1 /, '1111');
     await waitFor(() => expect(where()).toBe('/bill'));
-    expect(screen.getByRole('heading', { name: 'Bill' })).toBeInTheDocument();
+    expect(await screen.findByRole('textbox', { name: /scan or type/i })).toBeInTheDocument();
   });
 
   it('shows "Wrong PIN" and stays on /login for a wrong PIN', async () => {

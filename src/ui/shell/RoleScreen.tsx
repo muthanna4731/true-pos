@@ -37,8 +37,8 @@ function navFor(role: Role): NavItem[] {
   }
 }
 
-/** The frame every role screen sits in: logo, who and where, links for this role, language toggle, log out, sync badge. */
-export default function RoleScreen({ children }: { children: ReactNode }) {
+/** The frame every role screen sits in: logo, who and where, links for this role, language toggle, log out, sync badge. `wide` lets a working screen (the bill) use the full width. */
+export default function RoleScreen({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const { user, store, counter, logout } = useSession()
   const nav = user ? navFor(user.role) : []
   return (
@@ -65,7 +65,7 @@ export default function RoleScreen({ children }: { children: ReactNode }) {
         </button>
         <SyncBadge />
       </header>
-      <main className="role-main">{children}</main>
+      <main className={wide ? 'role-main wide' : 'role-main'}>{children}</main>
     </div>
   )
 }

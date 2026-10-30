@@ -1,0 +1,337 @@
+/* Bill screen: search, Top 12, type tabs, brand tiles, cart. Flat colours from tokens.css, 56 px minimum targets. */
+
+.bill-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  align-items: start;
+}
+
+.bill-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.bill-left h2 {
+  margin: 4px 0 8px;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.search-box {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 20px;
+}
+
+.bill-notice {
+  margin: 0;
+  padding: 12px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--warn);
+  font-weight: 600;
+}
+
+/* Tiles */
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+  min-height: var(--touch);
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  color: var(--ink);
+  text-align: left;
+  overflow: hidden;
+}
+
+.type-beer {
+  background: var(--beer);
+}
+.type-whisky {
+  background: var(--whisky);
+  color: var(--on-dark);
+}
+.type-rum {
+  background: var(--rum);
+  color: var(--on-dark);
+}
+.type-brandy {
+  background: var(--brandy);
+  color: var(--on-dark);
+}
+.type-vodka {
+  background: var(--vodka);
+}
+.type-gin {
+  background: var(--gin);
+}
+.type-wine {
+  background: var(--wine);
+  color: var(--on-dark);
+}
+.type-other {
+  background: var(--other);
+}
+
+.tile-image {
+  width: 100%;
+  height: 72px;
+  object-fit: contain;
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+.tile-name {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.tile-price {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tile-brand {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+button.tile {
+  min-height: 80px;
+  padding: 10px 12px;
+}
+
+.top-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.type-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.brand-grid .tile {
+  min-height: 140px;
+}
+
+.size-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.size-buttons button {
+  min-width: var(--touch);
+  padding: 0 12px;
+  font-size: 18px;
+}
+
+.no-match {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.no-match p {
+  margin: 0;
+}
+
+/* Cart */
+
+.bill-right {
+  position: sticky;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.cart-empty {
+  margin: 24px 0;
+  text-align: center;
+  font-size: 18px;
+}
+
+.cart-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.cart-line {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ink);
+}
+
+.line-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.line-name {
+  flex: 1;
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+  text-align: left;
+  font-size: 20px;
+}
+
+.line-amount {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.line-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.line-controls button {
+  min-width: var(--touch);
+  padding: 0 12px;
+  font-size: 20px;
+}
+
+.line-each {
+  flex: 1;
+  font-size: 14px;
+  text-align: right;
+}
+
+.line-remove {
+  font-size: 24px;
+}
+
+.line-offer {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stock-note {
+  margin: 6px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--warn);
+  font-weight: 600;
+}
+
+.bill-total {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.pay-slot:empty {
+  display: none;
+}
+
+/* Keypad */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background: var(--scrim);
+}
+
+.keypad {
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.keypad-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.keypad-display {
+  display: block;
+  margin: 8px 0 16px;
+  padding: 8px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 48px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.keypad-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 80px);
+  gap: 12px;
+}
+
+.keypad-keys button {
+  width: 80px;
+  height: 72px;
+  padding: 0;
+  font-size: 28px;
+}
+
+.keypad-done {
+  background: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .bill-screen {
+    grid-template-columns: 1fr;
+  }
+  .bill-right {
+    position: static;
+  }
+  .top-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

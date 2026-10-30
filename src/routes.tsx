@@ -4,6 +4,7 @@ import type { Role } from './domain/types'
 import { t } from './i18n'
 import { useLang } from './i18n/useLang'
 import { useLoyaltyFlag } from './loyalty/flags'
+import BillScreen from './ui/bill/BillScreen'
 import DemoPanel from './ui/shell/DemoPanel'
 import Login from './ui/shell/Login'
 import RoleGate from './ui/shell/RoleGate'
@@ -30,7 +31,16 @@ export function AppRoutes() {
     <>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/bill" element={<Screen allow={['cashier', 'manager']} title={t('nav.bill')} />} />
+        <Route
+          path="/bill"
+          element={
+            <RoleGate allow={['cashier', 'manager']}>
+              <RoleScreen wide>
+                <BillScreen />
+              </RoleScreen>
+            </RoleGate>
+          }
+        />
         <Route path="/manager/*" element={<Screen allow={['manager']} title={t('home.manager')} />} />
         <Route path="/office/*" element={<Screen allow={['office']} title={t('home.office')} />} />
         <Route path="/owner" element={<Screen allow={['owner']} title={t('home.owner')} />} />

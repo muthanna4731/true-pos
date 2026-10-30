@@ -248,3 +248,8 @@ button.danger {
   border-color: var(--bad);
   color: var(--bad);
 }
+
+.role-main.wide {
+  max-width: none;
+  padding-top: 12px;
+}
