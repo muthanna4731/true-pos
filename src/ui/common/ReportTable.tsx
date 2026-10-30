@@ -9,6 +9,10 @@ import { printAs } from './print'
 export type ColumnKind = 'text' | 'date' | 'number' | 'money' | 'litres'
 export type Column = { key: string; label: string; kind?: ColumnKind }
 type Row = Record<string, unknown>
+/** Any row object; interfaces such as LitreRow have no index signature, so cells are read through `cellOf`. */
+type RowLike = object
+
+const cellOf = (r: RowLike, key: string): unknown => (r as Row)[key]
 
 const count = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 })
 
@@ -29,8 +33,8 @@ function plain(v: unknown, kind: ColumnKind = 'text'): unknown {
   return v
 }
 
-function downloadCsv(title: string, columns: Column[], rows: Row[]): void {
-  const data = rows.map((r) => Object.fromEntries(columns.map((c) => [c.key, plain(r[c.key], c.kind)])))
+function downloadCsv(title: string, columns: Column[], rows: RowLike[]): void {
+  const data = rows.map((r) => Object.fromEntries(columns.map((c) => [c.key, plain(cellOf(r, c.key), c.kind)])))
   // The BOM makes Excel read the file as UTF-8, so ₹ and Kannada survive.
   const blob = new Blob(['\uFEFF', toCsv(data, columns)], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -55,9 +59,9 @@ export default function ReportTable({
 }: {
   title: string
   columns: Column[]
-  rows: Row[]
+  rows: RowLike[]
   asOf: { now: string; dayClose?: { lockedAt: string } }
-  totals?: Row
+  totals?: RowLike
   /** Makes each body row tappable (and reachable by keyboard). */
   onRowClick?: (row: Row) => void
 }) {
@@ -93,15 +97,15 @@ export default function ReportTable({
               {...(onRowClick && {
                 className: 'row-tap',
                 tabIndex: 0,
-                onClick: () => onRowClick(r),
+                onClick: () => onRowClick(r as Row),
                 onKeyDown: (e: KeyboardEvent<HTMLTableRowElement>) => {
-                  if (e.key === 'Enter') onRowClick(r)
+                  if (e.key === 'Enter') onRowClick(r as Row)
                 },
               })}
             >
               {columns.map((c) => (
                 <td key={c.key} className={numeric(c) ? 'num' : undefined}>
-                  {display(r[c.key], c.kind)}
+                  {display(cellOf(r, c.key), c.kind)}
                 </td>
               ))}
             </tr>
@@ -112,7 +116,7 @@ export default function ReportTable({
             <tr>
               {columns.map((c) => (
                 <td key={c.key} className={numeric(c) ? 'num' : undefined}>
-                  {display(totals[c.key], c.kind)}
+                  {display(cellOf(totals, c.key), c.kind)}
                 </td>
               ))}
             </tr>

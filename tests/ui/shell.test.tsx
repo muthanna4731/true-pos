@@ -325,7 +325,7 @@ describe('demo panel', () => {
     const user = userEvent.setup();
     const panel = await openWithKeys();
     const group = within(panel).getByRole('group', { name: 'Simulate a scan' });
-    await waitFor(() => expect(within(group).getAllByRole('button')).toHaveLength(15), { timeout: 5000 });
+    await waitFor(() => expect(within(group).getAllByRole('button')).toHaveLength(15), { timeout: 10_000 });
 
     await user.click(within(group).getByRole('button', { name: /Ravi/ }));
     expect(scans).toEqual(['TS1:7K3M9QX2RA']);
@@ -333,13 +333,13 @@ describe('demo panel', () => {
 
     fireEvent.keyDown(window, { key: 'D', ctrlKey: true, shiftKey: true });
     const again = within(await screen.findByRole('dialog')).getByRole('group', { name: 'Simulate a scan' });
-    await waitFor(() => expect(within(again).getAllByRole('button')).toHaveLength(15), { timeout: 5000 });
+    await waitFor(() => expect(within(again).getAllByRole('button')).toHaveLength(15), { timeout: 10_000 });
     const bottle = within(again).getAllByRole('button')[3];
     const barcode = bottle.textContent!.split(' ').at(-1)!;
     await user.click(bottle);
     expect(scans.at(-1)).toBe(barcode);
     expect(barcode).toMatch(/^\d{8,}$/);
-  });
+  }, 25_000); // the top-sellers load takes ~3.8 s alone and longer under the full parallel suite
 
   it('moves the demo clock forward a day and remembers it', async () => {
     const user = userEvent.setup();
