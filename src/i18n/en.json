@@ -124,6 +124,8 @@
   "loyalty.redeemFailed": "Could not use points, try again",
   "report.asOf": "as of {time}",
   "report.locked": "Closed day: locked figures",
+  "report.print": "Print",
+  "report.csv": "Download CSV",
   "back": "Back",
   "mgr.stockArrived": "Stock arrived",
   "mgr.countShelf": "Count shelf",

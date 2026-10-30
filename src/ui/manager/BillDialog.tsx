@@ -5,6 +5,7 @@ import { voidBill } from '../../db/sales'
 import { sha256Hex } from '../../domain/hash'
 import type { Store } from '../../domain/types'
 import { t } from '../../i18n'
+import { printAs } from '../common/print'
 import { loadReceipt } from '../bill/loadReceipt'
 import Receipt from '../bill/Receipt'
 import PinPad from '../shell/PinPad'
@@ -52,7 +53,7 @@ export default function BillDialog({ number, store, canVoid, onClose }: Props) {
           </div>
         ) : (
           <div className="bill-actions">
-            <button type="button" onClick={() => window.print()}>
+            <button type="button" onClick={() => printAs('receipt')}>
               {t('pay.reprint')}
             </button>
             {canVoid && receipt?.bill.status === 'paid' && (

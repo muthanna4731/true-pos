@@ -1,30 +1,57 @@
-/* Printing: only the 80 mm receipt comes out of the printer. */
-
-@page {
-  size: 80mm auto;
-  margin: 0;
-}
+/* Printing has two modes, set by printAs() in src/ui/common/print.ts:
+   html.print-receipt prints only the 80 mm till slip, html.print-report only the A4 report.
+   printAs also adds the matching @page size, so each mode gets its own paper. */
 
 @media print {
-  body * {
+  html.print-receipt body *,
+  html.print-report body * {
     visibility: hidden;
   }
 
-  .receipt-print,
-  .receipt-print * {
+  html.print-receipt .receipt-print,
+  html.print-receipt .receipt-print *,
+  html.print-report .report-print,
+  html.print-report .report-print * {
     visibility: visible;
   }
 
-  .receipt-print {
+  html.print-receipt .receipt-print {
     position: absolute;
     top: 0;
     left: 0;
     width: 80mm;
   }
 
-  .receipt {
+  html.print-receipt .receipt {
     width: 80mm;
     padding: 4mm;
     font-size: 12px;
+  }
+
+  html.print-report .report-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-size: 10pt;
+  }
+
+  html.print-report .report-actions {
+    display: none;
+  }
+
+  html.print-report .report-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  html.print-report .report-table th,
+  html.print-report .report-table td {
+    border-bottom: 0.5pt solid #000;
+    padding: 1mm 2mm;
+  }
+
+  html.print-report .report-table thead {
+    display: table-header-group;
   }
 }

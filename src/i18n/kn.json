@@ -125,6 +125,8 @@
   "loyalty.redeemFailed": "ಪಾಯಿಂಟ್ ಬಳಸಲಾಗಲಿಲ್ಲ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
   "report.asOf": "{time} ವರೆಗೆ",
   "report.locked": "ಮುಚ್ಚಿದ ದಿನ: ಲಾಕ್ ಮಾಡಿದ ಅಂಕಿಅಂಶ",
+  "report.print": "ಮುದ್ರಿಸಿ",
+  "report.csv": "CSV ಡೌನ್‌ಲೋಡ್",
   "back": "ಹಿಂದೆ",
   "mgr.stockArrived": "ಸ್ಟಾಕ್ ಬಂತು",
   "mgr.countShelf": "ಶೆಲ್ಫ್ ಎಣಿಕೆ",

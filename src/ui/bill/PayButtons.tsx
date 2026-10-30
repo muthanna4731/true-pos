@@ -8,6 +8,7 @@ import { formatINR } from '../../domain/money'
 import { clock, istDate } from '../../domain/time'
 import type { Bill, PayMode, Paise } from '../../domain/types'
 import { t } from '../../i18n'
+import { printAs } from '../common/print'
 import { flushLoyaltyNow } from '../../loyalty/queue'
 import { useSession } from '../shell/session'
 import CashDialog from './CashDialog'
@@ -166,7 +167,7 @@ export default function PayButtons({ priced, cart, onPaid }: Props) {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    window.print()
+                    printAs('receipt')
                   }}
                 >
                   {t('pay.print')}
