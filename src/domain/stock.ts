@@ -96,6 +96,11 @@ export function stockFlows(movements: StockMovement[], storeCode: string, fromDa
       case 'loss':
         f.adjust += m.qty;
         break;
+      default: {
+        // A new movement kind must get a column, or closing stops equalling total - sales + adjust.
+        const unhandled: never = m.kind;
+        throw new Error(`unhandled_movement_kind:${String(unhandled)}`);
+      }
     }
   }
   return new Map([...flows].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));

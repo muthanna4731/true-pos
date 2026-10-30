@@ -88,9 +88,10 @@ export function isDayTotals(x: unknown): x is DayTotals {
 
 // ---- stock reports, all read from the movement ledger -------------------------------------------
 
-/** Litres rounded to 2 decimals: bottles x size in ml. */
-function litresOf(ml: number): number {
-  return Math.round(ml / 10) / 100;
+/** Litres rounded to 2 decimals, half away from zero so negative stock mirrors positive: bottles x size in ml. */
+export function litresOf(ml: number): number {
+  const r = Math.round(Math.abs(ml) / 10) / 100;
+  return ml < 0 ? -r : r;
 }
 
 const mlOf = (qty: number, p: Product): number => qty * (p.sizeMl ?? 0);
@@ -141,7 +142,7 @@ export function exciseLitreStatement(
 export interface LitreRow {
   group: ExciseGroup | 'Grand Total';
   opening: number;
-  /** Purchases less returns. Transfers and count corrections are in `total` and `closing` only. */
+  /** Purchases less returns. Transfers are in `total`; count corrections and losses only in `closing`. */
   purchase: number;
   /** Opening + purchases + transfers in - transfers out. */
   total: number;

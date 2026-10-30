@@ -3,6 +3,7 @@ import {
   dailyLitreStatement,
   discountsReport,
   exciseLitreStatement,
+  litresOf,
   lossesReport,
   remittance,
   valuation,
@@ -73,6 +74,12 @@ describe('exciseLitreStatement', () => {
     const rows = exciseLitreStatement([mv('W90', 179, 'purchase', D1)], products, costOf, 'TSTS1', '2026-08-10', '2026-08-10');
     expect(rows[0]!.received.litres).toBe(16.11);
     expect(rows[0]!.closing.litres).toBe(16.11);
+  });
+
+  it('rounds negative litres away from zero, mirroring positive stock', () => {
+    expect(litresOf(375)).toBe(0.38);
+    expect(litresOf(-375)).toBe(-0.38);
+    expect(litresOf(-5)).toBe(-0.01);
   });
 
   it('splits opening, received, issued and closing over a range', () => {

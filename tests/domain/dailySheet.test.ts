@@ -94,7 +94,10 @@ describe('dailySheet', () => {
       const upTo = ts1.filter((m) => istDate(m.at) <= day);
       const rows = dailySheet(ts1, seed.products, () => 0, 'TSTS1', day);
       expect(rows.length).toBeGreaterThan(0);
-      for (const r of rows) expect(r.closing).toBe(onHand(upTo, 'TSTS1', r.productId));
+      for (const r of rows) {
+        expect(r.closing).toBe(onHand(upTo, 'TSTS1', r.productId));
+        expect(r.total - r.sales + r.adjust).toBe(r.closing);
+      }
       // A product left out has no movements yet, so nothing on hand.
       const listed = new Set(rows.map((r) => r.productId));
       for (const p of seed.products) if (!listed.has(p.id)) expect(onHand(upTo, 'TSTS1', p.id)).toBe(0);

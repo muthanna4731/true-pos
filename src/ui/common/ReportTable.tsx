@@ -31,13 +31,16 @@ function plain(v: unknown, kind: ColumnKind = 'text'): unknown {
 function downloadCsv(title: string, columns: Column[], rows: Row[]): void {
   const data = rows.map((r) => Object.fromEntries(columns.map((c) => [c.key, plain(r[c.key], c.kind)])))
   // The BOM makes Excel read the file as UTF-8, so ₹ and Kannada survive.
-  const blob = new Blob(['﻿', toCsv(data, columns)], { type: 'text/csv;charset=utf-8' })
+  const blob = new Blob(['\uFEFF', toCsv(data, columns)], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${title.replace(/[^\w-]+/g, '-').toLowerCase()}.csv`
+  // A Kannada title has no ASCII letters, so fall back to a plain name.
+  const name = title.replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'report'
+  a.download = `${name}.csv`
   a.click()
-  URL.revokeObjectURL(url)
+  // Safari cancels the download if the URL is revoked in the same tick.
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 /** A report: title, as-of stamp, the table with an optional totals row, and [Print] / [Download CSV]. */
