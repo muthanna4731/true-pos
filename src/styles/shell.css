@@ -1,0 +1,250 @@
+/* App shell: login, role header, sync badge, demo panel. Flat colours, 56 px minimum targets. */
+
+h1 {
+  font-size: 28px;
+  margin: 16px 0;
+}
+
+button,
+.nav-link {
+  min-height: var(--touch);
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button[aria-pressed='true'] {
+  background: var(--ink);
+  color: #fff;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+.shell-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #fff;
+  border-bottom: 2px solid var(--ink);
+}
+
+.shell-header .spacer {
+  flex: 1;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.who {
+  font-weight: 600;
+}
+
+.shell-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sync-ok {
+  background: var(--ok);
+  color: #fff;
+}
+
+.sync-offline {
+  background: var(--warn);
+  color: var(--ink);
+}
+
+.sync-problem {
+  background: var(--bad);
+  color: #fff;
+}
+
+.login,
+.role-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+.login > .shell-header {
+  margin: 0 -16px;
+}
+
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.user-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 88px;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.user-name {
+  font-size: 20px;
+}
+
+.user-role,
+.user-store {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.role-cashier {
+  background: var(--accent);
+}
+
+.demo-pins {
+  margin-top: 24px;
+}
+
+.login-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pinpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pin-dots {
+  display: flex;
+  gap: 16px;
+  margin: 8px 0;
+}
+
+.pin-dot {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+
+.pin-dot.filled {
+  background: var(--ink);
+}
+
+.pin-wrong {
+  min-height: 1.4em;
+  margin: 4px 0 12px;
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.pin-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  gap: 12px;
+}
+
+.pin-key {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  font-size: 28px;
+}
+
+.link-button {
+  margin-top: 16px;
+  border-color: transparent;
+  background: transparent;
+  text-decoration: underline;
+}
+
+.loading {
+  padding: 32px 16px;
+  font-size: 20px;
+}
+
+.demo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(17, 17, 17, 0.6);
+}
+
+.demo-panel {
+  width: min(640px, 100%);
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.demo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.demo-head h2,
+.demo-row h3 {
+  margin: 0;
+}
+
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.demo-row > h3,
+.demo-row > p,
+.demo-buttons {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.demo-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button.danger {
+  border-color: var(--bad);
+  color: var(--bad);
+}
