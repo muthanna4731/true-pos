@@ -15,3 +15,8 @@ export function productHistory(movements: StockMovement[], storeCode: string, pr
     a.at === b.at ? (b.id ?? 0) - (a.id ?? 0) : a.at < b.at ? 1 : -1,
   );
 }
+
+/** How a counted quantity compares with what was expected: all there, fewer, or more. */
+export function lineStatus(expected: number, counted: number): 'match' | 'short' | 'extra' {
+  return counted === expected ? 'match' : counted < expected ? 'short' : 'extra';
+}

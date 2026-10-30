@@ -12,7 +12,8 @@ import { flushLoyaltyNow } from '../../loyalty/queue'
 import { useSession } from '../shell/session'
 import CashDialog from './CashDialog'
 import ModeIcon from './ModeIcon'
-import Receipt, { type ReceiptLine } from './Receipt'
+import { loadReceipt } from './loadReceipt'
+import Receipt from './Receipt'
 import SplitDialog from './SplitDialog'
 import UpiDialog from './UpiDialog'
 import { usePractice } from './usePractice'
@@ -28,19 +29,6 @@ interface Props {
 
 type Dialog = 'cash' | 'upi' | 'split'
 type Payments = { mode: PayMode; amount: Paise }[]
-
-/** A bill with its lines and payments, as the receipt needs them. */
-async function loadReceipt(number: string) {
-  const [bill, lines, payments] = await Promise.all([
-    db.bills.get(number),
-    db.billLines.where('billNumber').equals(number).toArray(),
-    db.payments.where('billNumber').equals(number).toArray(),
-  ])
-  if (!bill) return undefined
-  const products = await db.products.bulkGet(lines.map((l) => l.productId))
-  const named: ReceiptLine[] = lines.map((l, i) => ({ ...l, name: products[i]?.shortName ?? l.productId }))
-  return { bill, lines: named, payments }
-}
 
 /**
  * [Cash], [UPI] and [Card] for the cart, a small [Split payment] link, [Reprint], and the receipt preview.

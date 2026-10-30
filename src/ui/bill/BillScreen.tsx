@@ -15,6 +15,7 @@ import { useLoyaltyFlag } from '../../loyalty/flags'
 import { flushLoyaltyNow } from '../../loyalty/queue'
 import { useSession } from '../shell/session'
 import { useScanner } from '../shell/useScanner'
+import CloseShift from '../manager/CloseShift'
 import Cart from './Cart'
 import CatalogueGrid from './CatalogueGrid'
 import CustomerLine from './CustomerLine'
@@ -31,7 +32,7 @@ const newCart = (): CartState => ({ clientId: newId(), lines: [] })
 
 /** The cashier's bill screen: find a bottle, tap it, see the cart. Search and catalogue on the left, the bill on the right. */
 export default function BillScreen() {
-  const { store } = useSession()
+  const { store, user, shiftId, logout } = useSession()
   const storeCode = store?.code
   const data = useBillData(storeCode)
   const practice = usePractice()
@@ -39,6 +40,7 @@ export default function BillScreen() {
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<Tab>('all')
   const [notice, setNotice] = useState<string | null>(null)
+  const [ending, setEnding] = useState(false)
 
   const add = useCallback((productId: string) => dispatch({ type: 'add', productId }), [])
   // After a payment the next customer gets an empty cart and a fresh clientId.
@@ -169,7 +171,19 @@ export default function BillScreen() {
         )}
         <p className="bill-total">{t('total', { amount: formatINR(priced.net) })}</p>
         <PayButtons priced={priced} cart={billable} onPaid={onPaid} />
+        {user?.role === 'cashier' && shiftId && (
+          <button type="button" className="link-button end-shift" onClick={() => setEnding(true)}>
+            {t('endShift')}
+          </button>
+        )}
       </aside>
+      {ending && shiftId && (
+        <div className="modal-overlay">
+          <div className="close-dialog" role="dialog" aria-label={t('close.title')}>
+            <CloseShift shiftId={shiftId} onDone={() => logout()} onCancel={() => setEnding(false)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
