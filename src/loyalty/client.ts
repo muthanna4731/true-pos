@@ -15,6 +15,7 @@ export type LoyaltyErrorCode =
   | 'unknown_reward'
   | 'reward_inactive'
   | 'cost_changed'
+  | 'bad_request'
   | 'network';
 
 export class LoyaltyError extends Error {

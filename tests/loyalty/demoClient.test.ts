@@ -177,6 +177,27 @@ describe('DemoLoyaltyClient: redeem', () => {
     expect((await db.loyaltyLedger.toArray()).filter((r) => r.kind === 'redeem')).toHaveLength(1);
   });
 
+  it('answers a retry of the same request after loyalty was switched off, the price changed or the balance dropped', async () => {
+    await client.redeem(RAVI, 'R-50', 'req-1', 100);
+    await setLoyaltyEnabled(false);
+    await db.rewards.update('R-50', { cost: 120, active: false });
+    expect(await client.redeem(RAVI, 'R-50', 'req-1', 100)).toEqual({ balance: 140 });
+    expect((await db.loyaltyLedger.toArray()).filter((r) => r.kind === 'redeem')).toEqual([expect.objectContaining({ requestId: 'req-1', rewardId: 'R-50', points: -100 })]);
+  });
+
+  it('refuses a replayed requestId used for another reward, cost or member with bad_request', async () => {
+    await client.redeem(RAVI, 'R-50', 'req-1', 100);
+    expect(await code(client.redeem(RAVI, 'R-150', 'req-1', 250))).toBe('bad_request');
+    expect(await code(client.redeem(RAVI, 'R-50', 'req-1', 90))).toBe('bad_request');
+    expect(await code(client.redeem('B4N8TC5WZ6', 'R-50', 'req-1', 100))).toBe('bad_request');
+    expect(await balance()).toBe(140);
+  });
+
+  it('refuses a missing requestId or cost with bad_request', async () => {
+    expect(await code(client.redeem(RAVI, 'R-50', '', 100))).toBe('bad_request');
+    expect(await code(client.redeem(RAVI, 'R-50', 'req-2', undefined as unknown as number))).toBe('bad_request');
+  });
+
   it('refuses with insufficient_points when the balance is below the cost', async () => {
     expect(await code(client.redeem(RAVI, 'R-150', 'req-1', 250))).toBe('insufficient_points');
     expect(await balance()).toBe(240);

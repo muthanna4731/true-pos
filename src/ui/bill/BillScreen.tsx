@@ -44,7 +44,8 @@ export default function BillScreen() {
   // After a payment the next customer gets an empty cart and a fresh clientId.
   const onPaid = useCallback((_bill: Bill) => dispatch({ type: 'clear', clientId: newId() }), [])
 
-  const loyalty = useLoyaltyFlag()
+  // Practice bills never reach loyalty, so on this screen practice mode (or not knowing yet) reads as loyalty off.
+  const loyalty = useLoyaltyFlag() && practice === false
 
   /** Put a member on the bill. Does nothing while loyalty is off. `not_found` when the code is not a member. */
   const attachMember = async (raw: string): Promise<'attached' | 'not_found' | 'off'> => {

@@ -252,6 +252,8 @@ export interface LoyaltyLedgerRow {
   billRef: string;
   /** Set on a `redeem` row: the request that made it, so a retry deducts once. */
   requestId?: string;
+  /** Set on a `redeem` row: the reward it paid for, so a replay can be checked against the request. */
+  rewardId?: string;
   at: string;
 }
 

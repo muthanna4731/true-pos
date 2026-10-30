@@ -239,6 +239,29 @@ describe('bill screen: loyalty on', () => {
   });
 });
 
+describe('bill screen: practice mode', () => {
+  it('acts as if loyalty were off: no customer line, member scans ignored without a word, cart unchanged', async () => {
+    await setLoyaltyEnabled(true);
+    await db.kv.put({ key: 'practice', value: true });
+    await renderBill();
+    await user.click(tile(OC.shortName));
+    await within(cart()).findByText(OC.shortName);
+    await screen.findByText(/practice/i);
+    const before = cart().innerHTML;
+    scan('TS1:7K3M-9QX2RA');
+    scan('B4N8TC5WZ6');
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    expect(customerBox()).toBeNull();
+    expect(memberLine()).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Use points' })).toBeNull();
+    expect(screen.queryByText(/Barcode not found/)).toBeNull();
+    expect(screen.queryByText('No member with that code')).toBeNull();
+    expect(cart().innerHTML).toBe(before);
+  });
+});
+
 describe('bill screen: loyalty off', () => {
   it('shows no customer line and ignores a member scan without a word, leaving the cart alone', async () => {
     await renderBill();

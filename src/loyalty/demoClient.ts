@@ -4,7 +4,7 @@ import type { LoyaltyLedgerRow, Reward } from '../domain/types';
 import { LoyaltyError, type LoyaltyClient } from './client';
 import { maskName, normalizeCode } from './code';
 
-/** The app's `app_config` rules, as the demo stand-in holds them in `kv.loyaltyConfig`. */
+/** The app's loyalty rules (switch, points per 100 rupees, bill limits, daily cap), as the demo stand-in holds them in `kv.loyaltyConfig`. */
 export interface LoyaltyConfig {
   loyaltyEnabled: boolean;
   earnPer100: number;
@@ -42,13 +42,13 @@ export async function setLoyaltyEnabled(on: boolean, database: TruePosDB = db): 
   });
 }
 
-/** What the app's `app.balance(member)` adds up: every ledger row of the member. */
+/** A member's balance: the sum of all their ledger rows. */
 async function balanceOf(database: TruePosDB, memberCode: string): Promise<number> {
   const rows = await database.loyaltyLedger.where('memberCode').equals(memberCode).toArray();
   return rows.reduce((sum, r) => sum + r.points, 0);
 }
 
-/** The app's `upper(regexp_replace(ref, '\s', '', 'g'))`. */
+/** The bill ref as the app reads it: all whitespace removed, then upper case. */
 const cleanRef = (raw: string): string => (raw ?? '').replace(/\s/g, '').toUpperCase();
 
 /**
@@ -109,16 +109,22 @@ export class DemoLoyaltyClient implements LoyaltyClient {
   redeem(code: string, rewardId: string, requestId: string, expectedCost: number): Promise<{ balance: number }> {
     const d = this.database;
     return d.transaction('rw', [d.kv, d.loyaltyMembers, d.loyaltyLedger, d.rewards], async () => {
-      if (!(await readConfig(d)).loyaltyEnabled) throw new LoyaltyError('loyalty_off');
+      if (!requestId || typeof expectedCost !== 'number' || Number.isNaN(expectedCost)) throw new LoyaltyError('bad_request');
       const member = await d.loyaltyMembers.get(normalizeCode(code));
       if (!member) throw new LoyaltyError('member_not_found');
 
-      // A retry of a request that already went through changes nothing.
-      const again = (await d.loyaltyLedger.where('memberCode').equals(member.code).toArray()).some(
-        (r) => r.kind === 'redeem' && r.requestId === requestId,
-      );
-      if (again) return { balance: await balanceOf(d, member.code) };
+      // A retry of a request that already went through is answered before the rules that describe now
+      // (the switch, the reward, the balance), so it still succeeds if any of them changed since.
+      // A request id is unique across all members; reusing it for anything else is refused.
+      const first = (await d.loyaltyLedger.toArray()).find((r) => r.requestId === requestId);
+      if (first) {
+        if (first.memberCode !== member.code || first.kind !== 'redeem' || first.rewardId !== rewardId || first.points !== -expectedCost) {
+          throw new LoyaltyError('bad_request');
+        }
+        return { balance: await balanceOf(d, member.code) };
+      }
 
+      if (!(await readConfig(d)).loyaltyEnabled) throw new LoyaltyError('loyalty_off');
       const reward: Reward | undefined = await d.rewards.get(rewardId);
       if (!reward) throw new LoyaltyError('unknown_reward');
       if (!reward.active) throw new LoyaltyError('reward_inactive');
@@ -127,7 +133,7 @@ export class DemoLoyaltyClient implements LoyaltyClient {
 
       const now = clock.now();
       // A redeem belongs to no bill: store and bill ref stay empty.
-      await d.loyaltyLedger.add({ memberCode: member.code, points: -reward.cost, kind: 'redeem', storeCode: '', fy: financialYear(now), billRef: '', requestId, at: now });
+      await d.loyaltyLedger.add({ memberCode: member.code, points: -reward.cost, kind: 'redeem', storeCode: '', fy: financialYear(now), billRef: '', requestId, rewardId, at: now });
       return { balance: await balanceOf(d, member.code) };
     });
   }
