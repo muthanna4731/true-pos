@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { db } from '../../db/db'
+import { priceInForce } from '../../domain/prices'
 import { topSellers } from '../../domain/sellers'
 import { clock, istDate } from '../../domain/time'
 import type { Offer, Paise, Product } from '../../domain/types'
@@ -72,28 +73,22 @@ export function useBillData(storeCode: string | undefined): BillData {
   useEffect(() => {
     if (!storeCode) return
     let alive = true
-    loadSellers(storeCode).then((s) => alive && setSellers(s), () => undefined)
+    loadSellers(storeCode).then(
+      (s) => alive && setSellers(s),
+      (err: unknown) => console.error('Could not load the best sellers', err),
+    )
     return () => {
       alive = false
     }
   }, [storeCode, minute])
 
-  // The price in force: the latest one that has started.
-  const mrp = useMemo(() => {
-    const now = clock.now()
-    const best = new Map<string, { from: string; mrp: Paise }>()
-    for (const p of prices ?? []) {
-      const have = best.get(p.productId)
-      if (p.effectiveFrom <= now && (!have || p.effectiveFrom > have.from)) best.set(p.productId, { from: p.effectiveFrom, mrp: p.mrp })
-    }
-    return new Map([...best].map(([id, v]) => [id, v.mrp]))
-    // `minute` makes a price that starts today take effect without a reload.
-  }, [prices, minute])
+  const istDay = istDate(clock.now())
+  // A price that starts today takes effect at 00:00 IST: `istDay` changes on the first re-render after midnight.
+  const mrp = useMemo(() => priceInForce(prices ?? [], istDay), [prices, istDay])
 
   const mrpOf = useCallback((id: string): Paise => mrp.get(id) ?? 0, [mrp])
   const products = useMemo(() => (allProducts ?? []).filter((p) => mrp.has(p.id)), [allProducts, mrp])
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
-  const istDay = istDate(clock.now())
 
   return {
     ready: allProducts !== undefined && prices !== undefined && offers !== undefined,
