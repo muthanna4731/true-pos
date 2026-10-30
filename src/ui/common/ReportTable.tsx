@@ -33,7 +33,7 @@ function plain(v: unknown, kind: ColumnKind = 'text'): unknown {
   return v
 }
 
-function downloadCsv(title: string, columns: Column[], rows: RowLike[]): void {
+export function downloadCsv(title: string, columns: Column[], rows: RowLike[]): void {
   const data = rows.map((r) => Object.fromEntries(columns.map((c) => [c.key, plain(cellOf(r, c.key), c.kind)])))
   // The BOM makes Excel read the file as UTF-8, so ₹ and Kannada survive.
   const blob = new Blob(['\uFEFF', toCsv(data, columns)], { type: 'text/csv;charset=utf-8' })

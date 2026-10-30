@@ -1,28 +1,16 @@
-import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import type { Role } from './domain/types'
 import { t } from './i18n'
 import { useLang } from './i18n/useLang'
 import { useLoyaltyFlag } from './loyalty/flags'
 import BillScreen from './ui/bill/BillScreen'
 import ManagerRoutes from './ui/manager/ManagerRoutes'
 import OfficeRoutes from './ui/office/OfficeRoutes'
+import Products from './ui/office/Products'
+import OwnerPage from './ui/owner/OwnerPage'
 import DemoPanel from './ui/shell/DemoPanel'
 import Login from './ui/shell/Login'
 import RoleGate from './ui/shell/RoleGate'
 import RoleScreen from './ui/shell/RoleScreen'
-
-/** A role screen that later tasks fill in: the gate, the header with language toggle and sync badge, and a title. */
-function Screen({ allow, title, children }: { allow: Role[]; title: string; children?: ReactNode }) {
-  return (
-    <RoleGate allow={allow}>
-      <RoleScreen>
-        <h1>{title}</h1>
-        {children ?? <p>{t('comingSoon')}</p>}
-      </RoleScreen>
-    </RoleGate>
-  )
-}
 
 /** Every route of the app. Needs a router above it. */
 export function AppRoutes() {
@@ -45,7 +33,27 @@ export function AppRoutes() {
         />
         <Route path="/manager/*" element={<ManagerRoutes />} />
         <Route path="/office/*" element={<OfficeRoutes />} />
-        <Route path="/owner" element={<Screen allow={['owner']} title={t('home.owner')} />} />
+        <Route
+          path="/owner"
+          element={
+            <RoleGate allow={['owner']}>
+              <RoleScreen>
+                <h1>{t('home.owner')}</h1>
+                <OwnerPage />
+              </RoleScreen>
+            </RoleGate>
+          }
+        />
+        <Route
+          path="/owner/prices"
+          element={
+            <RoleGate allow={['owner']}>
+              <RoleScreen>
+                <Products />
+              </RoleScreen>
+            </RoleGate>
+          }
+        />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       <DemoPanel />

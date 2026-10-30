@@ -200,3 +200,34 @@
   gap: 8px;
   margin-bottom: 16px;
 }
+
+.owner-page {
+  display: grid;
+  gap: 1rem;
+}
+.owner-shops {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.owner-shop {
+  border: 2px solid var(--ink);
+  padding: 0.75rem;
+}
+.owner-net {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.owner-page button {
+  min-height: 56px;
+  margin: 0.25rem 0.5rem 0.25rem 0;
+}
+.owner-preview pre {
+  white-space: pre-wrap;
+  border: 2px solid var(--ink);
+  padding: 0.75rem;
+}
+.offer-form {
+  display: grid;
+  gap: 0.5rem;
+}
