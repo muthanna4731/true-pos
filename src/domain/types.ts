@@ -221,9 +221,10 @@ export interface Loss {
   storeCode: string;
   productId: string;
   qty: number;
-  reason: 'breakage' | 'theft' | 'expired' | 'other';
+  reason: 'breakage' | 'leakage' | 'shortage' | 'theft' | 'expired' | 'other';
   at: string;
   by: string;
+  note?: string;
   /** The `ref` of the loss movement. */
   ref: string;
 }

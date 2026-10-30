@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 import { newId } from '../domain/id';
 import { clock, istDate } from '../domain/time';
 import { onHand } from '../domain/stock';
-import type { Claim, Grn, GrnLine, Loss, StockMovement } from '../domain/types';
+import type { Claim, Grn, GrnLine, Loss, Price, StockMovement, Transfer } from '../domain/types';
 import { db } from './db';
 
 /** Tax collected at source on a KSBCL invoice. */
@@ -162,4 +162,79 @@ export function saveCount(
     );
     return results;
   });
+}
+
+/** Write a loss: a `losses` row and a `loss` movement of -qty, in one transaction. */
+export function recordLoss(storeCode: string, productId: string, qty: number, reason: Loss['reason'], by: string, note?: string): Promise<void> {
+  if (!Number.isInteger(qty) || qty <= 0) return Promise.reject(new Error('bad_qty'));
+  return db.transaction('rw', [db.losses, db.movements], async () => {
+    const at = clock.now();
+    const ref = `LOSS-${newId().slice(0, 8)}`;
+    await db.movements.add({ storeCode, productId, qty: -qty, kind: 'loss', ref, at });
+    await db.losses.add({ storeCode, productId, qty, reason, at, by, ref, ...(note?.trim() ? { note: note.trim() } : {}) });
+  });
+}
+
+/**
+ * Send stock to another shop. The permit number is required. The stock leaves the sender now (`transfer_out`) and the
+ * transfer is In transit; the receiver gains nothing until `receiveTransfer`. A transfer id can be dispatched once.
+ */
+export function dispatchTransfer(
+  tr: { id: string; fromStore: string; toStore: string; permitNo: string; lines: { productId: string; qty: number }[] },
+  by: string,
+): Promise<void> {
+  const permitNo = tr.permitNo.trim();
+  if (permitNo === '') return Promise.reject(new Error('permit_required'));
+  if (tr.fromStore === tr.toStore) return Promise.reject(new Error('same_store'));
+  if (tr.lines.length === 0 || tr.lines.some((l) => !Number.isInteger(l.qty) || l.qty <= 0)) return Promise.reject(new Error('bad_qty'));
+  void by;
+  return db.transaction('rw', [db.transfers, db.movements], async () => {
+    if (await db.transfers.get(tr.id)) throw new Error('transfer_exists');
+    const at = clock.now();
+    const lines = new Map<string, number>();
+    for (const l of tr.lines) lines.set(l.productId, (lines.get(l.productId) ?? 0) + l.qty);
+    const merged = [...lines].map(([productId, qty]) => ({ productId, qty }));
+    const saved: Transfer = { id: tr.id, fromStore: tr.fromStore, toStore: tr.toStore, lines: merged, permitNo, status: 'in_transit', dispatchedAt: at };
+    await db.transfers.add(saved);
+    await db.movements.bulkAdd(merged.map((l) => ({ storeCode: tr.fromStore, productId: l.productId, qty: -l.qty, kind: 'transfer_out' as const, ref: tr.id, at })));
+  });
+}
+
+/** The receiving shop confirms: `transfer_in` movements and status Received. Receiving twice is refused. */
+export function receiveTransfer(id: string, by: string): Promise<void> {
+  void by;
+  return db.transaction('rw', [db.transfers, db.movements, db.products], async () => {
+    const tr = await db.transfers.get(id);
+    if (!tr) throw new Error('transfer_not_found');
+    if (tr.status !== 'in_transit') throw new Error('cannot_receive');
+    const at = clock.now();
+    const moves: StockMovement[] = [];
+    for (const l of tr.lines) {
+      const beer = (await db.products.get(l.productId))?.category === 'BEER';
+      moves.push({ storeCode: tr.toStore, productId: l.productId, qty: l.qty, kind: 'transfer_in', ref: id, at, ...(beer ? { expiresOn: beerExpiry(at) } : {}) });
+    }
+    await db.movements.bulkAdd(moves);
+    await db.transfers.update(id, { status: 'received', receivedAt: at });
+  });
+}
+
+/** Beer keeps for about 5 months; transferred beer carries the same expiry rule the seed uses. */
+function beerExpiry(iso: string): string {
+  const d = new Date(`${istDate(iso)}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + 5);
+  return d.toISOString().slice(0, 10);
+}
+
+/** The price row in force for a product on an IST day: the latest `effectiveFrom` that has started. */
+export async function priceAt(productId: string, istDay: string): Promise<Price> {
+  const price = await db.prices.where('[productId+effectiveFrom]').between([productId, Dexie.minKey], [productId, istDay], true, true).last();
+  if (!price) throw new Error('no_price');
+  return price;
+}
+
+/** Append price rows (a history: nothing already saved is changed). Returns how many were added. */
+export async function pushPrices(rows: Omit<Price, 'id' | 'pushedBy'>[], by: string): Promise<number> {
+  if (rows.some((r) => !/^\d{4}-\d{2}-\d{2}$/.test(r.effectiveFrom))) throw new Error('bad_day');
+  await db.prices.bulkAdd(rows.map((r) => ({ ...r, pushedBy: by })));
+  return rows.length;
 }

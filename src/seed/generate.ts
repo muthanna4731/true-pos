@@ -222,7 +222,11 @@ export function generateSeed(opts: SeedOpts): SeedData {
     },
   ];
 
-  const suppliers: Supplier[] = [{ id: 'SUP-KSBCL', name: 'KSBCL', kind: 'ksbcl' }];
+  const suppliers: Supplier[] = [
+    { id: 'SUP-KSBCL', name: 'KSBCL', kind: 'ksbcl' },
+    { id: 'SUP-LOCAL-1', name: 'Mysore Ice & Mixers', kind: 'other' },
+    { id: 'SUP-LOCAL-2', name: 'Chamundi Snacks Depot', kind: 'other' },
+  ];
 
   // ---- ledger ----
 

@@ -105,3 +105,28 @@ export function grnTotals(grn: Grn, prices: Price[]): { aroed: Paise; total: Pai
   const aroed = grn.lines.reduce((s, l) => s + l.expected * (best.get(l.productId)?.aroed ?? 0), 0);
   return { aroed, total: grn.invoiceAmount + aroed + grn.tcs };
 }
+
+/**
+ * Bottles to send from the hub to a shop that is running low: for every product the shop sells whose stock is under
+ * its reorder level, fill up to twice that level, never more than the hub has. Products the hub cannot spare are left out.
+ * `sales` is `avgDailySales(...)` (key `store|product`).
+ */
+export function refillSuggestion(
+  storeCode: string,
+  hubCode: string,
+  movements: StockMovement[],
+  sales: Map<string, number>,
+): { productId: string; qty: number }[] {
+  const stock = onHandMap(movements);
+  const out: { productId: string; qty: number }[] = [];
+  for (const [key, avg] of sales) {
+    const [store, productId] = key.split('|');
+    if (store !== storeCode || avg <= 0) continue;
+    const level = minLevel(avg);
+    const have = stock.get(key) ?? 0;
+    if (have >= level) continue;
+    const qty = Math.min(2 * level - have, stock.get(`${hubCode}|${productId}`) ?? 0);
+    if (qty > 0) out.push({ productId, qty });
+  }
+  return out.sort((a, b) => a.productId.localeCompare(b.productId));
+}
