@@ -65,8 +65,8 @@ describe.each([1, DEMO_SEED])('generateSeed (seed %i)', (seedNo) => {
     expect(seed.stores.map((s) => s.code)).toEqual([...Array.from({ length: 9 }, (_, i) => `TSTS${i + 1}`), 'TSGLD']);
     expect(seed.stores.map((s) => s.number)).toEqual(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']);
     expect(seed.stores.filter((s) => s.isHub).map((s) => s.code)).toEqual(['TSTS1']);
-    expect(seed.stores[9]).toMatchObject({ name: 'True Spirits Gold', branchSlug: null, upiVpa: 'truespirits10@okaxis' });
-    expect(seed.stores[2]).toMatchObject({ name: 'True Spirits 3', upiVpa: 'truespirits3@okaxis' });
+    expect(seed.stores[9]).toMatchObject({ name: 'True Spirits Gold', branchSlug: null, upiVpa: 'truespirits10@demo' });
+    expect(seed.stores[2]).toMatchObject({ name: 'True Spirits 3', upiVpa: 'truespirits3@demo' });
     expect(seed.users).toHaveLength(22);
     const cashier = seed.users.find((u) => u.name === 'Cashier 3')!;
     expect(cashier).toMatchObject({ role: 'cashier', storeCodes: ['TSTS3'] });
@@ -359,7 +359,7 @@ describe.each([1, DEMO_SEED])('generateSeed (seed %i)', (seedNo) => {
   it('has the loyalty stand-in: three members, Ravi on 240, two rewards, and no loyalty switch', () => {
     expect(seed.loyaltyMembers).toHaveLength(3);
     for (const m of seed.loyaltyMembers) expect(m.code).toMatch(MEMBER_CODE);
-    expect(seed.loyaltyMembers[0]).toMatchObject({ code: '7K3M9QX2RA', name: 'Ravi', phone: '9845014821' });
+    expect(seed.loyaltyMembers[0]).toMatchObject({ code: '7K3M9QX2RA', name: 'Ravi', phone: '9000004821' });
     const balance = (code: string) => seed.loyaltyLedger.filter((r) => r.memberCode === code).reduce((s, r) => s + r.points, 0);
     expect(balance('7K3M9QX2RA')).toBe(240);
     expect(new Set(seed.loyaltyMembers.map((m) => m.phone)).size).toBe(3);

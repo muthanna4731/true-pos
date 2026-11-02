@@ -175,7 +175,7 @@ export function generateSeed(opts: SeedOpts): SeedData {
       name: gold ? 'True Spirits Gold' : `True Spirits ${i}`,
       branchSlug: null,
       isHub: i === 1,
-      upiVpa: `truespirits${i}@okaxis`,
+      upiVpa: `truespirits${i}@demo`,
       licenceNo: `CL2-DEMO-${String(i).padStart(3, '0')}`,
     });
   }
@@ -719,7 +719,7 @@ export function generateSeed(opts: SeedOpts): SeedData {
   const joined = istAt(addDays(today, -20), 12 * 60);
   const fy = financialYear(istAt(today, 12 * 60));
   const loyaltyMembers: LoyaltyMember[] = [
-    { code: '7K3M9QX2RA', name: 'Ravi', phone: '9845014821', createdAt: joined },
+    { code: '7K3M9QX2RA', name: 'Ravi', phone: '9000004821', createdAt: joined },
     { code: 'B4N8TC5WZ6', name: 'Meena', phone: '9000000002', createdAt: joined },
     { code: 'H2D9F7GKP3', name: 'Kiran', phone: '9000000003', createdAt: joined },
   ];

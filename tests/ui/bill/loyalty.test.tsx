@@ -49,7 +49,7 @@ async function seedFixture(): Promise<void> {
     await db.billLines.add({ billNumber: n, productId: products[i].id, qty: 40 - i * 3, mrp: 0, discount: 0, tax: 0, amount: 0 });
   }
   await db.loyaltyMembers.bulkAdd([
-    { code: RAVI, name: 'Ravi', phone: '9845014821', createdAt: daysAgo(20) },
+    { code: RAVI, name: 'Ravi', phone: '9000004821', createdAt: daysAgo(20) },
     { code: 'B4N8TC5WZ6', name: 'Meena', phone: '9000000002', createdAt: daysAgo(20) },
   ]);
   await db.loyaltyLedger.bulkAdd([

@@ -19,7 +19,7 @@ beforeEach(async () => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date(NOON_IST));
   await resetDb();
-  await db.loyaltyMembers.add({ code: RAVI, name: 'Ravi', phone: '9845014821', createdAt: '2026-10-01T00:00:00.000Z' });
+  await db.loyaltyMembers.add({ code: RAVI, name: 'Ravi', phone: '9000004821', createdAt: '2026-10-01T00:00:00.000Z' });
   await setLoyaltyEnabled(true);
 });
 

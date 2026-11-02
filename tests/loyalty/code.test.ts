@@ -31,10 +31,10 @@ describe('isMemberCode', () => {
 
 describe('maskName', () => {
   it('shows the first letter and the last 4 digits', () => {
-    expect(maskName('Ravi', '9845014821')).toBe('R••• ··4821');
+    expect(maskName('Ravi', '9000004821')).toBe('R••• ··4821');
   });
 
   it('copes with a Kannada name', () => {
-    expect(maskName('ರವಿ', '9845014821')).toBe('ರ••• ··4821');
+    expect(maskName('ರವಿ', '9000004821')).toBe('ರ••• ··4821');
   });
 });

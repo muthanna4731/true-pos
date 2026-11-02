@@ -27,7 +27,7 @@ beforeEach(async () => {
   vi.setSystemTime(new Date(NOON_IST));
   await resetDb();
   await db.loyaltyMembers.bulkAdd([
-    { code: RAVI, name: 'Ravi', phone: '9845014821', createdAt: '2026-10-01T00:00:00.000Z' },
+    { code: RAVI, name: 'Ravi', phone: '9000004821', createdAt: '2026-10-01T00:00:00.000Z' },
     { code: 'B4N8TC5WZ6', name: 'Meena', phone: '9000000002', createdAt: '2026-10-01T00:00:00.000Z' },
   ]);
   await db.rewards.bulkAdd([
