@@ -18,7 +18,10 @@ export default function TopTiles({ products, mrpOf, onAdd }: Props) {
       <div className="top-grid">
         {products.map((p) => (
           <Tile key={p.id} type={typeOf(p)} image={p.image} label={p.shortName} onClick={() => onAdd(p.id)}>
-            <span className="tile-name">{p.shortName}</span>
+            <span className="tile-head">
+              <span className="type-dot" aria-hidden="true" />
+              <span className="tile-name">{p.shortName}</span>
+            </span>
             <span className="tile-price">{formatINR(mrpOf(p.id))}</span>
           </Tile>
         ))}

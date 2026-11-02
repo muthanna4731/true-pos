@@ -3,7 +3,7 @@ import type { ProductType } from '../bill/TypeTabs'
 
 interface Props {
   type: ProductType
-  /** A photo, when we have one. Otherwise the tile is a flat block of its type colour. */
+  /** A photo, when we have one. Otherwise the tile is text only. */
   image?: string
   /** With `onClick` the whole tile is one button (and `label` is its name); without, it is a box that holds buttons. */
   onClick?: () => void
@@ -11,7 +11,7 @@ interface Props {
   children: ReactNode
 }
 
-/** A flat product tile coloured by type. */
+/** A flat bone product tile. The type class only colours the small dot inside it. */
 export default function Tile({ type, image, onClick, label, children }: Props) {
   const body = (
     <>

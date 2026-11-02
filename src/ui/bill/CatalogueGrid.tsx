@@ -40,7 +40,10 @@ export default function CatalogueGrid({ tiles, onAdd, onClear }: Props) {
             const first = tile.sizes[0]
             return (
               <Tile key={`${tile.subcategory}/${tile.brand}`} type={typeOf(first)} image={first.image}>
-                <span className="tile-name">{nameOf(first)}</span>
+                <span className="tile-head">
+                  <span className="type-dot" aria-hidden="true" />
+                  <span className="tile-name">{nameOf(first)}</span>
+                </span>
                 <span className="tile-brand">{tile.brand.toLowerCase()}</span>
                 <span className="size-buttons">
                   {tile.sizes.map((p) => (
