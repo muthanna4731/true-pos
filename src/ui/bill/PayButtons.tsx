@@ -22,6 +22,19 @@ import { usePractice } from './usePractice'
 /** How long the receipt preview stays after a payment, unless it is tapped first. Tests shorten it. */
 export const RECEIPT_TIMING = { ms: 4000 }
 
+/** "Cash ₹980" with the amount in its own span, so it can be set in the display face. The words still come from i18n. */
+function PayLabel({ text, amount }: { text: string; amount: string }) {
+  const at = text.indexOf(amount)
+  if (at < 0) return <>{text}</>
+  return (
+    <span className="pay-label">
+      {text.slice(0, at)}
+      <span className="pay-figure">{amount}</span>
+      {text.slice(at + amount.length)}
+    </span>
+  )
+}
+
 interface Props {
   priced: PricedCart
   cart: Cart
@@ -128,15 +141,15 @@ export default function PayButtons({ priced, cart, onPaid }: Props) {
           <div className="pay-row">
             <button type="button" className="pay-big" disabled={paying} onClick={() => setDialog('cash')}>
               <ModeIcon mode="cash" />
-              {t('pay.cash', { amount: formatINR(priced.net) })}
+              <PayLabel text={t('pay.cash', { amount: formatINR(priced.net) })} amount={formatINR(priced.net)} />
             </button>
             <button type="button" className="pay-big" disabled={paying} onClick={() => setDialog('upi')}>
               <ModeIcon mode="upi" />
-              {t('pay.upi', { amount: formatINR(priced.net) })}
+              <PayLabel text={t('pay.upi', { amount: formatINR(priced.net) })} amount={formatINR(priced.net)} />
             </button>
             <button type="button" className="pay-big" disabled={paying} onClick={payAll('card')}>
               <ModeIcon mode="card" />
-              {t('pay.card', { amount: formatINR(priced.net) })}
+              <PayLabel text={t('pay.card', { amount: formatINR(priced.net) })} amount={formatINR(priced.net)} />
             </button>
           </div>
           <button type="button" className="link-button" disabled={paying} onClick={() => setDialog('split')}>

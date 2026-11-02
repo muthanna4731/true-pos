@@ -34,18 +34,30 @@ button {
 }
 
 /* Display type: Oswald, always uppercase, tight leading, never below 24px. */
-.display,
 h1,
 .bill-total,
 .pay-amount,
 .give-back-amount,
 .close-diff,
 .owner-net,
-.glance-figure {
+.pay-figure,
+.glance-line strong {
   font-family: var(--font-display);
   font-weight: 500;
   line-height: 1.1;
   text-transform: uppercase;
+}
+
+/* Text fields: pills with the shared look. :where() keeps specificity at zero so component rules (search box, customer line, table inputs) win. */
+:where(input:not([type]), input[type='text'], input[type='number'], input[type='date'], input[type='search'], select) {
+  min-height: var(--touch);
+  padding: 0 20px;
+  border: 1px solid var(--brand);
+  border-radius: var(--pill);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 20px;
 }
 
 /* Visible focus on every control: burgundy on light surfaces (the header sets its own). */

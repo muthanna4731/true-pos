@@ -12,12 +12,13 @@ interface Props {
   onChange(tab: Tab): void
 }
 
-/** All, Beer, Whisky and so on. The grid below shows only the chosen type. */
+/** All, Beer, Whisky and so on. The grid below shows only the chosen type. The dots are the legend for the tile dots. */
 export default function TypeTabs({ tab, onChange }: Props) {
   return (
     <div className="type-tabs">
       {TABS.map((key) => (
-        <button key={key} type="button" aria-pressed={tab === key} onClick={() => onChange(key)}>
+        <button key={key} type="button" className={key === 'all' ? undefined : `type-${key}`} aria-pressed={tab === key} onClick={() => onChange(key)}>
+          {key !== 'all' && <span className="type-dot" aria-hidden="true" />}
           {t(`tab.${key}`)}
         </button>
       ))}

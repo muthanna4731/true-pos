@@ -8,6 +8,19 @@
     visibility: hidden;
   }
 
+  /* The printing block itself: no card border, radius or padding on paper; table rules are thin black. */
+  html.print-report .report-print.printing {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #000;
+  }
+
+  html.print-report .report-table tfoot td {
+    border-top: 0.5pt solid #000;
+    border-bottom: 0.5pt solid #000;
+  }
+
   html.print-receipt .receipt-print,
   html.print-receipt .receipt-print * {
     visibility: visible;

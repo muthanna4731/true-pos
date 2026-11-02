@@ -50,6 +50,11 @@ button.big-button {
   font-size: 20px;
 }
 
+/* The headline figures are display type: Oswald, uppercase, 28px. */
+.glance-line strong {
+  font-size: 28px;
+}
+
 .as-of {
   font-size: 16px;
   font-weight: 700;
@@ -154,22 +159,6 @@ button.big-button {
   flex-direction: column;
   gap: 4px;
   font-weight: 600;
-}
-
-input:not([type]),
-input[type='text'],
-input[type='number'],
-input[type='date'],
-input[type='search'],
-select {
-  min-height: var(--touch);
-  padding: 0 20px;
-  border: 1px solid var(--brand);
-  border-radius: var(--pill);
-  background: var(--card);
-  color: var(--ink);
-  font: inherit;
-  font-size: 20px;
 }
 
 .receive-line {

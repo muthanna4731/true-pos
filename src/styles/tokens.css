@@ -22,15 +22,15 @@
   --bad: #b3261e;
   --practice: #ff7a00;
 
-  /* Type dots: muted tones that sit with burgundy and cream */
-  --beer: #d6a23a;
-  --whisky: #9a6a3a;
-  --rum: #5a3a2e;
-  --brandy: #c0794f;
-  --vodka: #8fb3c7;
-  --gin: #7fa58c;
-  --wine: #8e2b4a;
-  --other: #9b9189;
+  /* Type dots: muted, flat, and at least 20 delta-E 2000 apart from each other and from the burgundy ink (see restyle report) */
+  --beer: #e6cd62;
+  --whisky: #b9801f;
+  --rum: #2b1d15;
+  --brandy: #b84a2e;
+  --vodka: #9cc0d4;
+  --gin: #5f9a73;
+  --wine: #7b5aa6;
+  --other: #8f8a85;
 
   /* Shape */
   --pill: 9999px;

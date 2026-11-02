@@ -150,16 +150,31 @@ button.tile:hover {
 .type-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .type-tabs button {
-  padding: 0 22px;
+  padding: 0 14px;
   border-color: var(--rose);
+}
+
+.type-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.type-tabs .type-dot {
+  margin-top: 0;
 }
 
 .type-tabs button[aria-pressed='true'] {
   border-color: var(--brand);
+}
+
+/* On the burgundy active tab a bone ring keeps the dark dots visible. */
+.type-tabs button[aria-pressed='true'] .type-dot {
+  outline: 2px solid var(--on-dark);
 }
 
 .brand-grid {
@@ -460,6 +475,16 @@ button.pay-big {
 
 .mode-icon {
   flex: none;
+}
+
+.pay-label {
+  white-space: pre;
+}
+
+/* The amount is display type: Oswald, 30px (never below 24), still burgundy on coral. */
+.pay-figure {
+  font-size: 30px;
+  line-height: 1;
 }
 
 .split-mode {
