@@ -12,7 +12,7 @@ import { generateTodos } from '../../domain/todos'
 import { t } from '../../i18n'
 import { useLang } from '../../i18n/useLang'
 import { downloadCsv, type Column } from '../common/ReportTable'
-import { guarded } from '../office/shared'
+import { errorText, guarded } from '../office/shared'
 import Offers from './Offers'
 
 const addDays = (day: string, n: number): string => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86400000).toISOString().slice(0, 10)
@@ -40,6 +40,7 @@ export default function OwnerPage() {
   const today = istDate(clock.now())
   const [picked, setPicked] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   // Before the first bill of the day is rung, the page shows last night, so it is never a wall of zeros.
   const data = useLiveQuery(async () => {
     if (picked) return load(picked)
@@ -62,7 +63,11 @@ export default function OwnerPage() {
   }
 
   const monthStart = `${day.slice(0, 8)}01`
-  const download = (work: () => Promise<void>) => guarded(busy, work)
+  // A failed download says so; the next successful one clears it.
+  const download = async (work: () => Promise<void>) => {
+    const code = await guarded(busy, work)
+    if (code !== 'busy') setError(code)
+  }
   const priced = async () => priceRowsInForce(await db.prices.toArray(), day)
 
   const excise = () =>
@@ -176,6 +181,7 @@ export default function OwnerPage() {
         <button type="button" onClick={() => navigate('/owner/prices')}>
           {t('owner.pushPrices')}
         </button>
+        {error && <p role="alert">{errorText(error)}</p>}
       </section>
 
       <Offers />

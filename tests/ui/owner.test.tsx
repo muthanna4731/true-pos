@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db, resetDb } from '../../src/db/db';
 import { priceCart } from '../../src/domain/cart';
+import * as prices from '../../src/domain/prices';
 import { priceRowsInForce } from '../../src/domain/prices';
 import { setLang } from '../../src/i18n';
 import { loadSeedIfEmpty } from '../../src/seed/load';
@@ -113,5 +114,21 @@ describe('owner page', () => {
     await waitFor(async () => expect((await db.offers.get(created.code))!.to).toBe('2026-10-28'));
     const after = priceCart({ lines: [{ productId: target.id, qty: 1 }] } as never, new Map([[target.id, target]]), (id) => prices.get(id)?.mrp ?? 0, await db.offers.toArray(), '2026-10-29');
     expect(after.lines[0].discount).toBe(0);
+  });
+
+  it('a download that fails shows its error, and the next good download clears it', async () => {
+    const spy = vi.spyOn(prices, 'priceRowsInForce').mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    renderOwner();
+    await user.click(await screen.findByRole('button', { name: 'Excise statement, this month' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not do that. Try again.');
+    expect(spy).toHaveBeenCalled();
+
+    const url = vi.fn(() => 'blob:x');
+    Object.defineProperty(URL, 'createObjectURL', { value: url, configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: vi.fn(), configurable: true });
+    await user.click(screen.getByRole('button', { name: 'Excise statement, this month' }));
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
   });
 });
