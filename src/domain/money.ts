@@ -15,3 +15,15 @@ export function formatINR(p: Paise): string {
 export function rupeesToPaise(r: number): Paise {
   return Math.round(Number((r * 100).toPrecision(15)));
 }
+
+const trim = (n: number, digits: number): string => String(Number(n.toFixed(digits)));
+
+/** Short money for a narrow strip: `₹999`, `₹42.1k`, `₹18.4L`, `₹1.96Cr`. Use `formatINR` wherever the exact figure fits. */
+export function formatINRCompact(p: Paise): string {
+  const abs = Math.abs(Math.round(p)) / 100;
+  const sign = p < 0 ? '-' : '';
+  if (abs >= 1e7) return `${sign}₹${trim(abs / 1e7, 2)}Cr`;
+  if (abs >= 1e5) return `${sign}₹${trim(abs / 1e5, 1)}L`;
+  if (abs >= 1e4) return `${sign}₹${trim(abs / 1e3, 1)}k`;
+  return formatINR(p);
+}

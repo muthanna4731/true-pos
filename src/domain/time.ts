@@ -35,6 +35,11 @@ export function istDayStart(istDay: string): string {
   return d.toISOString();
 }
 
+/** The IST day `n` days after (or before, when negative) an IST day, both as `YYYY-MM-DD`. IST has no daylight saving, so a day is 24 hours. */
+export function addIstDays(istDay: string, n: number): string {
+  return new Date(Date.parse(`${istDay}T00:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
+}
+
 /** `12 Aug 2026` in IST. */
 export function formatDate(iso: string): string {
   const { year, month, day } = istParts(iso);
