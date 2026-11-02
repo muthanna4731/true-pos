@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 import { toCsv } from '../../domain/csv'
 import { formatINR } from '../../domain/money'
 import { formatDate } from '../../domain/time'
@@ -56,6 +56,7 @@ export default function ReportTable({
   asOf,
   totals,
   onRowClick,
+  rowAction,
 }: {
   title: string
   columns: Column[]
@@ -64,6 +65,8 @@ export default function ReportTable({
   totals?: RowLike
   /** Makes each body row tappable (and reachable by keyboard). */
   onRowClick?: (row: Row) => void
+  /** An extra last column of controls (not printed, not in the CSV), e.g. a button per row. */
+  rowAction?: { label: string; render: (row: Row) => ReactNode }
 }) {
   const numeric = (c: Column) => c.kind === 'number' || c.kind === 'money' || c.kind === 'litres'
   return (
@@ -88,6 +91,7 @@ export default function ReportTable({
                 {c.label}
               </th>
             ))}
+            {rowAction && <th className="row-action">{rowAction.label}</th>}
           </tr>
         </thead>
         <tbody>
@@ -108,6 +112,7 @@ export default function ReportTable({
                   {display(cellOf(r, c.key), c.kind)}
                 </td>
               ))}
+              {rowAction && <td className="row-action">{rowAction.render(r as Row)}</td>}
             </tr>
           ))}
         </tbody>

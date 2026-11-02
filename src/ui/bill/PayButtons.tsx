@@ -50,7 +50,7 @@ type Payments = { mode: PayMode; amount: Paise }[]
  */
 export default function PayButtons({ priced, cart, onPaid }: Props) {
   const { user, store, counter, shiftId } = useSession()
-  const practice = usePractice()
+  const practice = usePractice(store?.code)
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState<string | null>(null)

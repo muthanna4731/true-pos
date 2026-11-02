@@ -17,8 +17,7 @@ beforeEach(async () => {
   await db.users.bulkAdd([
     { id: 'U1', name: 'Cashier 1', phone: '1', role: 'cashier', pinHash: 'x', storeCodes: ['TSTS1'] },
     { id: 'U2', name: 'Cashier 2', phone: '2', role: 'cashier', pinHash: 'x', storeCodes: ['TSTS1'] },
-    { id: 'M1', name: 'Manager 1', phone: '3', role: 'manager', pinHash: 'x', storeCodes: ['TSTS1'] },
-    { id: 'M2', name: 'Manager 2', phone: '4', role: 'manager', pinHash: 'x', storeCodes: ['TSTS2'] },
+    { id: 'M', name: 'Manager', phone: '3', role: 'manager', pinHash: 'x', storeCodes: ['TSTS1', 'TSTS2'] },
   ]);
   await db.movements.add({ storeCode: 'TSTS1', productId: product.id, qty: 500, kind: 'opening', ref: 'open', at: '2026-10-01T00:00:00.000Z' });
 });
@@ -50,7 +49,7 @@ describe('expectedCash', () => {
     await sell(shift, 10000, 'card');
     await sell(shift, 70000, 'cash', true); // practice
     const voided = await sell(shift, 50000, 'cash');
-    await voidBill(voided.number, 'M1');
+    await voidBill(voided.number, 'M');
     await sell(other, 99900, 'cash');
     expect(await expectedCash(shift)).toBe(230000);
     expect(await expectedCash(other)).toBe(299900);
@@ -58,32 +57,30 @@ describe('expectedCash', () => {
 });
 
 describe('closeShift', () => {
-  it('works out the difference: expected ₹1,000, counted ₹900 is ₹100 short', async () => {
-    const shift = await openShift('TSTS1', 'U1', 50000);
-    await sell(shift, 50000, 'cash');
-    await openShift('TSTS1', 'U2'); // someone else is still working
-    const result = await closeShift(shift, { 500: 1, 200: 2 }, 0);
-    expect(result).toEqual({ expected: 100000, counted: 90000, diff: -10000, dayLocked: false });
-    expect(await db.shifts.get(shift)).toMatchObject({ closedAt: NOON_IST, expected: 100000, counted: 90000, diff: -10000 });
+  it('counts the notes and the coins, and saves the figures on the shift', async () => {
+    const shift = await openShift('TSTS1', 'U1', 200000);
+    const result = await closeShift(shift, { 500: 1, 200: 2 }, 0, 'M');
+    expect(result).toMatchObject({ expected: 200000, counted: 90000, diff: -110000 });
+    expect(await db.shifts.get(shift)).toMatchObject({ expected: 200000, counted: 90000, diff: -110000 });
   });
 
   it('adds the coins to the counted cash', async () => {
     const shift = await openShift('TSTS1', 'U1', 10000);
-    const result = await closeShift(shift, { 50: 2 }, 1250);
+    const result = await closeShift(shift, { 50: 2 }, 1250, 'U1');
     expect(result).toMatchObject({ expected: 10000, counted: 11250, diff: 1250 });
   });
 
-  it('locks the day when the manager closes last: no more sales, totals saved', async () => {
+  it('locks the day when the manager closes the last open shift: no more sales, totals saved', async () => {
     const a = await openShift('TSTS1', 'U1', 0);
-    const m = await openShift('TSTS1', 'M1', 0);
+    const b = await openShift('TSTS1', 'U2', 0);
     await sell(a, 10000, 'cash');
     await sell(a, 20000, 'upi');
     await sell(a, 5000, 'cash', true);
 
-    expect((await closeShift(a, { 100: 1 }, 0)).dayLocked).toBe(false); // the cashier goes first
+    expect((await closeShift(a, { 100: 1 }, 0, 'M')).dayLocked).toBe(false); // another shift is still open
     expect(await db.dayCloses.count()).toBe(0);
 
-    expect((await closeShift(m, {}, 0)).dayLocked).toBe(true);
+    expect((await closeShift(b, {}, 0, 'M')).dayLocked).toBe(true);
     const row = await db.dayCloses.get(['TSTS1', '2026-10-29']);
     expect(row).toMatchObject({ storeCode: 'TSTS1', date: '2026-10-29', lockedAt: NOON_IST });
     expect(row?.totals).toMatchObject({ net: 30000, bills: 2, byMode: { cash: 10000, upi: 20000, card: 0 } });
@@ -91,37 +88,49 @@ describe('closeShift', () => {
     await expect(sell(a, 100)).rejects.toBeInstanceOf(DayClosedError);
   });
 
+  it('locks the day when the manager closes the only open shift, whoever the shift belongs to', async () => {
+    const a = await openShift('TSTS1', 'U1', 0);
+    expect(await closeShift(a, {}, 0, 'M')).toMatchObject({ dayLocked: true });
+    expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toBeDefined();
+  });
+
   it('never locks the day on a cashier close, even the last one', async () => {
     const a = await openShift('TSTS1', 'U1', 0);
-    expect(await closeShift(a, {}, 0)).toMatchObject({ dayLocked: false });
+    expect(await closeShift(a, {}, 0, 'U1')).toMatchObject({ dayLocked: false });
     expect(await db.dayCloses.count()).toBe(0);
     await expect(sell(await openShift('TSTS1', 'U2', 0), 100)).resolves.toBeDefined();
   });
 
-  it('does not lock when the manager closes while a cashier shift is still open', async () => {
+  it('does not lock on a close by someone who is not a manager, or by an unknown id', async () => {
     const a = await openShift('TSTS1', 'U1', 0);
-    const m = await openShift('TSTS1', 'M1', 0);
-    expect((await closeShift(m, {}, 0)).dayLocked).toBe(false);
+    const b = await openShift('TSTS1', 'U2', 0);
+    expect((await closeShift(a, {}, 0, 'U2')).dayLocked).toBe(false);
+    expect((await closeShift(b, {}, 0, 'NOBODY')).dayLocked).toBe(false);
     expect(await db.dayCloses.count()).toBe(0);
-    // the cashier closing afterwards does not lock either: only a manager's close does
-    expect((await closeShift(a, {}, 0)).dayLocked).toBe(false);
+  });
+
+  it('does not lock when the last shift is closed by a cashier after the manager closed another', async () => {
+    const a = await openShift('TSTS1', 'U1', 0);
+    const b = await openShift('TSTS1', 'U2', 0);
+    expect((await closeShift(a, {}, 0, 'M')).dayLocked).toBe(false);
+    expect((await closeShift(b, {}, 0, 'U2')).dayLocked).toBe(false); // the cashier's own End shift never locks
     expect(await db.dayCloses.count()).toBe(0);
   });
 
   it('does not wait for a shift left open on an earlier day, and ignores other shops', async () => {
     await db.shifts.add({ id: 'OLD', storeCode: 'TSTS1', cashierId: 'U9', openedAt: '2026-10-27T04:00:00.000Z', floatPaise: 0 });
-    await openShift('TSTS2', 'M2', 0);
-    const shift = await openShift('TSTS1', 'M1', 0);
-    expect((await closeShift(shift, {}, 0)).dayLocked).toBe(true);
+    await openShift('TSTS2', 'U2', 0);
+    const shift = await openShift('TSTS1', 'U1', 0);
+    expect((await closeShift(shift, {}, 0, 'M')).dayLocked).toBe(true);
     expect(await db.dayCloses.get(['TSTS2', '2026-10-29'])).toBeUndefined();
   });
 
   it('locks the day the shift began on when it is closed after midnight, and leaves the next day open', async () => {
     vi.setSystemTime(new Date('2026-10-29T16:30:00.000Z')); // 22:00 IST, 29 Oct
-    const shift = await openShift('TSTS1', 'M1', 0);
+    const shift = await openShift('TSTS1', 'U1', 0);
     await sell(shift, 10000, 'cash');
     vi.setSystemTime(new Date('2026-10-29T18:50:00.000Z')); // 00:20 IST, 30 Oct
-    expect((await closeShift(shift, {}, 0)).dayLocked).toBe(true);
+    expect((await closeShift(shift, {}, 0, 'M')).dayLocked).toBe(true);
 
     expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toMatchObject({ date: '2026-10-29', lockedAt: '2026-10-29T18:50:00.000Z' });
     expect((await db.dayCloses.get(['TSTS1', '2026-10-29']))?.totals).toMatchObject({ net: 10000, bills: 1 });
@@ -135,15 +144,17 @@ describe('closeShift', () => {
   });
 
   it('is safe to call twice: the second call returns the first result and writes nothing new', async () => {
-    const shift = await openShift('TSTS1', 'M1', 0);
-    const first = await closeShift(shift, { 100: 1 }, 0);
+    const shift = await openShift('TSTS1', 'U1', 0);
+    const first = await closeShift(shift, { 100: 1 }, 0, 'M');
     vi.setSystemTime(new Date('2026-10-29T08:00:00.000Z'));
-    const second = await closeShift(shift, { 500: 9 }, 0);
+    const second = await closeShift(shift, { 500: 9 }, 0, 'M');
     expect(second).toEqual(first);
     expect((await db.shifts.get(shift))?.counted).toBe(10000);
   });
 
-  it('refuses an unknown shift', async () => {
-    await expect(closeShift('NOPE', {}, 0)).rejects.toThrow('shift_not_found');
+  it('refuses an unknown shift and a bad count', async () => {
+    await expect(closeShift('NOPE', {}, 0, 'M')).rejects.toThrow('shift_not_found');
+    const shift = await openShift('TSTS1', 'U1', 0);
+    await expect(closeShift(shift, { 100: -1 }, 0, 'M')).rejects.toThrow('bad_count');
   });
 });

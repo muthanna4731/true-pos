@@ -10,7 +10,8 @@ import { onHand } from '../../src/domain/stock';
 import type { PayMode, Product } from '../../src/domain/types';
 import { setLang } from '../../src/i18n';
 import BillScreen from '../../src/ui/bill/BillScreen';
-import ManagerRoutes from '../../src/ui/manager/ManagerRoutes';
+import OfficeRoutes from '../../src/ui/office/OfficeRoutes';
+import { resetWorkShop } from '../../src/ui/office/ShopScope';
 import { login, logout } from '../../src/ui/shell/session';
 
 // 29 Oct 2026, 12:00 IST.
@@ -46,11 +47,11 @@ function Where() {
   return <div data-testid="where">{useLocation().pathname}</div>;
 }
 
-function renderManager(path = '/manager') {
+function renderManager(path = '/office') {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/manager/*" element={<ManagerRoutes />} />
+        <Route path="/office/*" element={<OfficeRoutes />} />
         <Route path="*" element={null} />
       </Routes>
       <Where />
@@ -64,10 +65,14 @@ beforeEach(async () => {
   user = userEvent.setup();
   n = 0;
   await resetDb();
-  await db.stores.add({ code: 'TSTS1', number: '01', name: 'Hebbal', branchSlug: null, isHub: true, upiVpa: 'x@upi', licenceNo: 'L1' });
+  await db.stores.bulkAdd([
+    { code: 'TSTS1', number: '01', name: 'Hebbal', branchSlug: null, isHub: true, upiVpa: 'x@upi', licenceNo: 'L1' },
+    { code: 'TSTS2', number: '02', name: 'Yelahanka', branchSlug: null, isHub: false, upiVpa: 'y@upi', licenceNo: 'L2' },
+  ]);
   await db.users.bulkAdd([
     { id: 'U1', name: 'Cashier 1', phone: '1', role: 'cashier', pinHash: sha256Hex('U1:1111'), storeCodes: ['TSTS1'] },
-    { id: 'M1', name: 'Manager 1', phone: '2', role: 'manager', pinHash: sha256Hex('M1:2222'), storeCodes: ['TSTS1'] },
+    { id: 'U2', name: 'Cashier 2', phone: '3', role: 'cashier', pinHash: sha256Hex('U2:1111'), storeCodes: ['TSTS2'] },
+    { id: 'U-M', name: 'Manager', phone: '2', role: 'manager', pinHash: sha256Hex('U-M:2222'), storeCodes: ['TSTS1', 'TSTS2'] },
   ]);
   await db.products.bulkAdd(products);
   await db.prices.bulkAdd(products.map((p) => ({ productId: p.id, mrp: 10000, purchase: 7000, aroed: 0, cess: 0, effectiveFrom: '2026-04-01', pushedBy: 'seed' })));
@@ -76,6 +81,7 @@ beforeEach(async () => {
   cashierShift = 'SH-U1';
   sessionStorage.clear();
   logout();
+  resetWorkShop();
 });
 
 afterEach(() => {
@@ -86,28 +92,38 @@ afterEach(() => {
 });
 
 describe('manager home', () => {
-  it('shows the three big buttons, today at a glance with its as-of stamp, Bills and Practice mode', async () => {
+  it('shows the to-do home with the Manager row, today at a glance with its as-of stamp, and Practice mode', async () => {
     await sell(10000, 'cash');
     await sell(20000, 'upi');
     await sell(30000, 'card');
     await sell(99900, 'cash', { practice: true });
-    await login('M1', '2222');
+    await login('U-M', '2222');
     renderManager();
 
-    for (const name of ['Stock arrived', 'Count shelf', 'Close shift']) {
-      expect(await screen.findByRole('button', { name })).toBeInTheDocument();
-    }
+    const row = await screen.findByRole('region', { name: 'Manager' });
+    for (const name of ['Close shift', 'Bills', 'Prices', 'Shops & staff']) expect(within(row).getByRole('button', { name })).toBeInTheDocument();
     expect(await screen.findByText('Today: ₹600 · 3 bills · avg ₹200')).toBeInTheDocument();
-    expect(screen.getByText('as of 12:00 PM')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Bills' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Practice mode' })).toBeInTheDocument();
     // Every other figure of the day.
     const glance = screen.getByRole('region', { name: 'Today at a glance' });
+    expect(within(glance).getByText('as of 12:00 PM')).toBeInTheDocument();
     expect(within(glance).getByText('Month to date')).toBeInTheDocument();
     expect(within(glance).getByText('Cash').nextSibling).toHaveTextContent('₹100');
     expect(within(glance).getByText('UPI').nextSibling).toHaveTextContent('₹200');
     expect(within(glance).getByText('Card').nextSibling).toHaveTextContent('₹300');
     expect(within(glance).getByText('Whisky').nextSibling).toHaveTextContent('3 bottles · ₹600');
+  });
+
+  it('shows the figures of the shop picked, the hub first', async () => {
+    await sell(10000, 'cash');
+    await login('U-M', '2222');
+    renderManager();
+    const row = await screen.findByRole('region', { name: 'Manager' });
+    const pick = await within(row).findByRole('combobox', { name: 'Shop' });
+    expect(pick).toHaveValue('TSTS1');
+    expect(await screen.findByText('Today: ₹100 · 1 bill · avg ₹100')).toBeInTheDocument();
+    await user.selectOptions(pick, 'TSTS2');
+    expect(await screen.findByText('Today: ₹0 · 0 bills · avg ₹0')).toBeInTheDocument();
   });
 
   it('stamps a closed day with its locked figures, not a time', async () => {
@@ -118,26 +134,31 @@ describe('manager home', () => {
       lockedAt: NOON_IST,
       totals: { net: 12300, bills: 1, avgBill: 12300, byMode: { cash: 12300, upi: 0, card: 0 }, alc: 12300, nalc: 0, byType: {}, discount: 0, monthToDate: 12300 },
     });
-    await login('M1', '2222');
+    await login('U-M', '2222');
     renderManager();
     expect(await screen.findByText('Closed day: locked figures')).toBeInTheDocument();
-    expect(screen.queryByText(/as of/)).toBeNull();
+    expect(within(screen.getByRole('region', { name: 'Today at a glance' })).queryByText(/as of/)).toBeNull();
     expect(screen.getByText('Today: ₹123 · 1 bill · avg ₹123')).toBeInTheDocument();
   });
 
-  it('turns practice mode on and off', async () => {
-    await login('M1', '2222');
+  it('turns practice mode on and off for the shop picked, and only for that shop', async () => {
+    await login('U-M', '2222');
     renderManager();
     const toggle = await screen.findByRole('button', { name: 'Practice mode' });
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
     await user.click(toggle);
-    await waitFor(async () => expect((await db.kv.get('practice'))?.value).toBe(true));
+    await waitFor(async () => expect((await db.kv.get('practice:TSTS1'))?.value).toBe(true));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Practice mode' })).toHaveAttribute('aria-pressed', 'true'));
-    await user.click(screen.getByRole('button', { name: 'Practice mode' }));
-    await waitFor(async () => expect((await db.kv.get('practice'))?.value).toBe(false));
+    expect(await db.kv.get('practice:TSTS2')).toBeUndefined();
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Shop' }), 'TSTS2');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Practice mode' })).toHaveAttribute('aria-pressed', 'false'));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Shop' }), 'TSTS1');
+    await user.click(await screen.findByRole('button', { name: 'Practice mode' }));
+    await waitFor(async () => expect((await db.kv.get('practice:TSTS1'))?.value).toBe(false));
   });
 
-  it('is for the manager only', async () => {
+  it('is for the back office only: a cashier is sent to the bill screen', async () => {
     await login('U1', '1111');
     renderManager();
     await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/bill'));
@@ -148,11 +169,11 @@ describe('manager home', () => {
 describe('stock arrived', () => {
   beforeEach(async () => {
     await db.indents.add({ id: 'INDMYH26000001', storeCode: 'TSTS1', placedAt: '2026-10-26T09:00:00.000Z', status: 'placed', lines: [{ productId: STAG.id, cases: 4 }] });
-    await login('M1', '2222');
+    await login('U-M', '2222');
   });
 
   it('enters the invoice for a placed order, counts the door, marks breakage and saves', async () => {
-    renderManager('/manager/stock');
+    renderManager('/office/arrived');
     await user.click(await screen.findByRole('button', { name: 'Enter invoice' }));
 
     await user.type(screen.getByRole('textbox', { name: 'Invoice number' }), 'bad');
@@ -195,7 +216,7 @@ describe('stock arrived', () => {
 
   it('lists a delivery that is waiting to be counted, and says when nothing is waiting', async () => {
     await db.indents.update('INDMYH26000001', { status: 'received' });
-    renderManager('/manager/stock');
+    renderManager('/office/arrived');
     expect(await screen.findByText('No deliveries waiting')).toBeInTheDocument();
     await db.grns.add({
       id: 'GRN-9',
@@ -218,19 +239,30 @@ describe('stock arrived', () => {
   });
 });
 
+describe('stock arrived: shop picker', () => {
+  it('shows the deliveries of the shop picked, and the count of that shop', async () => {
+    await db.indents.add({ id: 'INDMYH26000002', storeCode: 'TSTS2', placedAt: '2026-10-26T09:00:00.000Z', status: 'placed', lines: [{ productId: STAG.id, cases: 2 }] });
+    await login('U-M', '2222');
+    renderManager('/office/arrived');
+    expect(await screen.findByText('No deliveries waiting')).toBeInTheDocument(); // the hub has none
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Shop' }), 'TSTS2');
+    expect(await screen.findByRole('button', { name: 'Enter invoice' })).toBeInTheDocument();
+    expect(screen.queryByText('No deliveries waiting')).toBeNull();
+  });
+});
+
 describe('stock arrived: transfers', () => {
   beforeEach(async () => {
-    await db.stores.add({ code: 'TSTS2', number: '02', name: 'Yelahanka', branchSlug: null, isHub: false, upiVpa: 'y@upi', licenceNo: 'L2' });
     await db.transfers.bulkAdd([
       { id: 'TR-IN-1', fromStore: 'TSTS2', toStore: 'TSTS1', lines: [{ productId: STAG.id, qty: 6 }], permitNo: 'KA-1', status: 'in_transit', dispatchedAt: '2026-10-28T05:00:00.000Z' },
       { id: 'TR-ELSEWHERE', fromStore: 'TSTS1', toStore: 'TSTS2', lines: [{ productId: OC.id, qty: 3 }], permitNo: 'KA-2', status: 'in_transit', dispatchedAt: '2026-10-28T05:00:00.000Z' },
       { id: 'TR-DONE', fromStore: 'TSTS2', toStore: 'TSTS1', lines: [{ productId: OC.id, qty: 2 }], permitNo: 'KA-3', status: 'received', dispatchedAt: '2026-10-20T05:00:00.000Z', receivedAt: '2026-10-21T05:00:00.000Z' },
     ]);
-    await login('M1', '2222');
+    await login('U-M', '2222');
   });
 
   it('lists only the transfers on their way to this shop, and Receive puts the stock on the shelf once', async () => {
-    renderManager('/manager/stock');
+    renderManager('/office/arrived');
     expect(await screen.findByText(/TR-IN-1/)).toBeInTheDocument();
     expect(screen.queryByText(/TR-ELSEWHERE/)).toBeNull();
     expect(screen.queryByText(/TR-DONE/)).toBeNull();
@@ -247,8 +279,8 @@ describe('stock arrived: transfers', () => {
 
 describe('count shelf', () => {
   it('shows what is expected against what was counted, then saves the difference', async () => {
-    await login('M1', '2222');
-    renderManager('/manager/count');
+    await login('U-M', '2222');
+    renderManager('/office/count');
     await user.click(await screen.findByRole('button', { name: 'Whisky' }));
 
     const ocCount = await screen.findByRole('spinbutton', { name: `Counted ${OC.shortName}` });
@@ -268,8 +300,8 @@ describe('count shelf', () => {
   });
 
   it('finds a bottle by search, and offers no save until something is counted', async () => {
-    await login('M1', '2222');
-    renderManager('/manager/count');
+    await login('U-M', '2222');
+    renderManager('/office/count');
     expect(await screen.findByText('Pick a type or search for a bottle')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save count' })).toBeNull();
     await user.type(screen.getByRole('textbox', { name: 'Search bottle' }), 'stag');
@@ -282,12 +314,16 @@ describe('count shelf', () => {
 
 describe('close shift', () => {
   it('counts the notes, shows short cash with the UPI and card totals, and locks the day at the last close', async () => {
+    await db.shifts.add({ id: 'SH-U1B', storeCode: 'TSTS1', cashierId: 'U1', openedAt: '2026-10-29T05:00:00.000Z', floatPaise: 200000 });
     await sell(20000, 'upi');
     await sell(10000, 'card');
-    await login('M1', '2222');
-    renderManager('/manager/close');
+    await login('U-M', '2222');
+    renderManager('/office/close');
 
-    await user.click(await screen.findByRole('button', { name: /Cashier 1/ }));
+    // The manager has no shift of their own: only the cashier shifts are listed.
+    expect(await screen.findAllByRole('button', { name: /Cashier 1/ })).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /Manager/ })).toBeNull();
+    await user.click((await screen.findAllByRole('button', { name: /Cashier 1/ }))[0]); // SH-U1, float ₹1,000
     expect(await screen.findByText('Expected cash ₹1,000')).toBeInTheDocument();
     expect(screen.getByText('UPI total ₹200')).toBeInTheDocument();
     expect(screen.getByText('Card total ₹100')).toBeInTheDocument();
@@ -308,30 +344,49 @@ describe('close shift', () => {
     // Wait for the result view: the live "₹100 short" line above it is replaced by it, so it can't be the thing awaited.
     expect(await screen.findByText('Shift closed')).toBeInTheDocument();
     expect(screen.getByText('₹100 short')).toBeInTheDocument();
-    expect(screen.queryByText(/Day locked/)).toBeNull();
+    expect(screen.queryByText(/Day locked/)).toBeNull(); // the other Cashier 1 shift is still open
     expect(await db.shifts.get('SH-U1')).toMatchObject({ expected: 100000, counted: 90000, diff: -10000 });
 
-    // The manager's own shift is the last one open.
     await user.click(screen.getByRole('button', { name: 'Done' }));
-    await user.click(await screen.findByRole('button', { name: /Manager 1/ }));
-    await screen.findByText('Expected cash ₹2,000');
-    for (let i = 0; i < 4; i++) await user.click(screen.getByRole('button', { name: 'Add ₹500 note' })); // float ₹2,000
+    await user.click(await screen.findByRole('button', { name: /Cashier 1/ }));
+    await screen.findByText('Expected cash ₹2,000'); // SH-U1B
+    for (let i = 0; i < 4; i++) await user.click(screen.getByRole('button', { name: 'Add ₹500 note' }));
     expect(screen.getByText('Matches ✓')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(await screen.findByText(/Day locked/)).toBeInTheDocument();
     expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toBeDefined();
     await expect(sell(100)).rejects.toThrow('day_closed');
 
-    // Closing your own shift ends your session.
+    // The manager has no shift, so closing one does not end the session.
     await user.click(screen.getByRole('button', { name: 'Done' }));
-    expect(sessionStorage.getItem('session')).toBeNull();
+    expect(sessionStorage.getItem('session')).not.toBeNull();
+    expect(await screen.findByText('No open shifts')).toBeInTheDocument();
+  });
+
+  it('lists the open shifts of the shop picked', async () => {
+    await db.shifts.add({ id: 'SH-U2', storeCode: 'TSTS2', cashierId: 'U2', openedAt: '2026-10-29T04:00:00.000Z', floatPaise: 100000 });
+    await login('U-M', '2222');
+    renderManager('/office/close');
+    expect(await screen.findByRole('button', { name: /Cashier 1/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cashier 2/ })).toBeNull();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Shop' }), 'TSTS2');
+    expect(await screen.findByRole('button', { name: /Cashier 2/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cashier 1/ })).toBeNull();
+
+    // Closing the only open shift of TSTS2 locks TSTS2 and leaves TSTS1 open.
+    await user.click(screen.getByRole('button', { name: /Cashier 2/ }));
+    await screen.findByText('Expected cash ₹1,000');
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(await screen.findByText(/Day locked/)).toBeInTheDocument();
+    expect(await db.dayCloses.get(['TSTS2', '2026-10-29'])).toBeDefined();
+    expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toBeUndefined();
+    await user.click(screen.getByRole('button', { name: 'Done' }));
   });
 
   it('says there is nothing to close when no shift is open', async () => {
     await db.shifts.clear();
-    await login('M1', '2222');
-    await db.shifts.clear();
-    renderManager('/manager/close');
+    await login('U-M', '2222');
+    renderManager('/office/close');
     expect(await screen.findByText('No open shifts')).toBeInTheDocument();
   });
 });
@@ -340,9 +395,9 @@ describe('bills', () => {
   it('lists today\'s bills and shows a bill\'s lines with Reprint', async () => {
     const bill = await sell(30000, 'upi', { qty: 3 });
     await sell(5000, 'cash', { practice: true });
-    await login('M1', '2222');
+    await login('U-M', '2222');
     const print = vi.spyOn(window, 'print').mockImplementation(() => {});
-    renderManager('/manager/bills');
+    renderManager('/office/bills');
 
     const list = await screen.findByRole('list', { name: 'Bills' });
     await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(2));
@@ -365,8 +420,8 @@ describe('bills', () => {
   it('voids a bill only after the manager PIN again, and puts the stock back', async () => {
     const bill = await sell(50000, 'cash', { qty: 5 });
     expect(await stockOf(OC.id)).toBe(95);
-    await login('M1', '2222');
-    renderManager('/manager/bills');
+    await login('U-M', '2222');
+    renderManager('/office/bills');
 
     await user.click(await screen.findByRole('button', { name: new RegExp(bill.number) }));
     const dialog = await screen.findByRole('dialog', { name: `Bill ${bill.number}` });
@@ -398,8 +453,8 @@ describe('bills', () => {
   it('shows no Void on a practice bill, or on any bill once the day is locked', async () => {
     const practice = await sell(5000, 'cash', { practice: true });
     const paid = await sell(10000, 'cash');
-    await login('M1', '2222');
-    renderManager('/manager/bills');
+    await login('U-M', '2222');
+    renderManager('/office/bills');
 
     await user.click(await screen.findByRole('button', { name: new RegExp(practice.number) }));
     let dialog = await screen.findByRole('dialog', { name: `Bill ${practice.number}` });
@@ -419,8 +474,8 @@ describe('bills', () => {
   });
 
   it('says so when there are no bills yet today', async () => {
-    await login('M1', '2222');
-    renderManager('/manager/bills');
+    await login('U-M', '2222');
+    renderManager('/office/bills');
     expect(await screen.findByText('No bills yet today')).toBeInTheDocument();
   });
 });
@@ -438,7 +493,7 @@ describe('cashier end shift', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(await within(dialog).findByText('Shift closed')).toBeInTheDocument();
     expect((await db.shifts.get('SH-U1'))?.closedAt).toBe(NOON_IST);
-    expect(within(dialog).queryByText(/Day locked/)).toBeNull(); // only a manager's close locks the day
+    expect(within(dialog).queryByText(/Day locked/)).toBeNull(); // a cashier's own close never locks the day
     expect(await db.dayCloses.count()).toBe(0);
     expect(sessionStorage.getItem('session')).not.toBeNull();
 
@@ -454,19 +509,12 @@ describe('cashier end shift', () => {
     expect(screen.queryByRole('dialog', { name: 'Close shift' })).toBeNull();
     expect((await db.shifts.get('SH-U1'))?.closedAt).toBeUndefined();
   });
-
-  it('is not on the manager\'s bill screen: the manager closes from the home', async () => {
-    await login('M1', '2222');
-    render(<BillScreen />);
-    await screen.findByRole('textbox', { name: /scan or type/i });
-    expect(screen.queryByRole('button', { name: 'End shift' })).toBeNull();
-  });
 });
 
 describe('Kannada', () => {
   it('has the manager home in Kannada', async () => {
     setLang('kn');
-    await login('M1', '2222');
+    await login('U-M', '2222');
     renderManager();
     expect(await screen.findByRole('button', { name: 'ಸ್ಟಾಕ್ ಬಂತು' })).toBeInTheDocument();
   });

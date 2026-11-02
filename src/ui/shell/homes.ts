@@ -6,7 +6,6 @@ export function homeFor(role: Role): string {
     case 'cashier':
       return '/bill'
     case 'manager':
-      return '/manager'
     case 'office':
       return '/office'
     case 'owner':

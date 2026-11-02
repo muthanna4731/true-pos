@@ -19,15 +19,17 @@ export function diffText(diff: Paise): string {
 interface Props {
   /** Close this shift (the cashier's own). Without it the manager picks from the shifts still open at the shop. */
   shiftId?: string
+  /** The shop whose open shifts the picker lists (when no `shiftId` is given). */
+  storeCode?: string
   /** After [Done], with the shift that was closed. */
   onDone(closedShiftId: string): void
   onCancel?(): void
 }
 
-/** Count the drawer and close a shift. The cashier's [End shift] and the manager's [Close shift] are this same screen. */
-export default function CloseShift({ shiftId, onDone, onCancel }: Props) {
+/** Count the drawer and close a shift. The cashier's [End shift] and the manager's [Close shift] are this same screen; who is signed in decides whether the day can lock. */
+export default function CloseShift({ shiftId, storeCode, onDone, onCancel }: Props) {
   const [picked, setPicked] = useState<string | undefined>(shiftId)
-  if (picked === undefined) return <ShiftPicker onPick={setPicked} />
+  if (picked === undefined) return <ShiftPicker storeCode={storeCode} onPick={setPicked} />
   return (
     <ShiftCount
       key={picked}
@@ -42,9 +44,7 @@ export default function CloseShift({ shiftId, onDone, onCancel }: Props) {
 }
 
 /** The shifts still open at this shop, one button each. */
-function ShiftPicker({ onPick }: { onPick(id: string): void }) {
-  const { store } = useSession()
-  const code = store?.code
+function ShiftPicker({ storeCode: code, onPick }: { storeCode?: string; onPick(id: string): void }) {
   const open = useLiveQuery(
     async () => {
       if (!code) return undefined
@@ -75,6 +75,7 @@ function ShiftPicker({ onPick }: { onPick(id: string): void }) {
 
 function ShiftCount({ shiftId, onDone, onCancel }: { shiftId: string; onDone(id: string): void; onCancel?(): void }) {
   const figures = useLiveQuery(async () => ({ expected: await expectedCash(shiftId), takings: await shiftTakings(shiftId) }), [shiftId])
+  const { user } = useSession()
   const [counts, setCounts] = useState<Record<number, number>>({})
   const [coins, setCoins] = useState('')
   const [result, setResult] = useState<ShiftClose | null>(null)
@@ -101,7 +102,7 @@ function ShiftCount({ shiftId, onDone, onCancel }: { shiftId: string; onDone(id:
     busy.current = true
     setFailed(false)
     try {
-      setResult(await closeShift(shiftId, counts, coinsToPaise(coins)))
+      setResult(await closeShift(shiftId, counts, coinsToPaise(coins), user?.id ?? ''))
     } catch {
       setFailed(true)
     } finally {

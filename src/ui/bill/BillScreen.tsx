@@ -35,7 +35,7 @@ export default function BillScreen() {
   const { store, user, shiftId, logout } = useSession()
   const storeCode = store?.code
   const data = useBillData(storeCode)
-  const practice = usePractice()
+  const practice = usePractice(storeCode)
   const [cart, dispatch] = useReducer(cartReducer, undefined, newCart)
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<Tab>('all')

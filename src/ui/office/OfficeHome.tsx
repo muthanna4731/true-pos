@@ -9,6 +9,9 @@ import type { Product, StockMovement } from '../../domain/types'
 import { t } from '../../i18n'
 import { useLang } from '../../i18n/useLang'
 import ReportTable from '../common/ReportTable'
+import ManagerPanel from '../manager/ManagerPanel'
+import { useSession } from '../shell/session'
+import { backOfficeLinks } from './navItems'
 
 /** Low-stock items shown before [Show all]: one product can be low in several shops, and there can be dozens of products. */
 const LOW_SHOWN = 5
@@ -48,9 +51,11 @@ function litresByGroup(movements: StockMovement[], products: Product[], storeCod
   return out
 }
 
-/** The office home: what needs doing today, the litres tile, and the tabs to the other screens. */
+/** The back-office home, for office and manager: what needs doing today, the manager's row (manager only), the litres tile, and the tabs to the other screens. */
 export default function OfficeHome() {
   const navigate = useNavigate()
+  const { user } = useSession()
+  const links = backOfficeLinks(user?.role ?? 'cashier')
   const lang = useLang()
   const [showAllLow, setShowAllLow] = useState(false)
   // To the minute, so the memos below hold between renders.
@@ -117,6 +122,8 @@ export default function OfficeHome() {
         </button>
       )}
 
+      {user?.role === 'manager' && <ManagerPanel />}
+
       <ReportTable
         title={t('office.litres')}
         asOf={{ now }}
@@ -132,25 +139,22 @@ export default function OfficeHome() {
       />
 
       <nav className="office-tabs" aria-label={t('home.office')}>
-        <button type="button" onClick={() => navigate('/office/orders')}>
-          {t('nav.orders')}
-        </button>
-        <button type="button" onClick={() => navigate('/office/deliveries')}>
-          {t('nav.deliveries')}
-        </button>
-        <button type="button" onClick={() => navigate('/office/transfers')}>
-          {t('nav.transfers')}
-        </button>
-        <button type="button" onClick={() => navigate('/office/stock')}>
-          {t('nav.stock')}
-        </button>
-        <details className="more-menu">
-          <summary>{t('office.more')}</summary>
-          {(['losses', 'suppliers', 'products', 'reports', 'shops'] as const).map((p) => (
-            <button key={p} type="button" onClick={() => navigate(`/office/${p}`)}>
-              {t(`nav.${p}`)}
+        {links
+          .filter((l) => l.primary)
+          .map((l) => (
+            <button key={l.path} type="button" onClick={() => navigate(`/office/${l.path}`)}>
+              {l.label}
             </button>
           ))}
+        <details className="more-menu">
+          <summary>{t('office.more')}</summary>
+          {links
+            .filter((l) => !l.primary && !l.quick)
+            .map((l) => (
+              <button key={l.path} type="button" onClick={() => navigate(`/office/${l.path}`)}>
+                {l.label}
+              </button>
+            ))}
         </details>
       </nav>
     </div>

@@ -4,23 +4,20 @@ import { istDayRange } from '../../db/dayData'
 import { db } from '../../db/db'
 import { formatINR } from '../../domain/money'
 import { clock, formatTime, istDate } from '../../domain/time'
-import type { Bill, PayMode } from '../../domain/types'
+import type { Bill, PayMode, Store } from '../../domain/types'
 import { t } from '../../i18n'
 import { useLoyaltyFlag } from '../../loyalty/flags'
-import { useSession } from '../shell/session'
 import BillDialog from './BillDialog'
 import PageHeader from './PageHeader'
 
 /** Today's bills at this shop, newest first. Tap one to see it, reprint it or void it. */
-export default function BillsList() {
-  const { store } = useSession()
-  const code = store?.code
+export default function BillsList({ store }: { store: Store }) {
+  const code = store.code
   const loyalty = useLoyaltyFlag()
   const [open, setOpen] = useState<string | null>(null)
   const today = istDate(clock.now())
 
   const data = useLiveQuery(async () => {
-    if (!code) return undefined
     const [from, to] = istDayRange(today)
     const bills = (await db.bills.where('[storeCode+at]').between([code, from], [code, to], true, false).toArray()).reverse()
     const payments = await db.payments.where('billNumber').anyOf(bills.map((b) => b.number)).toArray()
@@ -55,7 +52,7 @@ export default function BillsList() {
           </li>
         ))}
       </ul>
-      {open !== null && store && (
+      {open !== null && (
         <BillDialog
           number={open}
           store={store}

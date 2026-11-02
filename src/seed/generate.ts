@@ -115,7 +115,6 @@ interface StoreCtx {
   store: Store;
   n: number;
   cashierId: string;
-  managerId: string;
   scale: number;
   active: Product[];
   cumWeights: number[];
@@ -192,9 +191,9 @@ export function generateSeed(opts: SeedOpts): SeedData {
   stores.forEach((s, i) => {
     const n = i + 1;
     users.push(user(`U-C${s.number}`, `Cashier ${n}`, 'cashier', '1111', [s.code], `99999000${s.number}`));
-    users.push(user(`U-M${s.number}`, `Manager ${n}`, 'manager', '2222', [s.code], `99999001${s.number}`));
   });
   const allCodes = stores.map((s) => s.code);
+  users.push(user('U-M', 'Manager', 'manager', '2222', allCodes, '9999900100'));
   users.push(user('U-OFFICE', 'Office', 'office', '3333', allCodes, '9999900200'));
   users.push(user('U-OWNER', 'Owner', 'owner', '4444', allCodes, '9999900300'));
 
@@ -282,7 +281,6 @@ export function generateSeed(opts: SeedOpts): SeedData {
       store,
       n: i + 1,
       cashierId: `U-C${store.number}`,
-      managerId: `U-M${store.number}`,
       scale: i === 0 ? 1 : 0.4 + 0.5 * rng(),
       active,
       cumWeights: cum,
@@ -666,7 +664,7 @@ export function generateSeed(opts: SeedOpts): SeedData {
           const ref = `LOSS-${String(lossNo).padStart(4, '0')}`;
           const at = istAt(date, 22 * 60 + 40);
           move(code, p.id, -qty, 'loss', ref, at);
-          losses.push({ storeCode: code, productId: p.id, qty, reason: lossReasons[ri(0, lossReasons.length - 1)], at, by: c.managerId, ref });
+          losses.push({ storeCode: code, productId: p.id, qty, reason: lossReasons[ri(0, lossReasons.length - 1)], at, by: 'U-M', ref });
         }
       }
 

@@ -1,6 +1,6 @@
 # True POS (demo)
 
-An offline-first point-of-sale demo for a liquor shop chain. Four roles (cashier, shop manager, office, owner) run on generated dummy data held in the browser (IndexedDB). There is no backend and no real data.
+An offline-first point-of-sale demo for a liquor shop chain. Four roles (cashier, manager, office, owner) run on generated dummy data held in the browser (IndexedDB). There is no backend and no real data.
 
 React 18, Vite, TypeScript, Dexie, and a Workbox service worker (vite-plugin-pwa) for offline use.
 
@@ -32,11 +32,13 @@ The first visit builds the dummy data and takes a few seconds. To start over, op
 | Role | PIN |
 | --- | --- |
 | Cashier | `1111` |
-| Shop manager | `2222` |
+| Manager (one, chain-wide) | `2222` |
 | Office | `3333` |
 | Owner | `4444` |
 
 The login screen shows them under "Demo". These are demo PINs for dummy staff, not real accounts.
+
+Manager and Office share one back-office app. The manager also closes shifts and locks the day, runs prices and offers, voids bills, sets practice mode, and sees Shops & staff, where a new PIN can be set for anyone.
 
 ## About the data
 

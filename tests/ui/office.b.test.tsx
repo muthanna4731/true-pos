@@ -96,6 +96,12 @@ describe('stock', () => {
 });
 
 describe('shops and staff', () => {
+  // Shops & staff is the manager's page; office does not get it.
+  beforeEach(async () => {
+    logout();
+    expect(await login('U-M', '2222')).toBe(true);
+  });
+
   it('shows Loyalty: OFF when the flag is off, and the note', async () => {
     await db.kv.put({ key: 'loyalty', value: false });
     renderOffice('/office/shops');
@@ -189,6 +195,12 @@ describe('stale product picks', () => {
 });
 
 describe('products', () => {
+  // Office views the price list; the manager (or owner) pushes new prices.
+  beforeEach(async () => {
+    logout();
+    expect(await login('U-M', '2222')).toBe(true);
+  });
+
   it('pushes a new price effective tomorrow and keeps the history', async () => {
     await db.prices.add({ productId: PRODUCT, mrp: 100000, purchase: 80000, aroed: 0, cess: 0, effectiveFrom: '2026-04-01', pushedBy: 'x' });
     renderOffice('/office/products');

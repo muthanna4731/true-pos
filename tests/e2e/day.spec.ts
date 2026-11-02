@@ -4,16 +4,25 @@ import { login, openApp } from './helpers'
 test('closing the shift locks the day, and the next day opens billing again', async ({ page }) => {
   await openApp(page)
 
-  // The manager counts the drawer and closes: the day locks.
+  // The cashier opens a shift and walks away without ending it.
+  await login(page, 'cashier')
+  await expect(page.locator('.top-tiles .tile').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Log out' }).click()
+
+  // The manager is one chain-wide admin: no shift of their own, the shop picker starts on the hub. They count the drawer and close: the day locks.
   await login(page, 'manager')
-  await expect(page.getByRole('heading', { name: 'Shop manager' })).toBeVisible()
-  await page.getByRole('button', { name: 'Close shift' }).click()
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Manager' })).toBeVisible()
+  await page.getByRole('region', { name: 'Manager' }).getByRole('button', { name: 'Close shift' }).click()
+  await expect(page.getByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS1')
+  await expect(page.locator('.shift-row')).toHaveCount(1)
   await page.locator('.shift-row').first().click()
   await page.getByRole('button', { name: 'Close', exact: true }).click()
   await expect(page.getByText("Day locked. Today's figures are final.")).toBeVisible()
-  await page.getByRole('button', { name: 'Done' }).click() // closing your own shift ends the session
+  await page.getByRole('button', { name: 'Done' }).click() // the manager has no shift, so the session goes on
 
-  // Back in as the manager, today's report shows locked figures.
+  // Back on the home, today's report shows locked figures.
+  await page.getByRole('button', { name: 'Log out' }).click()
   await expect(page.getByRole('heading', { name: 'Who is working?' })).toBeVisible()
   await login(page, 'manager')
   await expect(page.getByText('Closed day: locked figures')).toBeVisible()

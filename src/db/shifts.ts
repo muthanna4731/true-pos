@@ -53,12 +53,12 @@ function validCount(n: number): boolean {
 }
 
 /**
- * Close a shift with the cash counted (notes by rupee value, plus coins in paise). Only a manager's close can lock
- * the day: when the closing shift is a manager's and no other shift of the shop that began on the same IST day is
- * still open, the shift's own day is locked in the same transaction and its figures are saved. A cashier's close
- * never locks. Safe to call twice.
+ * Close a shift with the cash counted (notes by rupee value, plus coins in paise). Only a close by a manager can lock
+ * the day: when `closedBy` is a manager and no other shift of the shop that began on the same IST day is still
+ * open, the shift's own day is locked in the same transaction and its figures are saved. A cashier closing their
+ * own shift never locks. Safe to call twice.
  */
-export function closeShift(shiftId: string, counts: Record<number, number>, coins: Paise): Promise<ShiftClose> {
+export function closeShift(shiftId: string, counts: Record<number, number>, coins: Paise, closedBy: string): Promise<ShiftClose> {
   if (!Object.values(counts).every(validCount) || !validCount(coins)) return Promise.reject(new Error('bad_count'));
   return db.transaction('rw', [db.shifts, db.users, db.bills, db.payments, db.billLines, db.products, db.dayCloses], async () => {
     const shift = await db.shifts.get(shiftId);
@@ -76,7 +76,7 @@ export function closeShift(shiftId: string, counts: Record<number, number>, coin
     const diff = counted - expected;
     await db.shifts.update(shiftId, { closedAt: now, counted, expected, diff });
 
-    if ((await db.users.get(shift.cashierId))?.role !== 'manager') return { expected, counted, diff, dayLocked: false };
+    if ((await db.users.get(closedBy))?.role !== 'manager') return { expected, counted, diff, dayLocked: false };
 
     // Shifts left open from another day do not hold this day's lock back.
     const othersOpen = await db.shifts

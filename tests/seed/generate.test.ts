@@ -67,14 +67,23 @@ describe.each([1, DEMO_SEED])('generateSeed (seed %i)', (seedNo) => {
     expect(seed.stores.filter((s) => s.isHub).map((s) => s.code)).toEqual(['TSTS1']);
     expect(seed.stores[9]).toMatchObject({ name: 'True Spirits Gold', branchSlug: null, upiVpa: 'truespirits10@demo' });
     expect(seed.stores[2]).toMatchObject({ name: 'True Spirits 3', upiVpa: 'truespirits3@demo' });
-    expect(seed.users).toHaveLength(22);
+    expect(seed.users).toHaveLength(13);
     const cashier = seed.users.find((u) => u.name === 'Cashier 3')!;
     expect(cashier).toMatchObject({ role: 'cashier', storeCodes: ['TSTS3'] });
     expect(cashier.pinHash).toBe(sha256Hex(`${cashier.id}:1111`));
     const owner = seed.users.find((u) => u.name === 'Owner')!;
     expect(owner.pinHash).toBe(sha256Hex(`${owner.id}:4444`));
-    expect(seed.users.find((u) => u.name === 'Manager 10')!.pinHash).toBe(sha256Hex(`U-M10:2222`));
+    const manager = seed.users.find((u) => u.id === 'U-M')!;
+    expect(manager).toMatchObject({ name: 'Manager', role: 'manager', storeCodes: seed.stores.map((s) => s.code) });
+    expect(manager.phone).toMatch(/^99999/);
+    expect(manager.pinHash).toBe(sha256Hex(`U-M:2222`));
     expect(sha256Hex(`${seed.users.find((u) => u.name === 'Office')!.id}:3333`)).toBe(seed.users.find((u) => u.name === 'Office')!.pinHash);
+  });
+
+  it('has exactly one manager, chain-wide, and the losses are written off by that manager', () => {
+    expect(seed.users.filter((u) => u.role === 'manager').map((u) => u.id)).toEqual(['U-M']);
+    expect(seed.losses.length).toBeGreaterThan(0);
+    expect(new Set(seed.losses.map((l) => l.by))).toEqual(new Set(['U-M']));
   });
 
   it('prices every product at MRP / 1.10 with no AROED or cess, from 1 April 2026', () => {

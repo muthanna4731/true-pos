@@ -242,7 +242,7 @@ describe('bill screen: loyalty on', () => {
 describe('bill screen: practice mode', () => {
   it('acts as if loyalty were off: no customer line, member scans ignored without a word, cart unchanged', async () => {
     await setLoyaltyEnabled(true);
-    await db.kv.put({ key: 'practice', value: true });
+    await db.kv.put({ key: 'practice:TSTS1', value: true });
     await renderBill();
     await user.click(tile(OC.shortName));
     await within(cart()).findByText(OC.shortName);

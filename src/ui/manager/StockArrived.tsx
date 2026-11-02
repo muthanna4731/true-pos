@@ -4,6 +4,7 @@ import { db } from '../../db/db'
 import { draftGrn, receiveTransfer } from '../../db/stockOps'
 import { isOnOrder, KSBCL_INV_RE } from '../../domain/orders'
 import { formatDate } from '../../domain/time'
+import type { Store } from '../../domain/types'
 import { shopLabel } from '../../domain/todos'
 import { t } from '../../i18n'
 import { errorText, guarded } from '../office/shared'
@@ -18,16 +19,15 @@ type View = { kind: 'list' } | { kind: 'invoice'; indentId: string } | { kind: '
  * invoice has not been entered (the manager types it with [Enter invoice]), and transfers from other shops
  * that are on their way here (the manager confirms them with [Receive]).
  */
-export default function StockArrived() {
-  const { store, user } = useSession()
+export default function StockArrived({ store }: { store: Store }) {
+  const { user } = useSession()
   const busy = useRef(false)
-  const code = store?.code
+  const code = store.code
   const [view, setView] = useState<View>({ kind: 'list' })
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const waiting = useLiveQuery(async () => {
-    if (!code) return undefined
     const grns = await db.grns.where('storeCode').equals(code).toArray()
     const invoiced = new Set(grns.flatMap((g) => (g.indentId ? [g.indentId] : [])))
     const indents = await db.indents.where('storeCode').equals(code).filter((i) => isOnOrder(i) && !invoiced.has(i.id)).toArray()

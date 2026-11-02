@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from 'react'
 import { db } from '../../db/db'
 import { saveCount } from '../../db/stockOps'
 import { typeOf } from '../../domain/productType'
+import type { Store } from '../../domain/types'
 import { searchProducts } from '../../domain/search'
 import { onHand } from '../../domain/stock'
 import { t } from '../../i18n'
@@ -29,9 +30,9 @@ function diffText(diff: number): string {
 }
 
 /** Pick a type or search, type what is on the shelf, see the difference, then [Save count]. */
-export default function CountShelf() {
-  const { store, user } = useSession()
-  const code = store?.code
+export default function CountShelf({ store }: { store: Store }) {
+  const { user } = useSession()
+  const code = store.code
   const [tab, setTab] = useState<Tab>('all')
   const [query, setQuery] = useState('')
   const [typed, setTyped] = useState<Record<string, string>>({})
@@ -51,7 +52,6 @@ export default function CountShelf() {
   const ids = shown.map((p) => p.id).join(',')
   const system = useLiveQuery(async () => {
     const out = new Map<string, number>()
-    if (!code) return out
     for (const id of ids === '' ? [] : ids.split(',')) {
       out.set(id, onHand(await db.movements.where('[storeCode+productId]').equals([code, id]).toArray(), code, id))
     }
@@ -64,7 +64,7 @@ export default function CountShelf() {
   })
 
   const save = async (): Promise<void> => {
-    if (busy.current || !code || !user || entered.length === 0) return // a double tap saves once
+    if (busy.current || !user || entered.length === 0) return // a double tap saves once
     busy.current = true
     setFailed(false)
     try {

@@ -7,7 +7,7 @@ Product names and MRPs come from the public price list; all quantities and rupee
 
 - Run the built app, not the dev server, so the offline step works: `npm run build && npm run preview`, then open http://localhost:4173.
 - The very first visit builds the dummy shop data (about 6 seconds on a laptop). After that it opens at once.
-- Demo PINs: Cashier `1111`, Shop manager `2222`, Office `3333`, Owner `4444`. The login screen lists them under "Demo".
+- Demo PINs: Cashier `1111`, Manager `2222`, Office `3333`, Owner `4444`. The login screen lists them under "Demo".
 - Hidden demo panel: press Ctrl+Shift+D, or tap the "True POS" logo three times quickly. Press Esc or Close to hide it.
 - To start over at any time: demo panel > Reset demo data.
 
@@ -33,17 +33,16 @@ Product names and MRPs come from the public price list; all quantities and rupee
 3. Bill one bottle: tap a tile, **Cash**, **Exact**. The badge says `● Offline · 1 bill will sync`.
 4. Turn the wifi on. The badge goes back to `● Online` and the bill is sent.
 
-### 4. The manager closes the shifts and the day locks (2 min)
+### 4. The manager closes the shift and the day locks (2 min)
 
-Logging out does not end the cashier's shift, so the manager has two open shifts to close: the cashier's, then their own.
+The manager is one chain-wide admin with no shift of their own. Logging out does not end the cashier's shift, so the manager closes it.
 
-1. Tap **Log out**, then **Manager 1** and `2222`.
-2. The manager home shows today at a glance. Tap **Close shift**. Two shifts are listed: **Cashier 1** and **Manager 1**.
-3. Tap **Cashier 1**'s shift, count the cash with the note buttons (the screen shows "Expected cash" and whether it matches), tap **Close**. The screen says "Shift closed". The day is not locked yet, because the manager's own shift is still open. Tap **Done**.
-4. The list now shows only **Manager 1**. Tap it, count the drawer, tap **Close**. The screen says "Day locked. Today's figures are final." Tap **Done**: closing your own shift logs you out.
-5. Log in as the manager again. Today's figures now say "Closed day: locked figures".
-6. Log in as **Cashier 1** and tap a bottle: instead of the pay buttons the screen says "Day closed for today. Ask your manager."
-7. Open the demo panel and tap **Next day**: billing works again.
+1. Tap **Log out**, then **Manager** and `2222`. The back-office home opens: the same to-do list as Office, with a **Manager** row of quick actions (Close shift, Bills, Prices, Shops & staff) and today at a glance. The shop picker starts on the hub, TS1.
+2. Tap **Close shift**. One shift is listed: **Cashier 1**.
+3. Tap it, count the cash with the note buttons (the screen shows "Expected cash" and whether it matches), tap **Close**. The screen says "Shift closed" and "Day locked. Today's figures are final.", because a manager closed the last open shift of the day. Tap **Done**. A cashier's own **End shift** never locks the day.
+4. Go back to the home. Today's figures now say "Closed day: locked figures".
+5. Log in as **Cashier 1** and tap a bottle: instead of the pay buttons the screen says "Day closed for today. Ask your manager."
+6. Open the demo panel and tap **Next day**: billing works again.
 
 ### 5. The office to-do list shows the planted problems (2 min)
 
@@ -55,8 +54,9 @@ Logging out does not end the cashier's shift, so the manager has two open shifts
    - "TS4 did not close yesterday" with **Remind**
    - "4 shops low on UB Premium 650" with **Make order**
 2. Stock arrived: an order to KSBCL was placed yesterday and has not been delivered. Open **Deliveries**, pick that order in "New KSBCL delivery", type an invoice number such as `SMYH26123456`, tap **Add delivery**.
-3. Log in as the manager and tap **Stock arrived** > **Count it**. Every line starts as "Matches"; change one line to show a short or broken bottle, then tap **Done**.
-4. Transfers are received by the shop's manager: log in as **Manager 8**, open **Stock arrived**, and tap **Receive** on `TR-PLANT-1` (the stuck transfer). The office to-do item goes away.
+3. Open **Stock arrived** (Office and Manager both have it, with a shop picker that starts on the hub) and tap **Count it**. Every line starts as "Matches"; change one line to show a short or broken bottle, then tap **Done**.
+4. Transfers are received at the receiving shop: in **Stock arrived**, pick **TS8** in the shop picker and tap **Receive** on `TR-PLANT-1` (the stuck transfer). The office to-do item goes away.
+5. Log in as **Manager** to show what Office does not get: **Close shift**, **Bills** (void a bill with the manager PIN), **Practice mode** for a shop, **Prices** and **Offers** (push a price, run an offer), and **Shops & staff** with **Change PIN** for each person. Office sees Products but only to read.
 
 ### 6. The owner page and the WhatsApp preview (1 min)
 

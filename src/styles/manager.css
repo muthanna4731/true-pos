@@ -1,4 +1,4 @@
-/* Shop manager screens: home, stock arrived, count shelf, close shift, bills. Flat colours, 56 px minimum targets. */
+/* Manager screens: the manager row on the office home, stock arrived, count shelf, close shift, bills. Flat colours, 56 px minimum targets. */
 
 .page-header {
   display: flex;
@@ -10,20 +10,30 @@
   margin-top: 0;
 }
 
-.manager-home .big-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/* The manager's row on the office home: quick actions in burgundy statement pills in bone text. */
+.manager-actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
-/* Big manager buttons: burgundy statement pills in bone text (coral is kept for the main action on a screen). */
-button.big-button {
-  min-height: 120px;
+.manager-actions button {
+  min-height: 56px;
   padding: 0 24px;
   border-color: var(--brand);
   background: var(--brand);
   color: var(--on-dark);
-  font-size: 22px;
+}
+
+.shop-pick {
+  margin: 16px 0;
+}
+
+.change-pin label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
 }
 
 .glance {
@@ -410,10 +420,6 @@ button.end-shift {
 }
 
 @media (max-width: 720px) {
-  .manager-home .big-buttons {
-    grid-template-columns: 1fr;
-  }
-
   .receive-line,
   .count-line {
     grid-template-columns: 1fr;

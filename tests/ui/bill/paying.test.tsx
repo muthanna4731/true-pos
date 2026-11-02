@@ -248,7 +248,7 @@ describe('bill screen: paying', () => {
   });
 
   it('marks the receipt PRACTICE and leaves stock alone in practice mode', async () => {
-    await db.kv.put({ key: 'practice', value: true });
+    await db.kv.put({ key: 'practice:TSTS1', value: true });
     await renderBill();
     expect(await screen.findByText("PRACTICE — bills don't count")).toBeInTheDocument();
     await tap(tile(OC.shortName));
@@ -262,7 +262,7 @@ describe('bill screen: paying', () => {
   });
 
   it('shows no practice band when practice mode is off', async () => {
-    await db.kv.put({ key: 'practice', value: false });
+    await db.kv.put({ key: 'practice:TSTS1', value: false });
     await renderBill();
     await tap(tile(OC.shortName));
     await payButton('Card ₹55');

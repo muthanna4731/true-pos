@@ -52,14 +52,13 @@ function subscribe(listener: () => void): () => void {
   }
 }
 
-/** Cashiers and managers work at one counter of one shop; office and owner see all shops. */
+/** Only a cashier works at one counter of one shop; manager, office and owner see all shops. */
 function worksAtCounter(role: Role): boolean {
-  return role === 'cashier' || role === 'manager'
+  return role === 'cashier'
 }
 
 /**
- * Check the PIN and start the session. A cashier or manager also gets a shift at their shop,
- * unless they already have one open. Returns false for an unknown user or a wrong PIN.
+ * Check the PIN and start the session. A cashier also gets a shift at their shop, unless they already have one open. Returns false for an unknown user or a wrong PIN.
  */
 export async function login(userId: string, pin: string): Promise<boolean> {
   const user = await db.users.get(userId)

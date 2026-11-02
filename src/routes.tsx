@@ -4,7 +4,6 @@ import { useLang } from './i18n/useLang'
 import { useClockOffset } from './ui/useClockOffset'
 import { useLoyaltyFlag } from './loyalty/flags'
 import BillScreen from './ui/bill/BillScreen'
-import ManagerRoutes from './ui/manager/ManagerRoutes'
 import OfficeRoutes from './ui/office/OfficeRoutes'
 import Products from './ui/office/Products'
 import OwnerPage from './ui/owner/OwnerPage'
@@ -26,14 +25,14 @@ export function AppRoutes() {
         <Route
           path="/bill"
           element={
-            <RoleGate allow={['cashier', 'manager']}>
+            <RoleGate allow={['cashier']}>
               <RoleScreen wide>
                 <BillScreen />
               </RoleScreen>
             </RoleGate>
           }
         />
-        <Route path="/manager/*" element={<ManagerRoutes />} />
+        <Route path="/manager/*" element={<Navigate to="/office" replace />} />
         <Route path="/office/*" element={<OfficeRoutes />} />
         <Route
           path="/owner"

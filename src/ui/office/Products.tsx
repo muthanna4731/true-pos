@@ -21,6 +21,8 @@ const tomorrow = (day: string): string => new Date(Date.parse(`${day}T00:00:00Z`
 export default function Products() {
   useLang()
   const { user } = useSession()
+  // Manager and owner change prices and short names; office only reads the list (the controls are not rendered).
+  const canEdit = user?.role === 'manager' || user?.role === 'owner'
   const busy = useRef(false)
   const now = nowMinute()
   const today = istDate(now)
@@ -100,7 +102,7 @@ export default function Products() {
 
   return (
     <div className="products">
-      <PageHeader title={t('nav.products')} backTo="/office" />
+      <PageHeader title={t('nav.products')} />
       <input aria-label={t('tr.find')} placeholder={t('tr.find')} value={find} onChange={(e) => setFind(e.target.value)} />
       <ReportTable
         title={t('prod.list')}
@@ -123,9 +125,9 @@ export default function Products() {
           { key: 'from', label: t('prod.effective'), kind: 'date' },
         ]}
         rows={rows}
-        onRowClick={(r) => choose(String(r.id))}
+        onRowClick={canEdit ? (r) => choose(String(r.id)) : undefined}
       />
-      {product && (
+      {canEdit && product && (
         <section aria-label={product.description}>
           <h2>{product.description}</h2>
           <label>
@@ -160,7 +162,7 @@ export default function Products() {
           />
         </section>
       )}
-      {pending.length > 0 && (
+      {canEdit && pending.length > 0 && (
         <section aria-label={t('prod.pending')}>
           <h2>{t('prod.pending')}</h2>
           <ul>

@@ -101,3 +101,9 @@
     color: #000;
   }
 }
+
+@media print {
+  .report-table .row-action {
+    display: none;
+  }
+}

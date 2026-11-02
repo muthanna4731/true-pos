@@ -109,6 +109,13 @@ describe('login', () => {
     vi.restoreAllMocks();
   });
 
+  it('lists Cashier 1 to 10, then one Manager, Office and Owner', async () => {
+    renderAt('/login');
+    await screen.findByRole('button', { name: /^Cashier 1 / });
+    const names = Array.from(document.querySelectorAll('.user-tile .user-name')).map((n) => n.textContent);
+    expect(names).toEqual([...Array.from({ length: 10 }, (_, i) => `Cashier ${i + 1}`), 'Manager', 'Office', 'Owner']);
+  });
+
   it('shows only one shop\'s people when a store is preselected', async () => {
     renderAt('/login?store=TSTS2');
     expect(await screen.findByRole('button', { name: /^Cashier 2 / })).toBeInTheDocument();
@@ -124,7 +131,7 @@ describe('login', () => {
 
   it('sends each role to its home', async () => {
     const homes: [RegExp, string, string][] = [
-      [/^Manager 1 /, '2222', '/manager'],
+      [/^Manager /, '2222', '/office'],
       [/^Office /, '3333', '/office'],
       [/^Owner /, '4444', '/owner'],
     ];
@@ -221,8 +228,8 @@ describe('roles', () => {
   it('puts the language toggle and the sync badge on every role screen', async () => {
     const user = userEvent.setup();
     renderAt('/login');
-    await loginAs(user, /^Manager 1 /, '2222');
-    await waitFor(() => expect(where()).toBe('/manager'));
+    await loginAs(user, /^Manager /, '2222');
+    await waitFor(() => expect(where()).toBe('/office'));
     expect(screen.getByRole('button', { name: 'ಕನ್ನಡ / EN' })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('● Online');
   });

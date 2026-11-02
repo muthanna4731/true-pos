@@ -6,36 +6,52 @@ import { setPractice } from '../../db/settings'
 import { formatINR } from '../../domain/money'
 import { isDayTotals } from '../../domain/reports'
 import { clock, istDate } from '../../domain/time'
+import type { Store } from '../../domain/types'
 import { t } from '../../i18n'
 import { usePractice } from '../bill/usePractice'
 import AsOf from '../common/AsOf'
-import BigButton from '../common/BigButton'
-import { useSession } from '../shell/session'
+import ShopScope from '../office/ShopScope'
 
 const billsText = (n: number): string => (n === 1 ? t('glance.billOne') : t('glance.billMany', { n }))
 
-/** Three big buttons, today's figures stamped with their time, then [Bills] and [Practice mode]. */
-export default function ManagerHome() {
-  const { store } = useSession()
+/** The manager's row on the office home: quick actions, then one shop's day at a glance and its practice switch. */
+export default function ManagerPanel() {
   const navigate = useNavigate()
-  const practice = usePractice()
-  const code = store?.code
+  return (
+    <section className="manager-panel" aria-label={t('mgr.row')}>
+      <h2>{t('mgr.row')}</h2>
+      <div className="manager-actions">
+        <button type="button" onClick={() => navigate('/office/close')}>
+          {t('mgr.closeShift')}
+        </button>
+        <button type="button" onClick={() => navigate('/office/bills')}>
+          {t('mgr.bills')}
+        </button>
+        <button type="button" onClick={() => navigate('/office/products')}>
+          {t('mgr.prices')}
+        </button>
+        <button type="button" onClick={() => navigate('/office/shops')}>
+          {t('nav.shops')}
+        </button>
+      </div>
+      <ShopScope>{(store) => <ShopToday store={store} />}</ShopScope>
+    </section>
+  )
+}
+
+/** Today's figures for one shop, stamped with their time, and its [Practice mode] switch. */
+function ShopToday({ store }: { store: Store }) {
+  const practice = usePractice(store.code)
+  const code = store.code
   const today = istDate(clock.now())
 
-  const live = useLiveQuery(() => (code ? loadDayTotals(code, today) : undefined), [code, today])
-  const dayClose = useLiveQuery(async () => (code ? ((await db.dayCloses.get([code, today])) ?? null) : undefined), [code, today])
+  const live = useLiveQuery(() => loadDayTotals(code, today), [code, today])
+  const dayClose = useLiveQuery(async () => (await db.dayCloses.get([code, today])) ?? null, [code, today])
   // A closed day shows the numbers that were locked, not a fresh sum.
   const totals = dayClose && isDayTotals(dayClose.totals) ? dayClose.totals : live
 
   return (
-    <div className="manager-home">
-      <h1>{t('home.manager')}</h1>
-      <div className="big-buttons">
-        <BigButton onClick={() => navigate('stock')}>{t('mgr.stockArrived')}</BigButton>
-        <BigButton onClick={() => navigate('count')}>{t('mgr.countShelf')}</BigButton>
-        <BigButton onClick={() => navigate('close')}>{t('mgr.closeShift')}</BigButton>
-      </div>
-
+    <>
       <section className="glance" aria-label={t('mgr.glance')}>
         <h2>{t('mgr.glance')}</h2>
         {totals && dayClose !== undefined && (
@@ -93,22 +109,15 @@ export default function ManagerHome() {
       </section>
 
       <div className="home-links">
-        <button type="button" onClick={() => navigate('bills')}>
-          {t('mgr.bills')}
-        </button>
         {practice !== undefined && (
           <>
-            <button
-              type="button"
-              aria-pressed={practice}
-              onClick={() => void setPractice(!practice)}
-            >
+            <button type="button" aria-pressed={practice} onClick={() => void setPractice(code, !practice)}>
               {t('mgr.practice')}
             </button>
             <span className="practice-state">{practice ? t('demo.on') : t('demo.off')}</span>
           </>
         )}
       </div>
-    </div>
+    </>
   )
 }
