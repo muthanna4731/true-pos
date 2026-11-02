@@ -99,7 +99,7 @@ describe('manager home', () => {
     renderManager();
 
     const row = await screen.findByRole('region', { name: 'Manager' });
-    for (const name of ['Close shift', 'Bills', 'Prices', 'Shops & staff']) expect(within(row).getByRole('button', { name })).toBeInTheDocument();
+    expect(within(row).getByRole('combobox', { name: 'Shop' })).toBeInTheDocument();
     expect(await screen.findByText('Today: ₹600 · 3 bills · avg ₹200')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Practice mode' })).toBeInTheDocument();
     // Every other figure of the day.
@@ -514,6 +514,6 @@ describe('Kannada', () => {
     setLang('kn');
     await login('U-M', '2222');
     renderManager();
-    expect(await screen.findByRole('button', { name: 'ಸ್ಟಾಕ್ ಬಂತು' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'ಸ್ಟಾಕ್ ಬಂತು' })).toBeInTheDocument();
   });
 });

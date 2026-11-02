@@ -117,9 +117,9 @@ describe('office', () => {
     for (const name of ['Close shift', 'Bills', 'Shops & staff', 'Practice mode', 'Prices']) {
       expect(screen.queryByRole('button', { name })).toBeNull();
     }
-    // The shared screens are still one tap away.
-    const tabs = screen.getByRole('navigation', { name: 'Today' });
-    for (const name of ['Stock arrived', 'Count shelf']) expect(within(tabs).getByRole('button', { name })).toBeInTheDocument();
+    // The side menu is the only way to the other screens: the home has no tab row of its own.
+    expect(screen.queryByRole('navigation', { name: 'Today' })).toBeNull();
+    expect(within(screen.getByRole('navigation', { name: 'Menu' })).getByRole('link', { name: 'Stock arrived' })).toBeInTheDocument();
   });
 
   it.each(MANAGER_ONLY_PATHS)('is sent home from %s by a direct URL', async (path) => {
@@ -176,24 +176,26 @@ describe('manager', () => {
   });
 
   it('starts every login on the hub, whichever shop the last session picked', async () => {
-    renderAt('/office/arrived');
+    const first = renderAt('/office/arrived');
     const pick = await screen.findByRole('combobox', { name: 'Shop' });
     await user.selectOptions(pick, 'TSTS2');
     await waitFor(() => expect(screen.getByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS2'));
     logout();
     await login('U-M', '2222');
+    first.unmount();
     renderAt('/office/arrived');
-    expect(await screen.findAllByRole('combobox', { name: 'Shop' })).toSatisfy((all: HTMLElement[]) => all.every((c) => (c as HTMLSelectElement).value === 'TSTS1'));
+    expect(await screen.findByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS1');
   });
 
-  it('has the Manager row of quick actions under the to-do home', async () => {
+  it('has the Manager part on the home with the shop picker and the glance, and no quick-action buttons', async () => {
     renderAt('/office');
     const row = await screen.findByRole('region', { name: 'Manager' });
-    for (const name of ['Close shift', 'Bills', 'Prices', 'Shops & staff']) expect(within(row).getByRole('button', { name })).toBeInTheDocument();
+    expect(within(row).getByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS1');
     expect(screen.getByRole('heading', { name: 'Today' })).toBeInTheDocument(); // the office to-do home is still there
     expect(screen.getByRole('region', { name: 'Today at a glance' })).toBeInTheDocument();
-    expect(within(row).getByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS1');
-    await user.click(within(row).getByRole('button', { name: 'Shops & staff' }));
+    for (const name of ['Close shift', 'Bills', 'Prices', 'Shops & staff']) expect(screen.queryByRole('button', { name })).toBeNull();
+    // They are on the side menu.
+    await user.click(within(screen.getByRole('navigation', { name: 'Menu' })).getByRole('link', { name: 'Shops & staff' }));
     await waitFor(() => expect(where()).toBe('/office/shops'));
   });
 

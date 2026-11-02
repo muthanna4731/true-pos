@@ -67,8 +67,9 @@ const ICONS: Record<string, ReactNode> = {
   ),
   offers: (
     <>
-      <path d="M4 12V4h8l8 8-8 8z" />
-      <path d="M9 9l5 5M9.5 14.5h.01M14 9.5h.01" />
+      <path d="M18 5L6 19" />
+      <circle cx="7.5" cy="7.5" r="2.5" />
+      <circle cx="16.5" cy="16.5" r="2.5" />
     </>
   ),
   shops: <path d="M3 9l2-5h14l2 5M3 9c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3M5 12v8h14v-8" />,
@@ -91,9 +92,12 @@ export default function SideNav({ role }: { role: Role }) {
   const links = backOfficeLinks(role)
   const nav = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
-  // On a phone the capsule scrolls sideways; keep the current page in view.
+  // On a phone the capsule scrolls sideways; centre the current page in it. Setting scrollLeft moves only the capsule
+  // (scrollIntoView would also nudge the window), and it does nothing where the capsule is a column.
   useEffect(() => {
-    nav.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
+    const box = nav.current
+    const current = box?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (box && current) box.scrollLeft = current.offsetLeft - (box.clientWidth - current.offsetWidth) / 2
   }, [pathname])
   if (links.length === 0) return null
   const items = [{ path: '', label: t('nav.home') }, ...links]

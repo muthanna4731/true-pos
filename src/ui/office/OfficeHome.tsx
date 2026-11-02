@@ -11,7 +11,6 @@ import { useLang } from '../../i18n/useLang'
 import ReportTable from '../common/ReportTable'
 import ManagerPanel from '../manager/ManagerPanel'
 import { useSession } from '../shell/session'
-import { backOfficeLinks } from './navItems'
 
 /** Low-stock items shown before [Show all]: one product can be low in several shops, and there can be dozens of products. */
 const LOW_SHOWN = 5
@@ -51,11 +50,10 @@ function litresByGroup(movements: StockMovement[], products: Product[], storeCod
   return out
 }
 
-/** The back-office home, for office and manager: what needs doing today, the manager's row (manager only), the litres tile, and the tabs to the other screens. */
+/** The back-office home, for office and manager: what needs doing today, the manager's row (manager only), the litres tile, and the other screens are on the side menu. */
 export default function OfficeHome() {
   const navigate = useNavigate()
   const { user } = useSession()
-  const links = backOfficeLinks(user?.role ?? 'cashier')
   const lang = useLang()
   const [showAllLow, setShowAllLow] = useState(false)
   // To the minute, so the memos below hold between renders.
@@ -137,26 +135,6 @@ export default function OfficeHome() {
         rows={rows}
         totals={{ group: t('office.total'), opening: total((g) => g.opening), received: total((g) => g.received), issued: total((g) => g.issued), closing: total((g) => g.closing) }}
       />
-
-      <nav className="office-tabs" aria-label={t('home.office')}>
-        {links
-          .filter((l) => l.primary)
-          .map((l) => (
-            <button key={l.path} type="button" onClick={() => navigate(`/office/${l.path}`)}>
-              {l.label}
-            </button>
-          ))}
-        <details className="more-menu">
-          <summary>{t('office.more')}</summary>
-          {links
-            .filter((l) => !l.primary && !l.quick)
-            .map((l) => (
-              <button key={l.path} type="button" onClick={() => navigate(`/office/${l.path}`)}>
-                {l.label}
-              </button>
-            ))}
-        </details>
-      </nav>
     </div>
   )
 }

@@ -52,24 +52,26 @@
   font-weight: 700;
 }
 
-.backoffice .header-pick,
-.backoffice .inline-pick {
+.backoffice .header-pick {
   margin-left: auto;
 }
 
-/* Manager row and glance card */
-.backoffice .manager-panel h2 {
-  margin: 16px 0 8px;
-}
-
-.backoffice .manager-actions {
+/* The manager's part of the home: a small heading with the shop picker, then the glance card */
+.backoffice .manager-head {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 16px 0 4px;
 }
 
-.backoffice .manager-actions button {
-  min-height: 40px;
-  padding: 0 16px;
+.backoffice .manager-head h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .backoffice .glance {
@@ -115,20 +117,7 @@
   font-size: 18px;
 }
 
-/* Tabs and filters */
-.backoffice .office-tabs {
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.backoffice .office-tabs > button,
-.backoffice .more-menu summary {
-  min-width: 0;
-  min-height: 40px;
-  padding: 0 16px;
-  font-size: 15px;
-}
-
+/* Filters and tabs */
 .backoffice .filters,
 .backoffice .transfers .tabs,
 .backoffice .reports .tabs,
@@ -328,6 +317,8 @@
     padding: 6px 24px;
     overflow: auto hidden;
     transform: translateX(-50%);
+    /* The ends fade out, so a cut-off item reads as "more this way". */
+    mask-image: linear-gradient(to right, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
   }
 
   .side-link {

@@ -18,7 +18,7 @@ test('the demo script locks the day: cashier bills and logs out, manager closes 
 
   // Step 4: the manager has no shift of their own. Close shift lists Cashier 1's open shift at the hub; closing it locks the day.
   await login(page, 'manager')
-  await page.getByRole('region', { name: 'Manager' }).getByRole('button', { name: 'Close shift' }).click()
+  await page.getByRole('navigation', { name: 'Menu' }).getByRole('link', { name: 'Close shift' }).click()
   await expect(page.getByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS1')
   await expect(page.locator('.shift-row')).toHaveCount(1)
   await page.locator('.shift-row', { hasText: 'Cashier 1' }).click()

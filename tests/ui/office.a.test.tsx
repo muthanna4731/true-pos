@@ -75,9 +75,8 @@ describe('office home', () => {
 
     const tile = screen.getByRole('heading', { name: 'Litres, last 7 days' }).closest('section')!;
     for (const head of ['Opening', 'Received', 'Issued', 'Closing']) expect(within(tile).getByText(head)).toBeInTheDocument();
-    const nav = screen.getByRole('navigation', { name: 'Today' });
-    for (const name of ['Orders', 'Deliveries', 'Transfers', 'Stock']) expect(within(nav).getByRole('button', { name })).toBeInTheDocument();
-    expect(within(nav).getByText('More ▾')).toBeInTheDocument();
+    // No tab row of its own: the other screens are on the side menu.
+    expect(screen.queryByRole('navigation', { name: 'Today' })).toBeNull();
   });
 
   it('opens Deliveries from [Raise claim]', async () => {

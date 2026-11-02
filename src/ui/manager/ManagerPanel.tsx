@@ -1,5 +1,4 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useNavigate } from 'react-router-dom'
 import { loadDayTotals } from '../../db/dayData'
 import { db } from '../../db/db'
 import { setPractice } from '../../db/settings'
@@ -14,27 +13,14 @@ import ShopScope, { ShopPicker } from '../office/ShopScope'
 
 const billsText = (n: number): string => (n === 1 ? t('glance.billOne') : t('glance.billMany', { n }))
 
-/** The manager's row on the office home: quick actions, then one shop's day at a glance and its practice switch. */
+/** The manager's part of the office home: the shop picker, then that shop's day at a glance and its practice switch. The pages themselves are on the side menu. */
 export default function ManagerPanel() {
-  const navigate = useNavigate()
   return (
     <section className="manager-panel" aria-label={t('mgr.row')}>
-      <h2>{t('mgr.row')}</h2>
-      <div className="manager-actions">
-        <button type="button" onClick={() => navigate('/office/close')}>
-          {t('mgr.closeShift')}
-        </button>
-        <button type="button" onClick={() => navigate('/office/bills')}>
-          {t('mgr.bills')}
-        </button>
-        <button type="button" onClick={() => navigate('/office/products')}>
-          {t('mgr.prices')}
-        </button>
-        <button type="button" onClick={() => navigate('/office/shops')}>
-          {t('nav.shops')}
-        </button>
-        <ShopPicker className="shop-pick inline-pick" />
-      </div>
+      <header className="manager-head">
+        <h2>{t('mgr.row')}</h2>
+        <ShopPicker className="shop-pick" />
+      </header>
       <ShopScope picker={false}>{(store) => <ShopToday store={store} />}</ShopScope>
     </section>
   )

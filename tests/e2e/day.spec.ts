@@ -13,7 +13,7 @@ test('closing the shift locks the day, and the next day opens billing again', as
   await login(page, 'manager')
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Manager' })).toBeVisible()
-  await page.getByRole('region', { name: 'Manager' }).getByRole('button', { name: 'Close shift' }).click()
+  await page.getByRole('navigation', { name: 'Menu' }).getByRole('link', { name: 'Close shift' }).click()
   await expect(page.getByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS1')
   await expect(page.locator('.shift-row')).toHaveCount(1)
   await page.locator('.shift-row').first().click()

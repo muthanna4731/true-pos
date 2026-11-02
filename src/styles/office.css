@@ -71,36 +71,6 @@
   font-weight: 700;
 }
 
-.office-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.office-tabs > button,
-.more-menu summary {
-  min-height: 56px;
-  min-width: 120px;
-}
-
-.more-menu summary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 24px;
-  border: 1px solid var(--brand);
-  border-radius: var(--pill);
-  background: var(--card);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.more-menu button {
-  display: block;
-  margin-top: 8px;
-}
-
 .orders .order-actions,
 .deliveries .tabs {
   display: flex;

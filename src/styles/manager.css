@@ -10,21 +10,6 @@
   margin-top: 0;
 }
 
-/* The manager's row on the office home: quick actions in burgundy statement pills in bone text. */
-.manager-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.manager-actions button {
-  min-height: 56px;
-  padding: 0 24px;
-  border-color: var(--brand);
-  background: var(--brand);
-  color: var(--on-dark);
-}
-
 .shop-pick {
   margin: 16px 0;
 }
