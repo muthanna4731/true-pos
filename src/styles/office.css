@@ -1,4 +1,4 @@
-/* Office screens: to-do home, orders, deliveries. Flat colours, 56 px minimum targets. */
+/* Office, reports and owner screens: to-do cards, tabs, tables, owner cards. Flat colours, 56 px minimum targets. */
 
 .office-top {
   display: flex;
@@ -8,11 +8,15 @@
 
 .todo-list,
 .order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin: 0 0 16px;
   padding: 0;
   list-style: none;
 }
 
+/* To-do cards: bone, with a left edge in the status colour. */
 .todo,
 .order-row {
   display: flex;
@@ -20,13 +24,29 @@
   align-items: center;
   gap: 12px;
   min-height: 56px;
-  padding: 8px 12px;
-  border-bottom: 2px solid var(--ink);
+  padding: 10px 16px;
+  border: 1px solid var(--rose);
+  border-left: 10px solid var(--rose);
+  border-radius: var(--r-card);
+  background: var(--card);
+}
+
+.todo-low_stock,
+.todo-delivery_short,
+.todo-transfer_stuck,
+.todo-negative_stock,
+.todo-day_not_closed {
+  border-left-color: var(--bad);
+}
+
+.todo-beer_expiry,
+.todo-count_off {
+  border-left-color: var(--warn);
 }
 
 .todo-text {
   flex: 1 1 260px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .todo-low_stock .todo-text::before,
@@ -41,14 +61,14 @@
 .todo-beer_expiry .todo-text::before,
 .todo-count_off .todo-text::before {
   content: '* ';
-  color: var(--warn);
+  color: var(--olive);
 }
 
 .todo-empty {
   padding: 16px;
   color: var(--ok);
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .office-tabs {
@@ -68,9 +88,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 16px;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
+  padding: 0 24px;
+  border: 1px solid var(--brand);
+  border-radius: var(--pill);
+  background: var(--card);
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -88,16 +110,18 @@
 }
 
 .orders-table input {
-  width: 80px;
+  width: 96px;
   min-height: 56px;
+  padding: 0 16px;
   text-align: right;
 }
 
 .order-status {
-  padding: 2px 10px;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
+  padding: 2px 12px;
+  border: 2px solid var(--brand);
+  border-radius: var(--pill);
   font-size: 14px;
+  font-weight: 700;
 }
 
 .order-draft {
@@ -112,7 +136,7 @@
   flex-basis: 100%;
   margin: 0;
   color: var(--bad);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .new-delivery {
@@ -123,36 +147,74 @@
   margin-bottom: 16px;
 }
 
+/* Tables: bone background, hairline row dividers, burgundy Lora-bold header. */
+.report-table,
 .deliveries-table,
-.orders-table,
-.delivery-detail .report-table {
+.orders-table {
   width: 100%;
   border-collapse: collapse;
+  background: var(--card);
 }
 
+.report {
+  margin: 0 0 24px;
+}
+
+.report-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+
+.report-head h2 {
+  margin: 0;
+}
+
+.report-head .report-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.report-table th,
+.report-table td,
 .deliveries-table th,
 .deliveries-table td,
 .orders-table th,
-.orders-table td,
-.delivery-detail th,
-.delivery-detail td {
-  padding: 8px;
-  border-bottom: 1px solid var(--ink);
+.orders-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rose);
   text-align: left;
 }
 
+.report-table th,
+.deliveries-table th,
+.orders-table th {
+  color: var(--brand);
+  font-weight: 700;
+  border-bottom: 2px solid var(--brand);
+}
+
+.report-table tfoot td {
+  font-weight: 700;
+  border-bottom: 0;
+  border-top: 2px solid var(--brand);
+}
+
+.report-table .num,
 .deliveries-table .num,
-.orders-table .num,
-.delivery-detail .num {
+.orders-table .num {
   text-align: right;
 }
 
 .claim-note {
   margin-top: 24px;
-  padding: 16px;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
-  background: var(--surface);
+  padding: 24px;
+  border: 1px solid var(--rose);
+  border-radius: var(--r-large);
+  background: var(--card);
 }
 
 /* Stock, transfers, reports, products: tappable rows, filters, badges. */
@@ -160,14 +222,15 @@
   cursor: pointer;
 }
 
-.row-tap:focus-visible {
-  outline: 3px solid var(--accent);
+.row-tap:hover {
+  background: var(--bg);
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 12px;
-  border: 2px solid var(--ink);
+  padding: 4px 14px;
+  border: 1px solid var(--brand);
+  border-radius: var(--pill);
   font-weight: 700;
 }
 
@@ -186,9 +249,12 @@
   min-height: 56px;
 }
 
-[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--bg);
+.tabs button {
+  border-color: var(--rose);
+}
+
+.tabs button[aria-pressed='true'] {
+  border-color: var(--brand);
 }
 
 .new-transfer,
@@ -201,33 +267,144 @@
   margin-bottom: 16px;
 }
 
+/* Owner */
 .owner-page {
   display: grid;
-  gap: 1rem;
+  gap: 24px;
 }
-.owner-shops {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-}
-.owner-shop {
-  border: 2px solid var(--ink);
-  padding: 0.75rem;
-}
-.owner-net {
-  font-size: 1.5rem;
+
+.owner-page > label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-weight: 700;
 }
+
+.owner-shops {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.owner-shop {
+  padding: 24px;
+  border: 1px solid var(--rose);
+  border-radius: var(--r-card);
+  background: var(--card);
+}
+
+.owner-shop h2 {
+  margin: 0 0 4px;
+}
+
+.owner-shop p {
+  margin: 0 0 6px;
+}
+
+.owner-net {
+  font-size: 40px;
+  font-weight: 500;
+}
+
+.owner-shop .owner-net {
+  margin: 0 0 8px;
+}
+
+.owner-shop .ok,
+.owner-shop .warn {
+  display: inline-block;
+  padding: 2px 14px;
+  border-radius: var(--pill);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.owner-shop .ok {
+  background: var(--ok);
+  color: var(--on-dark);
+}
+
+.owner-shop .warn {
+  background: var(--warn);
+  color: var(--ink);
+}
+
 .owner-page button {
   min-height: 56px;
-  margin: 0.25rem 0.5rem 0.25rem 0;
+  margin: 4px 8px 4px 0;
 }
+
+.owner-page > section > h2 {
+  margin-bottom: 12px;
+}
+
+/* The WhatsApp-style summary is a burgundy statement panel with bone text. */
+.owner-preview {
+  padding: 24px;
+  border-radius: var(--r-large);
+  background: var(--brand);
+  color: var(--on-dark);
+}
+
+.owner-preview .muted {
+  margin: 0 0 8px;
+}
+
 .owner-preview pre {
+  margin: 0 0 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--rose);
+  border-radius: var(--r-card);
+  font-family: var(--font-body);
   white-space: pre-wrap;
-  border: 2px solid var(--ink);
-  padding: 0.75rem;
 }
+
+.owner-preview button {
+  border-color: var(--on-dark);
+  background: transparent;
+  color: var(--on-dark);
+}
+
+.owner-preview :focus-visible {
+  outline-color: var(--on-dark);
+}
+
+.offer-list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.offer-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rose);
+}
+
 .offer-form {
-  display: grid;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 480px;
+}
+
+.offer-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-weight: 700;
+}
+
+.offer-form input,
+.offer-form select {
+  width: 100%;
+}
+
+.offer-form button {
+  width: 100%;
 }
