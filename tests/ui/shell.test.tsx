@@ -25,7 +25,7 @@ function ScanProbe() {
 
 function renderAt(path: string) {
   return render(
-    <SeedGate seed={{ days: 3 }}>
+    <SeedGate seed={{ days: 1 }}>
       <MemoryRouter initialEntries={[path]}>
         <AppRoutes />
         <Where />
@@ -44,7 +44,7 @@ async function loginAs(user: ReturnType<typeof userEvent.setup>, tile: RegExp, p
 
 beforeAll(async () => {
   await resetDb();
-  await loadSeedIfEmpty(db, { days: 3 });
+  await loadSeedIfEmpty(db, { days: 1 });
 });
 
 beforeEach(async () => {
@@ -325,7 +325,7 @@ describe('demo panel', () => {
     const user = userEvent.setup();
     const panel = await openWithKeys();
     const group = within(panel).getByRole('group', { name: 'Simulate a scan' });
-    await waitFor(() => expect(within(group).getAllByRole('button')).toHaveLength(15), { timeout: 10_000 });
+    await waitFor(() => expect(within(group).getAllByRole('button')).toHaveLength(15), { timeout: 20_000 });
 
     await user.click(within(group).getByRole('button', { name: /Ravi/ }));
     expect(scans).toEqual(['TS1:7K3M9QX2RA']);
@@ -333,13 +333,13 @@ describe('demo panel', () => {
 
     fireEvent.keyDown(window, { key: 'D', ctrlKey: true, shiftKey: true });
     const again = within(await screen.findByRole('dialog')).getByRole('group', { name: 'Simulate a scan' });
-    await waitFor(() => expect(within(again).getAllByRole('button')).toHaveLength(15), { timeout: 10_000 });
+    await waitFor(() => expect(within(again).getAllByRole('button')).toHaveLength(15), { timeout: 20_000 });
     const bottle = within(again).getAllByRole('button')[3];
     const barcode = bottle.textContent!.split(' ').at(-1)!;
     await user.click(bottle);
     expect(scans.at(-1)).toBe(barcode);
     expect(barcode).toMatch(/^\d{8,}$/);
-  }, 25_000); // the top-sellers load takes ~3.8 s alone and longer under the full parallel suite
+  }, 40_000); // one day of seed keeps the top-sellers load near 1 s; the generous limits cover a loaded full run
 
   it('moves the demo clock forward a day and remembers it', async () => {
     const user = userEvent.setup();

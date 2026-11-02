@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { t } from './i18n'
 import { useLang } from './i18n/useLang'
+import { useClockOffset } from './domain/useClockOffset'
 import { useLoyaltyFlag } from './loyalty/flags'
 import BillScreen from './ui/bill/BillScreen'
 import ManagerRoutes from './ui/manager/ManagerRoutes'
@@ -15,6 +16,7 @@ import RoleScreen from './ui/shell/RoleScreen'
 /** Every route of the app. Needs a router above it. */
 export function AppRoutes() {
   useLang() // re-render the whole tree when the language changes
+  useClockOffset() // and when the demo clock moves to another day, so "day closed" and "today" follow it
   useLoyaltyFlag() // keeps the loyalty switch fresh: at start, after login and every 5 minutes
 
   return (

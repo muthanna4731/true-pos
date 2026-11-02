@@ -41,4 +41,14 @@ describe('clock', () => {
     clock.setOffsetDays(-1);
     expect(clock.now()).toBe('2026-08-11T09:01:00.000Z');
   });
+  it('tells subscribers when the offset changes, and not when it stays the same', () => {
+    const seen: number[] = [];
+    const stop = clock.subscribe(() => seen.push(clock.offsetDays()));
+    clock.setOffsetDays(2);
+    clock.setOffsetDays(2);
+    clock.setOffsetDays(3);
+    stop();
+    clock.setOffsetDays(4);
+    expect(seen).toEqual([2, 3]);
+  });
 });

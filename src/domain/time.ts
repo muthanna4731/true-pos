@@ -60,6 +60,7 @@ export function financialYear(iso: string): string {
 }
 
 let offsetDays = 0;
+const clockListeners = new Set<() => void>();
 
 /** App clock. The day offset (demo time travel) is held in memory only. */
 export const clock = {
@@ -67,6 +68,19 @@ export const clock = {
     return new Date(Date.now() + offsetDays * 86400000).toISOString();
   },
   setOffsetDays(n: number): void {
+    if (n === offsetDays) return;
     offsetDays = n;
+    for (const listener of clockListeners) listener();
+  },
+  /** The current day offset, for screens that must redraw when the demo clock moves. */
+  offsetDays(): number {
+    return offsetDays;
+  },
+  /** Call `listener` whenever the offset changes. Returns the way to stop. */
+  subscribe(listener: () => void): () => void {
+    clockListeners.add(listener);
+    return () => {
+      clockListeners.delete(listener);
+    };
   },
 };
