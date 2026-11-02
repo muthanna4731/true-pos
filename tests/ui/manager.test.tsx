@@ -218,6 +218,33 @@ describe('stock arrived', () => {
   });
 });
 
+describe('stock arrived: transfers', () => {
+  beforeEach(async () => {
+    await db.stores.add({ code: 'TSTS2', number: '02', name: 'Yelahanka', branchSlug: null, isHub: false, upiVpa: 'y@upi', licenceNo: 'L2' });
+    await db.transfers.bulkAdd([
+      { id: 'TR-IN-1', fromStore: 'TSTS2', toStore: 'TSTS1', lines: [{ productId: STAG.id, qty: 6 }], permitNo: 'KA-1', status: 'in_transit', dispatchedAt: '2026-10-28T05:00:00.000Z' },
+      { id: 'TR-ELSEWHERE', fromStore: 'TSTS1', toStore: 'TSTS2', lines: [{ productId: OC.id, qty: 3 }], permitNo: 'KA-2', status: 'in_transit', dispatchedAt: '2026-10-28T05:00:00.000Z' },
+      { id: 'TR-DONE', fromStore: 'TSTS2', toStore: 'TSTS1', lines: [{ productId: OC.id, qty: 2 }], permitNo: 'KA-3', status: 'received', dispatchedAt: '2026-10-20T05:00:00.000Z', receivedAt: '2026-10-21T05:00:00.000Z' },
+    ]);
+    await login('M1', '2222');
+  });
+
+  it('lists only the transfers on their way to this shop, and Receive puts the stock on the shelf once', async () => {
+    renderManager('/manager/stock');
+    expect(await screen.findByText(/TR-IN-1/)).toBeInTheDocument();
+    expect(screen.queryByText(/TR-ELSEWHERE/)).toBeNull();
+    expect(screen.queryByText(/TR-DONE/)).toBeNull();
+    expect(screen.queryByText('No deliveries waiting')).toBeNull();
+
+    expect(await stockOf(STAG.id)).toBe(100);
+    await user.click(screen.getByRole('button', { name: 'Receive' }));
+    await waitFor(async () => expect(await stockOf(STAG.id)).toBe(106));
+    expect(await db.transfers.get('TR-IN-1')).toMatchObject({ status: 'received' });
+    await waitFor(() => expect(screen.queryByText(/TR-IN-1/)).toBeNull());
+    expect(await screen.findByText('No deliveries waiting')).toBeInTheDocument();
+  });
+});
+
 describe('count shelf', () => {
   it('shows what is expected against what was counted, then saves the difference', async () => {
     await login('M1', '2222');

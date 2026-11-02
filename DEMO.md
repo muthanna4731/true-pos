@@ -56,6 +56,7 @@ Logging out does not end the cashier's shift, so the manager has two open shifts
    - "4 shops low on UB Premium 650" with **Make order**
 2. Stock arrived: an order to KSBCL was placed yesterday and has not been delivered. Open **Deliveries**, pick that order in "New KSBCL delivery", type an invoice number such as `SMYH26123456`, tap **Add delivery**.
 3. Log in as the manager and tap **Stock arrived** > **Count it**. Every line starts as "Matches"; change one line to show a short or broken bottle, then tap **Done**.
+4. Transfers are received by the shop's manager: log in as **Manager 8**, open **Stock arrived**, and tap **Receive** on `TR-PLANT-1` (the stuck transfer). The office to-do item goes away.
 
 ### 6. The owner page and the WhatsApp preview (1 min)
 

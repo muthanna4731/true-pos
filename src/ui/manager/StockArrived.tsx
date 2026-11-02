@@ -1,10 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { db } from '../../db/db'
-import { draftGrn } from '../../db/stockOps'
+import { draftGrn, receiveTransfer } from '../../db/stockOps'
 import { isOnOrder, KSBCL_INV_RE } from '../../domain/orders'
 import { formatDate } from '../../domain/time'
+import { shopLabel } from '../../domain/todos'
 import { t } from '../../i18n'
+import { errorText, guarded } from '../office/shared'
 import { useSession } from '../shell/session'
 import PageHeader from './PageHeader'
 import ReceiveGrn from './ReceiveGrn'
@@ -12,26 +14,37 @@ import ReceiveGrn from './ReceiveGrn'
 type View = { kind: 'list' } | { kind: 'invoice'; indentId: string } | { kind: 'receive'; grnId: string }
 
 /**
- * Deliveries waiting at this shop: invoices already entered and not yet counted, and placed orders whose
- * invoice has not been entered (the manager types it with [Enter invoice]).
+ * Deliveries waiting at this shop: invoices already entered and not yet counted, placed orders whose
+ * invoice has not been entered (the manager types it with [Enter invoice]), and transfers from other shops
+ * that are on their way here (the manager confirms them with [Receive]).
  */
 export default function StockArrived() {
-  const { store } = useSession()
+  const { store, user } = useSession()
+  const busy = useRef(false)
   const code = store?.code
   const [view, setView] = useState<View>({ kind: 'list' })
   const [notice, setNotice] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const waiting = useLiveQuery(async () => {
     if (!code) return undefined
     const grns = await db.grns.where('storeCode').equals(code).toArray()
     const invoiced = new Set(grns.flatMap((g) => (g.indentId ? [g.indentId] : [])))
     const indents = await db.indents.where('storeCode').equals(code).filter((i) => isOnOrder(i) && !invoiced.has(i.id)).toArray()
-    return { drafts: grns.filter((g) => g.status === 'draft'), indents }
+    const transfers = await db.transfers.where('toStore').equals(code).filter((x) => x.status === 'in_transit').toArray()
+    const stores = await db.stores.toArray()
+    return { drafts: grns.filter((g) => g.status === 'draft'), indents, transfers, stores }
   }, [code])
 
   const grn = useLiveQuery(async () => (view.kind === 'receive' ? ((await db.grns.get(view.grnId)) ?? null) : undefined), [view.kind === 'receive' ? view.grnId : ''])
 
   const back = (): void => setView({ kind: 'list' })
+
+  const receive = async (id: string): Promise<void> => {
+    const failed = await guarded(busy, () => receiveTransfer(id, user?.id ?? ''))
+    setNotice(null)
+    setError(failed ? errorText(failed) : null)
+  }
 
   if (view.kind === 'receive') {
     return (
@@ -74,7 +87,12 @@ export default function StockArrived() {
           {notice}
         </p>
       )}
-      {waiting && waiting.drafts.length === 0 && waiting.indents.length === 0 && <p className="empty">{t('stock.empty')}</p>}
+      {error && (
+        <p className="pay-error" role="alert">
+          {error}
+        </p>
+      )}
+      {waiting && waiting.drafts.length === 0 && waiting.indents.length === 0 && waiting.transfers.length === 0 && <p className="empty">{t('stock.empty')}</p>}
       <ul className="waiting-list">
         {waiting?.drafts.map((g) => (
           <li key={g.id}>
@@ -104,6 +122,18 @@ export default function StockArrived() {
               }}
             >
               {t('stock.enterInvoice')}
+            </button>
+          </li>
+        ))}
+        {waiting?.transfers.map((x) => (
+          <li key={x.id} className="waiting-row">
+            <strong>{t('stock.transfer', { id: x.id })}</strong>
+            <span>
+              {t('stock.transferFrom', { shop: shopLabel(waiting.stores.find((s) => s.code === x.fromStore), x.fromStore) })} ·{' '}
+              {t('tr.lineSummary', { n: x.lines.length, q: x.lines.reduce((sum, l) => sum + l.qty, 0) })}
+            </span>
+            <button type="button" onClick={() => void receive(x.id)}>
+              {t('stock.receive')}
             </button>
           </li>
         ))}
