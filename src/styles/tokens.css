@@ -1,27 +1,45 @@
 :root {
-  /* Surfaces */
-  --bg: #f4f0e6;
-  --ink: #111111;
-  --accent: #4da2ff;
-  --surface: #ffffff;
-  --on-dark: #ffffff;
-  --scrim: rgba(17, 17, 17, 0.6);
+  /* Surfaces: aperitivo cream canvas, bone cards, burgundy ink */
+  --bg: #f2e2d5;
+  --card: #fef6ee;
+  --surface: #fef6ee;
+  --brand: #651c32;
+  --ink: #651c32;
+  --accent: #ef6079;
+  --on-dark: #fef6ee;
+  --scrim: rgba(101, 28, 50, 0.6);
 
-  /* Status */
+  /* Lines, soft accents */
+  --line: #e5e7eb;
+  --rose: #dfcac8;
+  --olive: #3e4938;
+  --sticker: #f0e87b;
+  --sky: #abd2eb;
+
+  /* Status: these carry meaning, so they stay clearly apart from coral */
   --ok: #2e7d32;
   --warn: #f2b705;
-  --bad: #c62828;
+  --bad: #b3261e;
   --practice: #ff7a00;
 
-  /* Tile colours by type */
-  --beer: #e9a23b;
-  --whisky: #8b5a2b;
-  --rum: #5b3a29;
-  --brandy: #a0522d;
-  --vodka: #9db4c0;
-  --gin: #6fa287;
-  --wine: #7b1e3a;
-  --other: #9e9e9e;
+  /* Type dots: muted tones that sit with burgundy and cream */
+  --beer: #d6a23a;
+  --whisky: #9a6a3a;
+  --rum: #5a3a2e;
+  --brandy: #c0794f;
+  --vodka: #8fb3c7;
+  --gin: #7fa58c;
+  --wine: #8e2b4a;
+  --other: #9b9189;
+
+  /* Shape */
+  --pill: 9999px;
+  --r-card: 16px;
+  --r-large: 24px;
+
+  /* Fonts: Oswald for display (always uppercase, 24px or more), Lora for everything else, Kannada as the fallback */
+  --font-display: 'Oswald', 'Noto Sans Kannada', 'Arial Narrow', sans-serif;
+  --font-body: 'Lora', 'Noto Sans Kannada', Georgia, serif;
 
   /* Touch */
   --touch: 56px;

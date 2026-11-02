@@ -1,6 +1,7 @@
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/inter/700.css';
+@import '@fontsource/oswald/400.css';
+@import '@fontsource/oswald/500.css';
+@import '@fontsource/lora/400.css';
+@import '@fontsource/lora/700.css';
 @import '@fontsource/noto-sans-kannada/400.css';
 @import '@fontsource/noto-sans-kannada/600.css';
 @import '@fontsource/noto-sans-kannada/700.css';
@@ -21,7 +22,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Inter', 'Noto Sans Kannada', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
@@ -30,4 +31,25 @@ body {
 button {
   font: inherit;
   min-height: var(--touch);
+}
+
+/* Display type: Oswald, always uppercase, tight leading, never below 24px. */
+.display,
+h1,
+.bill-total,
+.pay-amount,
+.give-back-amount,
+.close-diff,
+.owner-net,
+.glance-figure {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+/* Visible focus on every control: burgundy on light surfaces (the header sets its own). */
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
 }

@@ -21,8 +21,8 @@ export default defineConfig({
         orientation: 'landscape',
         start_url: '/',
         scope: '/',
-        background_color: '#F4F0E6',
-        theme_color: '#111111',
+        background_color: '#F2E2D5',
+        theme_color: '#651C32',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },

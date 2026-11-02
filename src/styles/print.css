@@ -66,4 +66,25 @@
   html.print-report .report-table thead {
     display: table-header-group;
   }
+
+  /* Paper is plain black on white, whatever the screen theme or fonts. */
+  html.print-receipt body,
+  html.print-report body {
+    background: #fff;
+    color: #000;
+  }
+
+  html.print-report .report-print,
+  html.print-report .report-print * {
+    background: transparent;
+    color: #000;
+    font-family: Arial, 'Noto Sans Kannada', sans-serif;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  html.print-receipt .receipt-print,
+  html.print-receipt .receipt-print * {
+    color: #000;
+  }
 }

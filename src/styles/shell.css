@@ -1,24 +1,25 @@
 /* App shell: login, role header, sync badge, demo panel. Flat colours, 56 px minimum targets. */
 
 h1 {
-  font-size: 28px;
-  margin: 16px 0;
+  margin: 24px 0 16px;
+  font-size: 36px;
 }
 
+/* Secondary button: an outline pill on cream. Coral is kept for the one main action (see .pay-primary). */
 button,
 .nav-link {
   min-height: var(--touch);
-  padding: 0 20px;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 600;
+  padding: 0 24px;
+  border: 1px solid var(--brand);
+  border-radius: var(--pill);
+  background: var(--card);
+  color: var(--brand);
+  font-weight: 700;
   cursor: pointer;
 }
 
 button[aria-pressed='true'] {
-  background: var(--ink);
+  background: var(--brand);
   color: var(--on-dark);
 }
 
@@ -26,33 +27,59 @@ button:disabled {
   opacity: 0.5;
 }
 
+/* Header: a full-width burgundy bar with bone text. */
 .shell-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  padding: 8px 16px;
-  background: var(--surface);
-  border-bottom: 2px solid var(--ink);
+  min-height: 64px;
+  padding: 4px 16px;
+  background: var(--brand);
+  color: var(--on-dark);
+}
+
+.shell-header :focus-visible {
+  outline-color: var(--on-dark);
 }
 
 .shell-header .spacer {
   flex: 1;
 }
 
+.shell-header button,
+.shell-header .nav-link {
+  padding: 0 20px;
+  border-color: var(--on-dark);
+  background: transparent;
+  color: var(--on-dark);
+}
+
 .logo {
-  font-size: 22px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   user-select: none;
 }
 
 .who {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .shell-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Many links (the office has nine) sit on their own row under the 64 px bar, so the bar stays tidy. */
+.shell-nav:has(> :nth-child(4)) {
+  order: 9;
+  flex-basis: 100%;
+  padding-bottom: 8px;
 }
 
 .nav-link {
@@ -65,9 +92,9 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
-  padding: 0 14px;
-  border-radius: 20px;
-  font-weight: 600;
+  padding: 0 16px;
+  border-radius: var(--pill);
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -93,8 +120,16 @@ button:disabled {
   padding: 0 16px 32px;
 }
 
-.login > .shell-header {
-  margin: 0 -16px;
+/* The login header is full width; only the content below it is held to 960 px. */
+.login {
+  max-width: none;
+  padding: 0;
+}
+
+.login > section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
 }
 
 .user-grid {
@@ -107,14 +142,18 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
-  min-height: 88px;
-  padding: 12px 16px;
+  gap: 4px;
+  min-height: 96px;
+  padding: 14px 18px;
+  border: 1px solid var(--rose);
+  border-radius: var(--r-card);
+  background: var(--card);
   text-align: left;
 }
 
 .user-name {
   font-size: 20px;
+  font-weight: 700;
 }
 
 .user-role,
@@ -123,8 +162,36 @@ button:disabled {
   font-weight: 400;
 }
 
-.role-cashier {
+/* A small rose tag tells the roles apart; its dot carries the role colour. */
+.user-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 12px 2px 8px;
+  border-radius: var(--pill);
+  background: var(--rose);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-role::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.role-cashier .user-role::before {
   background: var(--accent);
+}
+
+.role-office .user-role::before {
+  background: var(--olive);
+}
+
+.role-owner .user-role::before {
+  background: var(--sky);
 }
 
 .demo-pins {
@@ -152,12 +219,12 @@ button:disabled {
 .pin-dot {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--brand);
   border-radius: 50%;
 }
 
 .pin-dot.filled {
-  background: var(--ink);
+  background: var(--brand);
 }
 
 .pin-wrong {
@@ -169,14 +236,16 @@ button:disabled {
 
 .pin-keys {
   display: grid;
-  grid-template-columns: repeat(3, 72px);
+  grid-template-columns: repeat(3, 76px);
   gap: 12px;
 }
 
+/* Round keys, bigger than the 56 px minimum. */
 .pin-key {
-  width: 72px;
-  height: 72px;
+  width: 76px;
+  height: 76px;
   padding: 0;
+  border-radius: 50%;
   font-size: 28px;
 }
 
@@ -206,10 +275,10 @@ button:disabled {
 
 .demo-panel {
   width: min(640px, 100%);
-  padding: 16px;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
-  background: var(--bg);
+  padding: 24px;
+  border: 1px solid var(--rose);
+  border-radius: var(--r-large);
+  background: var(--card);
 }
 
 .demo-head {
