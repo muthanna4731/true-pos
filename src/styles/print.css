@@ -1,17 +1,15 @@
 /* Printing has two modes, set by printAs() in src/ui/common/print.ts:
    html.print-receipt prints only the 80 mm till slip, html.print-report only the A4 report.
-   printAs also adds the matching @page size, so each mode gets its own paper. */
+   printAs also adds the matching @page size, so each mode gets its own paper.
+   A report page can show several reports; printAs puts `printing` on the one that was clicked. */
 
 @media print {
-  html.print-receipt body *,
-  html.print-report body * {
+  html.print-receipt body * {
     visibility: hidden;
   }
 
   html.print-receipt .receipt-print,
-  html.print-receipt .receipt-print *,
-  html.print-report .report-print,
-  html.print-report .report-print * {
+  html.print-receipt .receipt-print * {
     visibility: visible;
   }
 
@@ -28,10 +26,24 @@
     font-size: 12px;
   }
 
-  html.print-report .report-print {
-    position: absolute;
-    top: 0;
-    left: 0;
+  /* Report: remove everything except the printing section and the elements around it (display:none, so no blank
+     trailing pages). The elements around it are laid out plainly so nothing clips or pushes it down. */
+  html.print-report body *:not(:has(.report-print.printing)):not(.report-print.printing):not(.report-print.printing *) {
+    display: none;
+  }
+
+  html.print-report body *:has(.report-print.printing) {
+    position: static;
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+
+  html.print-report .report-print.printing {
     width: 100%;
     font-size: 10pt;
   }

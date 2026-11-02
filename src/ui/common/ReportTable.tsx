@@ -72,7 +72,7 @@ export default function ReportTable({
         <h2>{title}</h2>
         <AsOf now={asOf.now} dayClose={asOf.dayClose} />
         <div className="report-actions">
-          <button type="button" onClick={() => printAs('report')}>
+          <button type="button" onClick={(e) => printAs('report', e.currentTarget)}>
             {t('report.print')}
           </button>
           <button type="button" onClick={() => downloadCsv(title, columns, rows)}>

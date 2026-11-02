@@ -92,4 +92,24 @@ describe('printAs', () => {
     window.dispatchEvent(new Event('afterprint'))
     expect(document.documentElement.className).not.toContain('print-')
   })
+
+  it('marks only the clicked report section as the one to print, and clears it on afterprint', () => {
+    document.body.innerHTML = '<section class="report report-print" id="a"><button id="pa"></button></section><section class="report report-print" id="b"><button id="pb"></button></section>'
+    const seen: string[] = []
+    vi.spyOn(window, 'print').mockImplementation(() => {
+      seen.push([...document.querySelectorAll('.printing')].map((e) => e.id).join(','))
+    })
+    printAs('report', document.getElementById('pb'))
+    expect(seen).toEqual(['b'])
+    window.dispatchEvent(new Event('afterprint'))
+    expect(document.querySelectorAll('.printing')).toHaveLength(0)
+
+    // A cancelled dialog that skipped afterprint leaves no stale mark behind the next print.
+    printAs('report', document.getElementById('pa'))
+    printAs('report', document.getElementById('pb'))
+    expect(seen[2]).toBe('b')
+    window.dispatchEvent(new Event('afterprint'))
+    expect(document.querySelectorAll('.printing')).toHaveLength(0)
+    document.body.innerHTML = ''
+  })
 })

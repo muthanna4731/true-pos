@@ -48,7 +48,7 @@ function ClaimNote({ grn, claims, products, store }: { grn: Grn; claims: Claim[]
         </tfoot>
       </table>
       <div className="report-actions">
-        <button type="button" onClick={() => printAs('report')}>
+        <button type="button" onClick={(e) => printAs('report', e.currentTarget)}>
           {t('del.print')}
         </button>
       </div>
