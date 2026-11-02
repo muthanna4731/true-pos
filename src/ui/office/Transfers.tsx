@@ -12,7 +12,7 @@ import { useLang } from '../../i18n/useLang'
 import ReportTable from '../common/ReportTable'
 import PageHeader from '../manager/PageHeader'
 import { useSession } from '../shell/session'
-import { errorText, guarded, nameOf, nowMinute, shopMovements, ShopSelect } from './shared'
+import { errorText, guarded, nameOf, nowMinute, productMatches, shopMovements, ShopSelect } from './shared'
 
 type Line = { productId: string; qty: number }
 
@@ -22,7 +22,8 @@ export default function Transfers() {
   const { user } = useSession()
   const busy = useRef(false)
   const [tab, setTab] = useState<'in' | 'out'>('out')
-  const [shop, setShop] = useState('')
+  // null until the user picks: then the hub. '' is a deliberate "all shops".
+  const [picked, setPicked] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -45,6 +46,7 @@ export default function Transfers() {
   if (!data) return null
   const { stores, transfers } = data
   const hub = stores.find((s) => s.isHub) ?? stores[0]
+  const shop = picked ?? hub?.code ?? ''
   const fromCode = from || hub?.code || ''
   const toCode = to || stores.find((s) => s.code !== fromCode)?.code || ''
   const label = (code: string) => shopLabel(stores.find((s) => s.code === code), code)
@@ -72,7 +74,7 @@ export default function Transfers() {
       }
     })
 
-  const matches = (find.trim() ? data.products.filter((p) => `${p.shortName} ${p.description}`.toLowerCase().includes(find.trim().toLowerCase())) : data.products).slice(0, 50)
+  const matches = productMatches(data.products, find, pick)
 
   const addLine = () => {
     const n = Math.floor(Number(qty))
@@ -113,7 +115,7 @@ export default function Transfers() {
             {t(`tr.${k}`)}
           </button>
         ))}
-        <ShopSelect stores={stores} value={shop} onChange={setShop} label={t('orders.shop')} allLabel={t('tr.allShops')} />
+        <ShopSelect stores={stores} value={shop} onChange={setPicked} label={t('orders.shop')} allLabel={t('tr.allShops')} />
         <button type="button" onClick={() => setOpen(!open)}>
           {t('tr.new')}
         </button>

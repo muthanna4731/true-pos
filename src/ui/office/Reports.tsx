@@ -3,8 +3,9 @@ import { useMemo, useState } from 'react'
 import { db } from '../../db/db'
 import { istDayRange, loadDayTotals } from '../../db/dayData'
 import { priceRowsInForce } from '../../domain/prices'
-import { dailyLitreStatement, exciseLitreStatement, lossesReport, remittance, valuation } from '../../domain/reports'
-import { formatTime, istDate } from '../../domain/time'
+import { dailyLitreStatement, exciseLitreStatement, isDayTotals, lossesReport, remittance, valuation } from '../../domain/reports'
+import { formatDate, formatTime, istDate, istDayStart } from '../../domain/time'
+import { shopLabel } from '../../domain/todos'
 import { t } from '../../i18n'
 import { useLang } from '../../i18n/useLang'
 import ReportTable from '../common/ReportTable'
@@ -23,15 +24,18 @@ export default function Reports() {
   const today = istDate(now)
   const [tab, setTab] = useState<Tab>('sales')
   const [shop, setShop] = useState('')
-  const [from, setFrom] = useState(addDays(today, -6))
-  const [to, setTo] = useState(today)
+  // The dates follow the demo clock ("Next day") until the user picks one.
+  const [fromPicked, setFrom] = useState<string | null>(null)
+  const [toPicked, setTo] = useState<string | null>(null)
+  const from = fromPicked ?? addDays(today, -6)
+  const to = toPicked ?? today
 
   const stores = useLiveQuery(() => db.stores.toArray(), [])
   const code = shop || stores?.find((s) => s.isHub)?.code || ''
 
   const data = useLiveQuery(async () => {
     if (!code) return undefined
-    const [products, prices, movements, losses, bills, tally] = await Promise.all([
+    const [products, prices, movements, losses, bills, tally, dayClose] = await Promise.all([
       db.products.toArray(),
       db.prices.toArray(),
       shopMovements(code),
@@ -42,11 +46,16 @@ export default function Reports() {
       })(),
       (async () => {
         const out = []
-        for (let d = from; d <= to && out.length < 31; d = addDays(d, 1)) out.push({ day: d, totals: await loadDayTotals(code, d) })
+        for (let d = from; d <= to && out.length < 31; d = addDays(d, 1)) {
+          // A closed day shows the figures that were locked, not a fresh sum.
+          const closed = await db.dayCloses.get([code, d])
+          out.push({ day: d, totals: closed && isDayTotals(closed.totals) ? closed.totals : await loadDayTotals(code, d) })
+        }
         return out
       })(),
+      db.dayCloses.get([code, to]),
     ])
-    return { products, prices, movements, losses, bills, tally }
+    return { products, prices, movements, losses, bills, tally, dayClose }
   }, [code, from, to])
 
   const view = useMemo(() => {
@@ -59,6 +68,8 @@ export default function Reports() {
   if (!stores || !data || !view) return null
   const { productBy, mrp, purchase, landed } = view
   const asOf = { now }
+  const salesAsOf = { now, dayClose: data.dayClose } // sales figures of a closed day are the locked ones (§8)
+  const dayLabel = (day: string) => formatDate(istDayStart(day))
   const name = (id: string) => nameOf(productBy, id)
 
   const qla = (key: string, label: string) => [
@@ -91,7 +102,7 @@ export default function Reports() {
         <>
           <ReportTable
             title={t('rep.dailySales')}
-            asOf={asOf}
+            asOf={salesAsOf}
             columns={[
               { key: 'day', label: t('tr.date'), kind: 'date' },
               { key: 'bills', label: t('rep.bills'), kind: 'number' },
@@ -103,15 +114,15 @@ export default function Reports() {
             rows={data.tally.map((d) => ({ day: `${d.day}T06:30:00.000Z`, bills: d.totals.bills, net: d.totals.net, ...d.totals.byMode }))}
           />
           <ReportTable
-            title={t('rep.billsList', { day: to })}
-            asOf={asOf}
+            title={t('rep.billsList', { day: dayLabel(to) })}
+            asOf={salesAsOf}
             columns={[
               { key: 'number', label: t('rep.bill') },
               { key: 'time', label: t('rep.time') },
               { key: 'net', label: t('del.net'), kind: 'money' },
               { key: 'status', label: t('tr.status') },
             ]}
-            rows={data.bills.map((b) => ({ number: b.number, time: formatTime(b.at), net: b.net, status: b.status }))}
+            rows={data.bills.map((b) => ({ number: b.number, time: formatTime(b.at), net: b.net, status: t(`bills.status.${b.status}`) }))}
           />
         </>
       )}
@@ -129,7 +140,7 @@ export default function Reports() {
             }))}
           />
           <ReportTable
-            title={t('rep.dailyLitres', { day: to })}
+            title={t('rep.dailyLitres', { day: dayLabel(to) })}
             asOf={asOf}
             columns={[
               { key: 'group', label: t('office.group') },
@@ -187,7 +198,7 @@ export default function Reports() {
             { key: 'qty', label: t('del.qty'), kind: 'number' },
             { key: 'litres', label: t('rep.litres'), kind: 'litres' },
           ]}
-          rows={lossesReport(data.losses, productBy, to.slice(0, 7)).map((r) => ({ shop: r.storeCode, reason: t(`loss.${r.reason}`), qty: r.qty, litres: r.litres }))}
+          rows={lossesReport(data.losses.filter((l) => l.storeCode === code), productBy, to.slice(0, 7)).map((r) => ({ shop: shopLabel(stores.find((s) => s.code === r.storeCode), r.storeCode), reason: t(`loss.${r.reason}`), qty: r.qty, litres: r.litres }))}
         />
       )}
 
@@ -196,7 +207,7 @@ export default function Reports() {
           <p>{t('rep.tallyNote')}</p>
           <ReportTable
             title={t('rep.tallyTitle')}
-            asOf={asOf}
+            asOf={salesAsOf}
             columns={[
               { key: 'date', label: t('tr.date'), kind: 'date' },
               { key: 'voucher', label: t('rep.voucher') },

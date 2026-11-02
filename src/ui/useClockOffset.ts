@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { clock } from './time'
+import { clock } from '../domain/time'
 
 /**
  * Re-render when the demo clock moves (the demo panel's "Next day"). The app root calls this so every

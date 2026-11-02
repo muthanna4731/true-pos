@@ -5,6 +5,7 @@ import { priceInForce } from '../../domain/prices'
 import { topSellers } from '../../domain/sellers'
 import { clock, istDate } from '../../domain/time'
 import type { Offer, Paise, Product } from '../../domain/types'
+import { useClockOffset } from '../useClockOffset'
 
 const DAY_MS = 86400000
 const MINUTE_MS = 60000
@@ -65,6 +66,7 @@ async function loadSellers(storeCode: string): Promise<Sellers> {
 /** Everything the bill screen reads from the database. */
 export function useBillData(storeCode: string | undefined): BillData {
   const minute = useMinute()
+  const dayOffset = useClockOffset() // the demo's "Next day" moves the 14-day window
   const allProducts = useLiveQuery(() => db.products.toArray(), [])
   const prices = useLiveQuery(() => db.prices.toArray(), [])
   const offers = useLiveQuery(() => db.offers.toArray(), [])
@@ -80,7 +82,7 @@ export function useBillData(storeCode: string | undefined): BillData {
     return () => {
       alive = false
     }
-  }, [storeCode, minute])
+  }, [storeCode, minute, dayOffset])
 
   const istDay = istDate(clock.now())
   // A price that starts today takes effect at 00:00 IST: `istDay` changes on the first re-render after midnight.

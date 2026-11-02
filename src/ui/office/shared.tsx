@@ -16,6 +16,14 @@ export function shopMovements(storeCode: string): Promise<StockMovement[]> {
 /** Product short name, falling back to the description, then the id. */
 export const nameOf = (products: Map<string, Product>, id: string): string => products.get(id)?.shortName || products.get(id)?.description || id
 
+/** The products a search box offers (first 50), always including the one already picked so the select never loses it. */
+export function productMatches(products: Product[], find: string, picked: string): Product[] {
+  const q = find.trim().toLowerCase()
+  const found = (q ? products.filter((p) => `${p.shortName} ${p.description}`.toLowerCase().includes(q)) : products).slice(0, 50)
+  const pick = picked && !found.some((p) => p.id === picked) ? products.find((p) => p.id === picked) : undefined
+  return pick ? [pick, ...found] : found
+}
+
 export const LOSS_REASONS = ['breakage', 'leakage', 'shortage', 'theft', 'expired'] as const
 
 /** A shop dropdown. `allLabel` adds an "all shops" choice with the empty value. */

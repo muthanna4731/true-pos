@@ -11,7 +11,7 @@ import { useLang } from '../../i18n/useLang'
 import ReportTable from '../common/ReportTable'
 import PageHeader from '../manager/PageHeader'
 import { useSession } from '../shell/session'
-import { errorText, guarded, LOSS_REASONS, nowMinute, ShopSelect } from './shared'
+import { errorText, guarded, LOSS_REASONS, nowMinute, productMatches, ShopSelect } from './shared'
 
 /** Record a loss (breakage, leakage, shortage, theft, expired) and read the month's losses by shop and reason. */
 export default function Losses() {
@@ -36,7 +36,7 @@ export default function Losses() {
   const productBy = useMemo(() => new Map((data?.products ?? []).map((p) => [p.id, p])), [data?.products])
   if (!data) return null
   const code = shop || data.stores.find((s) => s.isHub)?.code || data.stores[0]?.code || ''
-  const matches = (find.trim() ? data.products.filter((p) => `${p.shortName} ${p.description}`.toLowerCase().includes(find.trim().toLowerCase())) : data.products).slice(0, 50)
+  const matches = productMatches(data.products, find, product)
 
   const save = async () => {
     const n = Math.floor(Number(qty))

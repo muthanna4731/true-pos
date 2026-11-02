@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { t } from './i18n'
 import { useLang } from './i18n/useLang'
-import { useClockOffset } from './domain/useClockOffset'
+import { useClockOffset } from './ui/useClockOffset'
 import { useLoyaltyFlag } from './loyalty/flags'
 import BillScreen from './ui/bill/BillScreen'
 import ManagerRoutes from './ui/manager/ManagerRoutes'

@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clock, istDate } from '../../src/domain/time';
-import { useClockOffset } from '../../src/domain/useClockOffset';
+import { useClockOffset } from '../../src/ui/useClockOffset';
 
 function Today() {
   useClockOffset();

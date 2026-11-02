@@ -2,9 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useRef, useState } from 'react'
 import { db } from '../../db/db'
 import { pushPrices, setShortName } from '../../db/stockOps'
-import { rupeesToPaise } from '../../domain/money'
+import { formatINR, rupeesToPaise } from '../../domain/money'
 import { priceRowsInForce } from '../../domain/prices'
-import { istDate } from '../../domain/time'
+import { formatDate, istDate, istDayStart } from '../../domain/time'
 import type { Price } from '../../domain/types'
 import { t } from '../../i18n'
 import { useLang } from '../../i18n/useLang'
@@ -27,7 +27,8 @@ export default function Products() {
   const [find, setFind] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
   const [name, setName] = useState('')
-  const [form, setForm] = useState({ mrp: '', purchase: '', aroed: '', cess: '', from: tomorrow(today) })
+  // `from` stays null until the user picks a date, so it follows the demo clock ("Next day").
+  const [form, setForm] = useState({ mrp: '', purchase: '', aroed: '', cess: '', from: null as string | null })
   const [pending, setPending] = useState<Pending[]>([])
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -42,11 +43,12 @@ export default function Products() {
   const q = find.trim().toLowerCase()
   const list = (q ? data.products.filter((p) => `${p.shortName} ${p.description} ${p.subcategory}`.toLowerCase().includes(q)) : data.products).slice(0, SHOWN)
   const product = data.products.find((p) => p.id === picked)
+  const effectiveFrom = form.from ?? tomorrow(today)
   const choose = (id: string) => {
     setPicked(id)
     setName(data.products.find((p) => p.id === id)?.shortName ?? '')
     const cur = inForce.get(id)
-    setForm({ mrp: cur ? String(cur.mrp / 100) : '', purchase: cur ? String(cur.purchase / 100) : '', aroed: cur ? String(cur.aroed / 100) : '', cess: cur ? String(cur.cess / 100) : '', from: tomorrow(today) })
+    setForm({ mrp: cur ? String(cur.mrp / 100) : '', purchase: cur ? String(cur.purchase / 100) : '', aroed: cur ? String(cur.aroed / 100) : '', cess: cur ? String(cur.cess / 100) : '', from: null })
   }
 
   const rows = list.map((p) => {
@@ -79,8 +81,8 @@ export default function Products() {
   }
   const addRow = () => {
     const [mrp, purchase, aroed, cess] = [form.mrp, form.purchase, form.aroed || '0', form.cess || '0'].map(Number)
-    if (!picked || ![mrp, purchase, aroed, cess].every(Number.isFinite) || mrp <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(form.from)) return setNotice(t('prod.badPrice'))
-    setPending((ps) => [...ps.filter((x) => x.productId !== picked), { productId: picked, mrp: rupeesToPaise(mrp), purchase: rupeesToPaise(purchase), aroed: rupeesToPaise(aroed), cess: rupeesToPaise(cess), effectiveFrom: form.from }])
+    if (!picked || ![mrp, purchase, aroed, cess].every(Number.isFinite) || mrp <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(effectiveFrom)) return setNotice(t('prod.badPrice'))
+    setPending((ps) => [...ps.filter((x) => x.productId !== picked), { productId: picked, mrp: rupeesToPaise(mrp), purchase: rupeesToPaise(purchase), aroed: rupeesToPaise(aroed), cess: rupeesToPaise(cess), effectiveFrom }])
     setNotice(null)
   }
   const push = async () => {
@@ -138,7 +140,7 @@ export default function Products() {
             </label>
           ))}
           <label>
-            {t('prod.effective')} <input type="date" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })} />
+            {t('prod.effective')} <input type="date" value={effectiveFrom} onChange={(e) => setForm({ ...form, from: e.target.value })} />
           </label>
           <button type="button" onClick={addRow}>
             {t('prod.addRow')}
@@ -164,7 +166,7 @@ export default function Products() {
           <ul>
             {pending.map((p) => (
               <li key={p.productId}>
-                {data.products.find((x) => x.id === p.productId)?.shortName} · {t('tr.mrp')} {p.mrp / 100} · {p.effectiveFrom}
+                {data.products.find((x) => x.id === p.productId)?.shortName} · {t('tr.mrp')} {formatINR(p.mrp)} · {formatDate(istDayStart(p.effectiveFrom))}
               </li>
             ))}
           </ul>

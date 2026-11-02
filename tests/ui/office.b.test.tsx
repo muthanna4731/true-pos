@@ -1,11 +1,14 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db, resetDb } from '../../src/db/db';
+import { clock } from '../../src/domain/time';
 import { setLang } from '../../src/i18n';
 import { loadSeedIfEmpty } from '../../src/seed/load';
 import OfficeRoutes from '../../src/ui/office/OfficeRoutes';
+import Reports from '../../src/ui/office/Reports';
+import { useClockOffset } from '../../src/ui/useClockOffset';
 import { login, logout } from '../../src/ui/shell/session';
 
 // 29 Oct 2026, 12:00 IST.
@@ -120,6 +123,18 @@ describe('transfers', () => {
     await db.transfers.update('TR-PLANT-1', { status: 'in_transit', receivedAt: undefined });
   });
 
+  it('starts on the hub, so the In and Out tabs differ; "All shops" is still a choice', async () => {
+    renderOffice('/office/transfers');
+    const shop = await screen.findByRole('combobox', { name: 'Shop' });
+    expect(shop).toHaveValue('TSTS1');
+    const table = screen.getByRole('table');
+    await waitFor(() => expect(within(table).getAllByText('TR-PLANT-1').length).toBeGreaterThan(0)); // out of the hub
+    await user.click(screen.getByRole('button', { name: /^In$/ }));
+    expect(within(screen.getByRole('table')).queryByText('TR-PLANT-1')).toBeNull(); // nothing is sent to the hub
+    await user.selectOptions(shop, '');
+    expect(within(screen.getByRole('table')).getAllByText('TR-PLANT-1').length).toBeGreaterThan(0);
+  });
+
   it('refuses to dispatch without a permit number and writes nothing', async () => {
     renderOffice('/office/transfers');
     await user.click(await screen.findByRole('button', { name: 'New transfer' }));
@@ -146,6 +161,33 @@ describe('losses', () => {
   });
 });
 
+describe('stale product picks', () => {
+  it('keeps the picked product in the list when the search changes, so Save loss never writes against an invisible product', async () => {
+    renderOffice('/office/losses');
+    const find = await screen.findByRole('textbox', { name: 'Find a product' });
+    await user.type(find, 'ZZ Test');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Product' }), PRODUCT);
+    await user.clear(find);
+    await user.type(find, 'qqqqnomatch');
+    const select = screen.getByRole('combobox', { name: 'Product' });
+    expect(select).toHaveValue(PRODUCT);
+    expect(within(select).getByRole('option', { name: 'ZZ Test 750' })).toBeInTheDocument();
+  });
+
+  it('does the same on a new transfer', async () => {
+    renderOffice('/office/transfers');
+    await user.click(await screen.findByRole('button', { name: 'New transfer' }));
+    const find = screen.getByRole('textbox', { name: 'Find a product' });
+    await user.type(find, 'ZZ Test');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Product' }), PRODUCT);
+    await user.clear(find);
+    await user.type(find, 'qqqqnomatch');
+    const select = screen.getByRole('combobox', { name: 'Product' });
+    expect(select).toHaveValue(PRODUCT);
+    expect(within(select).getByRole('option', { name: 'ZZ Test 750' })).toBeInTheDocument();
+  });
+});
+
 describe('products', () => {
   it('pushes a new price effective tomorrow and keeps the history', async () => {
     await db.prices.add({ productId: PRODUCT, mrp: 100000, purchase: 80000, aroed: 0, cess: 0, effectiveFrom: '2026-04-01', pushedBy: 'x' });
@@ -156,6 +198,7 @@ describe('products', () => {
     await user.clear(mrp);
     await user.type(mrp, '1100');
     await user.click(screen.getByRole('button', { name: 'Add price row' }));
+    expect(await screen.findByText(/ZZ Test 750 · MRP ₹1,100 · 30 Oct 2026/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Push to all shops' }));
     expect(await screen.findByText('1 price rows pushed to all shops.')).toBeInTheDocument();
     const rows = await db.prices.where('productId').equals(PRODUCT).toArray();
@@ -173,5 +216,79 @@ describe('reports', () => {
     expect(await screen.findByRole('heading', { name: 'Stock valuation (landed cost)' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Tally export' }));
     expect(screen.getByRole('heading', { name: 'Tally export (stub)' })).toBeInTheDocument();
+  });
+
+  it('writes dates and status in words, not ISO or raw codes', async () => {
+    const bill = (n: number, status: 'paid' | 'practice') => ({ number: `TSTS1/ZZ/${n}`, clientId: `zz${n}`, storeCode: 'TSTS1', counter: 1, cashierId: 'x', shiftId: 'x', at: NOON_IST, gross: 100, discount: 0, tax: 0, net: 100, status });
+    await db.bills.bulkAdd([bill(1, 'paid'), bill(2, 'practice')]);
+    try {
+      renderOffice('/office/reports');
+      const bills = (await screen.findByRole('heading', { name: 'Bills on 29 Oct 2026' })).closest('section')!;
+      await waitFor(() => expect(within(bills).getAllByText('Paid').length).toBeGreaterThan(0));
+      expect(within(bills).getByText('Practice')).toBeInTheDocument();
+      expect(within(bills).queryByText('paid')).toBeNull();
+    } finally {
+      await db.bills.where('number').startsWith('TSTS1/ZZ/').delete();
+    }
+  });
+
+  it('writes the daily litre statement date in words', async () => {
+    renderOffice('/office/reports');
+    await user.click(await screen.findByRole('button', { name: 'Excise' }));
+    expect(await screen.findByRole('heading', { name: 'Daily Litre Statement, 29 Oct 2026' })).toBeInTheDocument();
+  });
+
+  it('stamps a closed day with its locked figures', async () => {
+    await db.dayCloses.put({
+      storeCode: 'TSTS1',
+      date: '2026-10-29',
+      lockedAt: NOON_IST,
+      totals: { net: 12300, bills: 1, avgBill: 12300, byMode: { cash: 12300, upi: 0, card: 0 }, alc: 12300, nalc: 0, byType: {}, discount: 0, monthToDate: 12300 },
+    });
+    try {
+      renderOffice('/office/reports');
+      const bills = (await screen.findByRole('heading', { name: 'Bills on 29 Oct 2026' })).closest('section')!;
+      expect(within(bills).getByText('Closed day: locked figures')).toBeInTheDocument();
+    } finally {
+      await db.dayCloses.delete(['TSTS1', '2026-10-29']);
+    }
+  });
+
+  it('shows the losses of the picked shop only, by shop name', async () => {
+    const loss = (storeCode: string, ref: string) => ({ storeCode, productId: PRODUCT, qty: 1, reason: 'theft' as const, at: '2026-10-28T06:30:00.000Z', by: 'x', ref });
+    await db.losses.bulkAdd([loss('TSTS1', 'L-ZZ-1'), loss('TSTS3', 'L-ZZ-2')]);
+    try {
+      renderOffice('/office/reports');
+      await user.click(await screen.findByRole('button', { name: 'Losses' }));
+      const table = (await screen.findByRole('heading', { name: 'Losses by shop and reason' })).closest('section')!;
+      expect(within(table).getAllByText('TS1').length).toBeGreaterThan(0);
+      expect(within(table).queryByText('TS3')).toBeNull();
+      expect(within(table).queryByText('TSTS1')).toBeNull();
+    } finally {
+      await db.losses.filter((l) => l.ref.startsWith('L-ZZ-')).delete();
+    }
+  });
+
+  it('moves its dates when the demo clock goes to the next day, until the user picks a date', async () => {
+    function Screen() {
+      useClockOffset();
+      return <Reports />;
+    }
+    render(
+      <MemoryRouter>
+        <Screen />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByRole('heading', { name: 'Bills on 29 Oct 2026' })).toBeInTheDocument();
+    try {
+      act(() => clock.setOffsetDays(1));
+      expect(await screen.findByRole('heading', { name: 'Bills on 30 Oct 2026' })).toBeInTheDocument();
+      expect(screen.getByLabelText('To')).toHaveValue('2026-10-30');
+      fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-10-20' } });
+      act(() => clock.setOffsetDays(2));
+      expect(await screen.findByRole('heading', { name: 'Bills on 20 Oct 2026' })).toBeInTheDocument();
+    } finally {
+      act(() => clock.setOffsetDays(0));
+    }
   });
 });
