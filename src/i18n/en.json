@@ -524,5 +524,6 @@
   "pin.failed": "Could not change the PIN, try again",
   "shops.action": "Action",
   "nav.menu": "Menu",
+  "nav.home": "Home",
   "shops.all": "All shops"
 }

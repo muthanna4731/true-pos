@@ -10,7 +10,7 @@ import type { Store } from '../../domain/types'
 import { t } from '../../i18n'
 import { usePractice } from '../bill/usePractice'
 import AsOf from '../common/AsOf'
-import ShopScope from '../office/ShopScope'
+import ShopScope, { ShopPicker } from '../office/ShopScope'
 
 const billsText = (n: number): string => (n === 1 ? t('glance.billOne') : t('glance.billMany', { n }))
 
@@ -33,8 +33,9 @@ export default function ManagerPanel() {
         <button type="button" onClick={() => navigate('/office/shops')}>
           {t('nav.shops')}
         </button>
+        <ShopPicker className="shop-pick inline-pick" />
       </div>
-      <ShopScope>{(store) => <ShopToday store={store} />}</ShopScope>
+      <ShopScope picker={false}>{(store) => <ShopToday store={store} />}</ShopScope>
     </section>
   )
 }

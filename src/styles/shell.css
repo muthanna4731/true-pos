@@ -6,8 +6,7 @@ h1 {
 }
 
 /* Secondary button: an outline pill on cream. Coral is kept for the one main action (see .pay-primary). */
-button,
-.nav-link {
+button {
   min-height: var(--touch);
   padding: 0 24px;
   border: 1px solid var(--brand);
@@ -47,8 +46,7 @@ button:disabled {
   flex: 1;
 }
 
-.shell-header button,
-.shell-header .nav-link {
+.shell-header button {
   padding: 0 20px;
   border-color: var(--on-dark);
   background: transparent;
@@ -67,25 +65,6 @@ button:disabled {
 
 .who {
   font-weight: 700;
-}
-
-.shell-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-/* Many links (the office has nine) sit on their own row under the 64 px bar, so the bar stays tidy. */
-.shell-nav:has(> :nth-child(4)) {
-  order: 9;
-  flex-basis: 100%;
-  padding-bottom: 8px;
-}
-
-.nav-link {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
 }
 
 .sync-badge {

@@ -11,7 +11,6 @@ import type { PayMode, Product } from '../../src/domain/types';
 import { setLang } from '../../src/i18n';
 import BillScreen from '../../src/ui/bill/BillScreen';
 import OfficeRoutes from '../../src/ui/office/OfficeRoutes';
-import { resetWorkShop } from '../../src/ui/office/ShopScope';
 import { login, logout } from '../../src/ui/shell/session';
 
 // 29 Oct 2026, 12:00 IST.
@@ -81,7 +80,6 @@ beforeEach(async () => {
   cashierShift = 'SH-U1';
   sessionStorage.clear();
   logout();
-  resetWorkShop();
 });
 
 afterEach(() => {

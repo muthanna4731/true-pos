@@ -7,7 +7,6 @@ import { buildProduct } from '../../src/domain/catalogue';
 import { sha256Hex } from '../../src/domain/hash';
 import { setLang } from '../../src/i18n';
 import { AppRoutes } from '../../src/routes';
-import { resetWorkShop } from '../../src/ui/office/ShopScope';
 import { login, logout, useSession } from '../../src/ui/shell/session';
 
 // 29 Oct 2026, 12:00 IST.
@@ -58,7 +57,6 @@ beforeEach(async () => {
   await db.prices.add({ productId: product.id, mrp: 10000, purchase: 7000, aroed: 0, cess: 0, effectiveFrom: '2026-04-01', pushedBy: 'seed' });
   sessionStorage.clear();
   logout();
-  resetWorkShop();
 });
 
 afterEach(() => {
@@ -139,6 +137,21 @@ describe('office', () => {
     expect(screen.queryByRole('button', { name: 'Add price row' })).toBeNull();
     expect(screen.queryByRole('button', { name: /push/i })).toBeNull();
     expect(screen.queryByRole('textbox', { name: 'Short name' })).toBeNull();
+    // The row still opens, and the price history under it is read-only.
+    const history = screen.getByRole('region', { name: product.description });
+    expect(within(history).getByRole('heading', { name: 'Price history' })).toBeInTheDocument();
+    expect(within(history).getByText('₹100')).toBeInTheDocument();
+  });
+
+  it('puts the side menu in the page: Home is current on the home, and the current page follows the route', async () => {
+    renderAt('/office');
+    const menu = await screen.findByRole('navigation', { name: 'Menu' });
+    expect(within(menu).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+    expect(within(menu).getAllByRole('link').filter((a) => a.getAttribute('aria-current') === 'page')).toHaveLength(1);
+    await user.click(within(menu).getByRole('link', { name: 'Products' }));
+    await waitFor(() => expect(where()).toBe('/office/products'));
+    expect(within(menu).getByRole('link', { name: 'Products' })).toHaveAttribute('aria-current', 'page');
+    expect(within(menu).getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
   });
 
   it('can open Stock arrived and Count shelf for any shop, hub first', async () => {
@@ -160,6 +173,17 @@ describe('manager', () => {
     await screen.findByRole('navigation', { name: 'Menu' });
     const links = headerLinks();
     for (const name of [...SHARED_LINKS, ...MANAGER_ONLY_LINKS]) expect(links).toContain(name);
+  });
+
+  it('starts every login on the hub, whichever shop the last session picked', async () => {
+    renderAt('/office/arrived');
+    const pick = await screen.findByRole('combobox', { name: 'Shop' });
+    await user.selectOptions(pick, 'TSTS2');
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS2'));
+    logout();
+    await login('U-M', '2222');
+    renderAt('/office/arrived');
+    expect(await screen.findAllByRole('combobox', { name: 'Shop' })).toSatisfy((all: HTMLElement[]) => all.every((c) => (c as HTMLSelectElement).value === 'TSTS1'));
   });
 
   it('has the Manager row of quick actions under the to-do home', async () => {

@@ -21,7 +21,7 @@ const tomorrow = (day: string): string => new Date(Date.parse(`${day}T00:00:00Z`
 export default function Products() {
   useLang()
   const { user } = useSession()
-  // Manager and owner change prices and short names; office only reads the list (the controls are not rendered).
+  // Manager and owner change prices and short names; office reads the list and each product's price history (the inputs and buttons are not rendered).
   const canEdit = user?.role === 'manager' || user?.role === 'owner'
   const busy = useRef(false)
   const now = nowMinute()
@@ -125,28 +125,32 @@ export default function Products() {
           { key: 'from', label: t('prod.effective'), kind: 'date' },
         ]}
         rows={rows}
-        onRowClick={canEdit ? (r) => choose(String(r.id)) : undefined}
+        onRowClick={(r) => choose(String(r.id))}
       />
-      {canEdit && product && (
+      {product && (
         <section aria-label={product.description}>
           <h2>{product.description}</h2>
-          <label>
-            {t('prod.shortName')} <input value={name} onChange={(e) => setName(e.target.value)} />
-          </label>
-          <button type="button" onClick={() => void saveName()}>
-            {t('prod.saveName')}
-          </button>
-          {([['mrp', t('tr.mrp')], ['purchase', t('prod.purchase')], ['aroed', 'AROED'], ['cess', t('prod.cess')]] as const).map(([k, label]) => (
-            <label key={k}>
-              {label} (₹) <input type="number" min={0} step="0.01" value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
-            </label>
-          ))}
-          <label>
-            {t('prod.effective')} <input type="date" value={effectiveFrom} onChange={(e) => setForm({ ...form, from: e.target.value })} />
-          </label>
-          <button type="button" onClick={addRow}>
-            {t('prod.addRow')}
-          </button>
+          {canEdit && (
+            <>
+              <label>
+                {t('prod.shortName')} <input value={name} onChange={(e) => setName(e.target.value)} />
+              </label>
+              <button type="button" onClick={() => void saveName()}>
+                {t('prod.saveName')}
+              </button>
+              {([['mrp', t('tr.mrp')], ['purchase', t('prod.purchase')], ['aroed', 'AROED'], ['cess', t('prod.cess')]] as const).map(([k, label]) => (
+                <label key={k}>
+                  {label} (₹) <input type="number" min={0} step="0.01" value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
+                </label>
+              ))}
+              <label>
+                {t('prod.effective')} <input type="date" value={effectiveFrom} onChange={(e) => setForm({ ...form, from: e.target.value })} />
+              </label>
+              <button type="button" onClick={addRow}>
+                {t('prod.addRow')}
+              </button>
+            </>
+          )}
           <ReportTable
             title={t('prod.history')}
             asOf={{ now }}

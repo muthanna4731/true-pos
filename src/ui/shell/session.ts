@@ -10,6 +10,8 @@ export interface SessionData {
   store: Store | null
   counter: number
   shiftId: string | null
+  /** The shop the back office is looking at (office and manager). It lives in the session, so every login starts on the hub. */
+  workShop: string
 }
 
 export interface Session extends SessionData {
@@ -18,7 +20,9 @@ export interface Session extends SessionData {
 }
 
 const KEY = 'session'
-const EMPTY: SessionData = { user: null, store: null, counter: 1, shiftId: null }
+/** Where office and manager start; the choice then holds from screen to screen until log out. */
+export const HUB_SHOP = 'TSTS1'
+const EMPTY: SessionData = { user: null, store: null, counter: 1, shiftId: null, workShop: HUB_SHOP }
 
 function load(): SessionData {
   try {
@@ -77,13 +81,18 @@ export async function login(userId: string, pin: string): Promise<boolean> {
     }
   }
   // The PIN hash has done its job; it doesn't need to sit in sessionStorage.
-  setState({ user: { ...user, pinHash: '' }, store, counter: 1, shiftId })
+  setState({ user: { ...user, pinHash: '' }, store, counter: 1, shiftId, workShop: HUB_SHOP })
   requestLoyaltyRefresh()
   return true
 }
 
 export function logout(): void {
   setState(EMPTY)
+}
+
+/** Choose the shop the back office shows. */
+export function setWorkShop(code: string): void {
+  if (state.user && state.workShop !== code) setState({ ...state, workShop: code })
 }
 
 export function useSession(): Session {
