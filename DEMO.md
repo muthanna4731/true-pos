@@ -33,14 +33,17 @@ Product names and MRPs come from the public price list; all quantities and rupee
 3. Bill one bottle: tap a tile, **Cash**, **Exact**. The badge says `● Offline · 1 bill will sync`.
 4. Turn the wifi on. The badge goes back to `● Online` and the bill is sent.
 
-### 4. The manager closes the shift and the day locks (2 min)
+### 4. The manager closes the shifts and the day locks (2 min)
+
+Logging out does not end the cashier's shift, so the manager has two open shifts to close: the cashier's, then their own.
 
 1. Tap **Log out**, then **Manager 1** and `2222`.
-2. The manager home shows today at a glance. Tap **Close shift**, pick the shift, count the cash with the note buttons, tap **Close**.
-3. The screen says "Day locked. Today's figures are final." Tap **Done**.
-4. Log in as the manager again. Today's figures now say "Closed day: locked figures".
-5. Log in as **Cashier 1** and tap a bottle: instead of the pay buttons the screen says "Day closed for today. Ask your manager."
-6. Open the demo panel and tap **Next day**: billing works again.
+2. The manager home shows today at a glance. Tap **Close shift**. Two shifts are listed: **Cashier 1** and **Manager 1**.
+3. Tap **Cashier 1**'s shift, count the cash with the note buttons (the screen shows "Expected cash" and whether it matches), tap **Close**. The screen says "Shift closed". The day is not locked yet, because the manager's own shift is still open. Tap **Done**.
+4. The list now shows only **Manager 1**. Tap it, count the drawer, tap **Close**. The screen says "Day locked. Today's figures are final." Tap **Done**: closing your own shift logs you out.
+5. Log in as the manager again. Today's figures now say "Closed day: locked figures".
+6. Log in as **Cashier 1** and tap a bottle: instead of the pay buttons the screen says "Day closed for today. Ask your manager."
+7. Open the demo panel and tap **Next day**: billing works again.
 
 ### 5. The office to-do list shows the planted problems (2 min)
 
@@ -80,6 +83,8 @@ Product names and MRPs come from the public price list; all quantities and rupee
 - First load of the full dummy data, measured in Chromium at 1280 x 800 on a laptop (3 fresh runs): login screen ready in about 6.0 s (5.9 to 6.0 s), cashier bill screen ready about 0.4 s after the PIN (6.3 to 6.4 s from first navigation). A reload after that opens the bill screen in about 0.3 s. Tablet timings have not been measured: do that by hand.
 - The "Next day" button moves the demo clock only; it does not create a new day of sales.
 - Loyalty runs on a stand-in that follows the real app's rules; no customer app is connected.
+- Barcode scanning is not built on Stock arrived or Count shelf; items are found by search only. (The bill screen does take scans.)
+- The Kannada strings need a native-speaker pass before showing Kannada to the client.
 
 ## Manual checks before the meeting
 
