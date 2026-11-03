@@ -181,14 +181,41 @@ body:has(.owner-app[data-theme='dark']) {
 button.ow-outlet {
   background: none;
   border: 0;
-  padding: 11px 0;
-  margin-top: -4px;
-  margin-bottom: -11px;
+  /* a 44px tap target; the negative margins give the space back so the header looks as before */
+  padding: 15px 0;
+  margin-top: -8px;
+  margin-bottom: -15px;
   cursor: pointer;
   font-family: var(--sans);
 }
 .ow-outlet .ow-caret {
   opacity: 0.7;
+}
+.ow-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+/* the sync badge (§4.4), always in the header: a quiet dot and words, louder when offline or failing */
+.ow-syncbadge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 150px;
+  font-size: 10.5px;
+  line-height: 1.25;
+  font-weight: 500;
+  text-align: right;
+  font-variant-numeric: var(--num);
+  color: var(--up);
+}
+.ow-syncbadge.offline {
+  color: var(--amber);
+}
+.ow-syncbadge.problem {
+  color: var(--down);
+  font-weight: 600;
 }
 .ow-avatar {
   width: 36px;
@@ -468,13 +495,18 @@ button.ow-outlet {
 }
 .ow-sec a,
 .ow-sec button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  /* a 44px tap target around 12px type; the negative margins keep the header where it was */
+  margin: -16px -10px;
+  padding: 0 10px;
   font-size: 12px;
   color: var(--ink-2);
   text-decoration: none;
   font-weight: 500;
   background: none;
   border: 0;
-  padding: 0;
   cursor: pointer;
   font-family: var(--sans);
 }
@@ -1169,8 +1201,12 @@ button.ow-outlet {
   max-width: 100%;
 }
 
+/* `*` does not match pseudo-elements, and the pour and the fresh-bill bar are drawn on ::before: name them too.
+   The pour stays on as a still amber edge. */
 @media (prefers-reduced-motion: reduce) {
-  .owner-app * {
+  .owner-app *,
+  .owner-app *::before,
+  .owner-app *::after {
     animation: none !important;
     transition: none !important;
   }

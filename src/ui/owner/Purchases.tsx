@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { loadPurchases } from '../../db/ownerData'
-import { formatINR, formatINRCompact } from '../../domain/money'
+import { formatINR, formatINRCompact, formatINRWhole } from '../../domain/money'
 import { purchasesSummary, type TransferRow } from '../../domain/owner'
 import { clock, formatDate, istDate } from '../../domain/time'
 import { t } from '../../i18n'
@@ -33,14 +33,14 @@ export default function Purchases() {
   const count = (n: number, one: string, many: string): string => t(n === 1 ? one : many, { n })
   const productName = (id: string): string => data.products.get(id)?.shortName || data.products.get(id)?.description || id
 
-  const receipts = sum.receipts.filter((r) => (tab === 'alcohol' ? r.alcohol : !r.alcohol))
+  const receipts = sum.receipts.filter((r) => (tab === 'alcohol' ? r.type === 'ksbcl' : r.type !== 'ksbcl'))
   const receiptRows = receipts.slice(0, RECEIPTS_SHOWN).map((r) => (
     <NameRow
       key={r.id}
       name={t('ow.grnRow', { date: dateOf(r.at), no: r.invoiceNo || r.id })}
       sub={`${r.productId ? productName(r.productId) : t('ow.mixed')} · ${count(r.cases, 'ow.caseOne', 'ow.caseMany')}`}
     >
-      <span className="ow-amt">{formatINR(r.amount)}</span>
+      <span className="ow-amt">{formatINRWhole(r.amount)}</span>
     </NameRow>
   ))
 
@@ -102,7 +102,7 @@ export default function Purchases() {
             {sum.suppliers.length === 0 && <Empty>{t('ow.noSuppliers')}</Empty>}
             {sum.suppliers.slice(0, 3).map((s, i) => (
               <NameRow key={s.supplierId} rank={i + 1} name={s.name} sub={count(s.receipts, 'ow.receiptOne', 'ow.receiptMany')}>
-                <span className="ow-amt">{formatINR(s.amount)}</span>
+                <span className="ow-amt">{formatINRWhole(s.amount)}</span>
               </NameRow>
             ))}
           </div>

@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { loadToday } from '../../db/ownerData'
-import { formatINR } from '../../domain/money'
+import { formatINR, formatINRWhole } from '../../domain/money'
 import { dailyUnits, rankProducts, runningOut, salesFigures, trendOf, weekdayDelta } from '../../domain/owner'
 import { clock, istDate } from '../../domain/time'
 import { t } from '../../i18n'
@@ -27,7 +27,7 @@ export default function TodayTab() {
       const series = dailyUnits(data.bills, data.lines, r.productId, data.day, scope)
       return { ...r, series, trend: trendOf(series) }
     })
-    return { figures, delta: weekdayDelta(data.bills, data.day, scope), top, out: runningOut(data.movements, now, data.day, scope) }
+    return { figures, delta: weekdayDelta(data.bills, data.day, scope, now), top, out: runningOut(data.movements, now, data.day, scope) }
   }, [data, scope])
 
   const sub = scope === null ? `${scopeName} · ${t('ow.chainTotal')}` : `${scopeName} · ${t(stores.find((s) => s.code === scope)?.isHub ? 'ow.mainOutlet' : 'ow.outlet')}`
@@ -51,7 +51,8 @@ export default function TodayTab() {
         {delta.pct !== null && (
           <div className="ow-beneath">
             <span className={delta.pct < 0 ? 'ow-delta down' : 'ow-delta'}>
-              {delta.pct < 0 ? '↓' : '↑'} {Math.abs(delta.pct)}%
+              {delta.pct === 0 ? '' : delta.pct < 0 ? '↓ ' : '↑ '}
+              {Math.abs(delta.pct)}%
             </span>
             <span className="ow-ctx">{t('ow.vsLast', { day: t(`ow.wd.${delta.weekday}`) })}</span>
           </div>
@@ -75,7 +76,7 @@ export default function TodayTab() {
       </LiveCard>
 
       <div className="ow-pair">
-        <Stat label={t('ow.billsLabel')} value={new Intl.NumberFormat('en-IN').format(figures.bills)} sub={t('ow.average', { amount: formatINR(figures.avgBill) })} />
+        <Stat label={t('ow.billsLabel')} value={new Intl.NumberFormat('en-IN').format(figures.bills)} sub={t('ow.average', { amount: formatINRWhole(figures.avgBill) })} />
         <Stat label={t('ow.discountLabel')} value={formatINR(figures.discount)} sub={t('ow.ofSales', { pct: (figures.discountTenthPct / 10).toFixed(1) })} />
       </div>
 

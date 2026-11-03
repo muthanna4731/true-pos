@@ -4,6 +4,7 @@ import { ageParts, sparkPath } from '../../domain/owner'
 import { formatINR } from '../../domain/money'
 import { clock } from '../../domain/time'
 import { t } from '../../i18n'
+import SyncBadge from '../shell/SyncBadge'
 import { useOwner } from './ownerContext'
 
 /* The owner app's building blocks, one per piece of the design: header, live card, stat, section, list rows, badges, sparkline, strips. */
@@ -54,8 +55,11 @@ export function OwnerHeader({ title, kn, sub, picker = true }: { title: string; 
           <span className="ow-outlet">{outlet}</span>
         )}
       </div>
-      <div className="ow-avatar" aria-hidden="true">
-        TS
+      <div className="ow-top-right">
+        <SyncBadge owner />
+        <div className="ow-avatar" aria-hidden="true">
+          TS
+        </div>
       </div>
     </header>
   )

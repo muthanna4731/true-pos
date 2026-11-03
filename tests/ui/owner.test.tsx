@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { configure, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -12,6 +13,8 @@ import { setLang } from '../../src/i18n';
 import { AppRoutes } from '../../src/routes';
 import { loadSeedIfEmpty } from '../../src/seed/load';
 import { login, logout } from '../../src/ui/shell/session';
+
+const ownerCss = readFileSync(`${process.cwd()}/src/styles/owner.css`, 'utf8');
 
 // 29 Oct 2026, 12:00 IST. No bill has been rung yet that day, so the owner app shows 28 Oct.
 const NOON_IST = '2026-10-29T06:30:00.000Z';
@@ -96,11 +99,63 @@ describe('the owner app', () => {
     expect(await screen.findByLabelText('Sales yesterday')).toBeInTheDocument();
   });
 
-  it('every tab is a link at least 44 px tall in the stylesheet, and the bar is labelled', async () => {
+  it('the tab bar is a labelled row of four links', async () => {
     renderOwner();
     await screen.findByLabelText('Sales yesterday');
     expect(screen.getByRole('navigation', { name: 'Owner menu' })).toBeInTheDocument();
     expect(screen.getAllByRole('link').filter((a) => a.classList.contains('ow-tab'))).toHaveLength(4);
+  });
+
+  it('the stylesheet gives the tabs, the section actions and the shop picker a 44 px hit area', () => {
+    const block = (selector: string): string => {
+      const found = [...ownerCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => m[1].split(',').map((x) => x.trim()).includes(selector));
+      expect(found, selector).toBeDefined();
+      return found![2];
+    };
+    const px = (css: string, prop: string): number => Number(new RegExp(`(?:^|[;\\s])${prop}:\\s*(\\d+)px`).exec(css)?.[1] ?? 0);
+    expect(px(block('.ow-tab'), 'min-height')).toBeGreaterThanOrEqual(44);
+    expect(px(block('.ow-sec button'), 'min-height')).toBeGreaterThanOrEqual(44);
+    // The picker has 15 + 15 px of padding around its 14 px line.
+    expect(px(block('button.ow-outlet'), 'padding')).toBeGreaterThanOrEqual(15);
+  });
+
+  it('reduced motion stops the pour and the fresh-bill bar, which are drawn on ::before', () => {
+    const media = /@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/.exec(ownerCss)?.[1] ?? '';
+    expect(media).toMatch(/\.owner-app \*::before/);
+    expect(media).toMatch(/\.owner-app \*::after/);
+    expect(media).toMatch(/animation:\s*none\s*!important/);
+    // The animated layers really are pseudo-elements.
+    expect(ownerCss).toMatch(/\.ow-live::before \{[^}]*animation:/);
+  });
+
+  it('the header carries the sync badge on every owner screen, and it follows the network', async () => {
+    renderOwner('/owner/more');
+    const badge = await screen.findByRole('status');
+    expect(badge).toHaveTextContent('● Online');
+    await user.click(tab('Stock'));
+    expect(await screen.findByRole('status')).toHaveTextContent('● Online');
+  });
+
+  it('shows the average bill in whole rupees', async () => {
+    renderOwner();
+    const avg = await screen.findByText(/average$/);
+    expect(avg.textContent).toMatch(/^₹[\d,]+ average$/);
+  });
+
+  it('the Sales header names the day it shows, and older bills carry their date', async () => {
+    renderOwner('/owner/sales');
+    expect(await screen.findByRole('button', { name: /All shops · yesterday/ })).toBeInTheDocument();
+    await waitFor(() => expect(document.querySelectorAll('.ow-bill').length).toBeGreaterThan(0));
+    // Bills from 28 Oct, shown on 29 Oct, say so.
+    expect(document.querySelector('.ow-bill')!.textContent).toMatch(/28 Oct/);
+  });
+
+  it('Purchases groups receipts by supplier type: KSBCL under Alcohol, other vendors under Non-alcohol', async () => {
+    renderOwner('/owner/more/purchases');
+    expect(await screen.findByText('KSBCL receipts')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Non-alcohol' }));
+    expect(await screen.findByText('Other receipts')).toBeInTheDocument();
+    expect(screen.queryByText('KSBCL receipts')).toBeNull();
   });
 
   it('starts on all shops, and the shop picker scopes the figures', async () => {
@@ -160,7 +215,7 @@ describe('the owner app', () => {
     renderOwner('/owner/more');
     await screen.findByRole('group', { name: 'Colour theme' });
     expect(document.querySelector('.owner-app')).toHaveAttribute('data-theme', 'dark');
-    localStorage.setItem('ownerTheme', 'light');
+    expect(localStorage.getItem('ownerTheme')).toBeNull();
   });
 
   it('uses a remembered pick over the device', async () => {
@@ -173,6 +228,8 @@ describe('the owner app', () => {
 
   it('has no share, send, broadcast or WhatsApp link anywhere', async () => {
     const pages: [string, string][] = [
+      ['/owner', '.ow-list .ow-row'],
+      ['/owner/prices', 'table'],
       ['/owner/sales', '.ow-bill'],
       ['/owner/stock', '.ow-ledger'],
       ['/owner/more', '.ow-rlink'],

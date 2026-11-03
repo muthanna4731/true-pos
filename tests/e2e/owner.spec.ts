@@ -18,6 +18,16 @@ test('the owner sees a bill from the till in a centred phone column, and moves a
   await expect(page.getByLabel('Sales today')).toBeVisible()
   await expect(page.getByText(/^live · \d+[smhd]$/)).toBeVisible()
 
+  // The amber pour orbits the live card's border, and stops for a reader who asks for less motion.
+  const pour = () => page.locator('.ow-live').evaluate((el) => getComputedStyle(el, '::before').animationName)
+  expect(await pour()).not.toBe('none')
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  expect(await pour()).toBe('none')
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+
+  // The sync badge sits in the header.
+  await expect(page.getByRole('status')).toContainText('Online')
+
   // A phone column, about 392 to 420 px wide, centred on the laptop screen.
   const col = await page.locator('.ow-col').boundingBox()
   expect(col!.width).toBeGreaterThanOrEqual(392)

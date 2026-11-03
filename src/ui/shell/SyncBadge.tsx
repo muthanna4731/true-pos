@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { flushOutbox, pendingCount } from '../../db/outbox'
 import { syncState } from './syncState'
 
-/** Top-right badge: online or offline, how many bills wait, and a problem notice if sending fails. */
-export default function SyncBadge() {
+/** Top-right badge: online or offline, how many bills wait, and a problem notice if sending fails. `owner` dresses it in the owner app's palette. */
+export default function SyncBadge({ owner = false }: { owner?: boolean }) {
   const [online, setOnline] = useState(() => navigator.onLine)
   const [error, setError] = useState<string | undefined>(undefined)
   const pending = useLiveQuery(pendingCount, [], 0)
@@ -34,7 +34,7 @@ export default function SyncBadge() {
 
   const { tone, text } = syncState(online, pending, error)
   return (
-    <span className={`sync-badge sync-${tone}`} role="status">
+    <span className={owner ? `ow-syncbadge ${tone}` : `sync-badge sync-${tone}`} role="status">
       {text}
     </span>
   )

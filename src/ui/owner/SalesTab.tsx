@@ -3,11 +3,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadSales } from '../../db/ownerData'
 import { formatINR } from '../../domain/money'
 import { hourSales, istHourStart, liveFeed, stockMoved, type FeedRow } from '../../domain/owner'
-import { clock, formatTime, istDate } from '../../domain/time'
+import { clock, formatDate, formatTime, istDate } from '../../domain/time'
 import { t } from '../../i18n'
 import { useLang } from '../../i18n/useLang'
 import { useOwner } from './ownerContext'
-import { Empty, LiveCard, NameRow, OwnerHeader, Pill, Section } from './parts'
+import { Empty, LiveCard, NameRow, OwnerHeader, Pill, Section, shortDate } from './parts'
 
 /** The top of the current IST hour, rechecked every 20 seconds, so "this hour" rolls over by itself. */
 function useHourStart(): string {
@@ -23,7 +23,7 @@ function useHourStart(): string {
  * The bill list. The bills on screen when it first drew are the baseline; a bill that arrives after that gets the
  * amber edge once. The parent keys this by shop, so picking another shop starts a new baseline.
  */
-function Feed({ rows, showShop, shopName }: { rows: FeedRow[]; showShop: boolean; shopName(code: string): string }) {
+function Feed({ rows, showShop, shopName, today }: { rows: FeedRow[]; showShop: boolean; shopName(code: string): string; today: string }) {
   const seen = useRef<Set<string> | null>(null)
   const fresh = useRef(new Set<string>())
   if (seen.current === null) seen.current = new Set(rows.map((r) => r.number))
@@ -43,6 +43,7 @@ function Feed({ rows, showShop, shopName }: { rows: FeedRow[]; showShop: boolean
           <span className="ow-who">
             <b>{r.number}</b>
             <span>
+              {istDate(r.at) !== today && `${shortDate(formatDate(r.at))} · `}
               {t(r.items === 1 ? 'ow.oneItem' : 'ow.nItems', { n: r.items })} · {t('ow.counterN', { n: r.counter })}
               {showShop && ` · ${shopName(r.storeCode)}`}
             </span>
@@ -70,7 +71,7 @@ export default function SalesTab() {
     return { hour, feed, moved }
   }, [data, scope])
 
-  const sub = `${scopeName} · ${t('ow.todayWord')}`
+  const sub = `${scopeName} · ${t(data && data.day !== today ? 'ow.yesterdayWord' : 'ow.todayWord')}`
   if (!data || !view) return <div className="ow-app"><OwnerHeader title={t('ow.tab.sales')} sub={sub} /></div>
   const { hour, feed, moved } = view
   const shopName = (code: string): string => stores.find((s) => s.code === code)?.name ?? code
@@ -94,7 +95,7 @@ export default function SalesTab() {
       </LiveCard>
 
       <Section title={t('ow.everyBill')} />
-      <Feed key={scope ?? 'all'} rows={feed} showShop={scope === null} shopName={shopName} />
+      <Feed key={scope ?? 'all'} rows={feed} showShop={scope === null} shopName={shopName} today={today} />
 
       <Section title={t(data.day === today ? 'ow.stockMovedToday' : 'ow.stockMovedYesterday')} />
       <div className="ow-list">

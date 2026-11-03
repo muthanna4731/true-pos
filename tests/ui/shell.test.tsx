@@ -258,6 +258,13 @@ describe('language toggle', () => {
 });
 
 describe('sync badge', () => {
+  async function badgeAtOwnerScreen() {
+    const user = userEvent.setup();
+    renderAt('/login');
+    await loginAs(user, /^Owner /, '4444');
+    await waitFor(() => expect(where()).toBe('/owner'));
+    await screen.findByRole('status');
+  }
   async function badgeAtBackOffice() {
     const user = userEvent.setup();
     renderAt('/login');
@@ -270,8 +277,8 @@ describe('sync badge', () => {
     await db.outbox.clear();
   });
 
-  it('shows how many bills wait while offline, and sends them when back online', async () => {
-    await badgeAtBackOffice();
+  it('shows how many bills wait while offline, and sends them when back online, on the owner screen', async () => {
+    await badgeAtOwnerScreen();
     expect(screen.getByRole('status')).toHaveTextContent('● Online');
 
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
@@ -289,6 +296,11 @@ describe('sync badge', () => {
     });
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('● Online'));
     await waitFor(async () => expect(await db.outbox.where('synced').equals(0).count()).toBe(0));
+  });
+
+  it('is on the back office screens too', async () => {
+    await badgeAtBackOffice();
+    expect(screen.getByRole('status')).toHaveTextContent('● Online');
   });
 });
 

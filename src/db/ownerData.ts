@@ -50,6 +50,23 @@ async function newestPaidAt(codes: string[]): Promise<string | null> {
   return newest.reduce<string | null>((best, b) => (b && (best === null || b.at > best) ? b.at : best), null);
 }
 
+/** The lines of these bills, read as one range per number prefix rather than one lookup per bill. */
+async function linesOfBills(numbers: string[]): Promise<BillLine[]> {
+  const wanted = new Set(numbers);
+  const spans = new Map<string, [string, string]>();
+  for (const n of numbers) {
+    const prefix = n.slice(0, n.lastIndexOf('/') + 1);
+    const span = spans.get(prefix);
+    if (!span) spans.set(prefix, [n, n]);
+    else {
+      if (n < span[0]) span[0] = n;
+      if (n > span[1]) span[1] = n;
+    }
+  }
+  const ranges = await Promise.all([...spans.values()].map(([lo, hi]) => db.billLines.where('billNumber').between(lo, hi, true, true).toArray()));
+  return ranges.flat().filter((l) => wanted.has(l.billNumber));
+}
+
 export interface TodayData {
   /** The scope this was read for, so a screen can tell stale data (from the shop picked before) from fresh. */
   scope: ShopScope;
@@ -72,10 +89,12 @@ export async function loadToday(scope: ShopScope): Promise<TodayData> {
   const bills = await billsBetween(codes, istDayStart(addIstDays(day, -7)), istDayStart(addIstDays(day, 1)));
   const todays = bills.filter((b) => b.status === 'paid' && b.at >= dayStart).map((b) => b.number);
   const dayLines = await db.billLines.where('billNumber').anyOf(todays).toArray();
-  const top = rankProducts(bills, dayLines, day, scope).map((r) => r.productId);
-  const topLines = top.length > 0 ? await db.billLines.where('productId').anyOf(top).toArray() : [];
-  const seen = new Set<number | undefined>();
-  const lines = [...dayLines, ...topLines].filter((l) => l.id === undefined || (!seen.has(l.id) && seen.add(l.id)));
+  const top = new Set(rankProducts(bills, dayLines, day, scope).map((r) => r.productId));
+  // The sparkline needs the top sellers' lines for the 7 days before. Bill numbers run in order within a prefix
+  // (shop, counter, year), so each prefix's loaded bills are one contiguous range of the number index.
+  const earlier = bills.filter((b) => b.status === 'paid' && b.at < dayStart).map((b) => b.number);
+  const topLines = top.size === 0 ? [] : (await linesOfBills(earlier)).filter((l) => top.has(l.productId));
+  const lines = [...dayLines, ...topLines];
   const [products, movements, newestAt] = await Promise.all([productMap(), movementsOf(codes), newestPaidAt(codes)]);
   return { scope, day, stores, products, bills, lines, movements, newestAt };
 }
