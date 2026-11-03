@@ -93,7 +93,7 @@ The owner has their own phone-shaped app, centred on the laptop screen. Nothing 
 ## Known limits
 
 - Office > Deliveries: the **Local suppliers** and **Returns** tabs are empty in the dummy data.
-- Not deployed yet: it runs on localhost only. Deploying to Cloudflare Pages comes later (see README).
+- Live at https://true-pos.muthannamandanna8.workers.dev (see README to redeploy). Each browser keeps its own dummy data.
 - First load of the full dummy data, measured in Chromium at 1280 x 800 on a laptop (3 fresh runs): login screen ready in about 6.0 s (5.9 to 6.0 s), cashier bill screen ready about 0.4 s after the PIN (6.3 to 6.4 s from first navigation). A reload after that opens the bill screen in about 0.3 s. Tablet timings have not been measured: do that by hand.
 - The "Next day" button moves the demo clock only; it does not create a new day of sales.
 - Loyalty runs on a stand-in that follows the real app's rules; no customer app is connected.
