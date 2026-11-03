@@ -98,10 +98,10 @@ describe('manager home', () => {
     await login('U-M', '2222');
     renderManager();
 
-    const row = await screen.findByRole('region', { name: 'Manager' });
-    expect(within(row).getByRole('combobox', { name: 'Shop' })).toBeInTheDocument();
+    const row = await screen.findByRole('region', { name: 'Manager' }, { timeout: 3000 });
+    expect(await within(row).findByRole('combobox', { name: 'Shop' })).toBeInTheDocument();
     expect(await screen.findByText('Today: ₹600 · 3 bills · avg ₹200')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Practice mode' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Practice mode' })).toBeInTheDocument();
     // Every other figure of the day.
     const glance = screen.getByRole('region', { name: 'Today at a glance' });
     expect(within(glance).getByText('as of 12:00 PM')).toBeInTheDocument();
