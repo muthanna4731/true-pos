@@ -1,10 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState } from 'react'
 import { db } from '../../db/db'
-import { closeShift, expectedCash, shiftTakings, type ShiftClose } from '../../db/shifts'
+import { closeShift, expectedCash, lockDay, shiftTakings, type ShiftClose } from '../../db/shifts'
 import { cashFromNotes } from '../../domain/cash'
 import { formatINR } from '../../domain/money'
-import { formatTime } from '../../domain/time'
+import { clock, formatTime, istDate } from '../../domain/time'
 import type { Paise } from '../../domain/types'
 import { t } from '../../i18n'
 import { useSession } from '../shell/session'
@@ -43,19 +43,60 @@ export default function CloseShift({ shiftId, storeCode, onDone, onCancel }: Pro
   )
 }
 
-/** The shifts still open at this shop, one button each. */
+/** The shifts still open at this shop, one button each. With none open today and the day not locked, the manager can [Lock day]. */
 function ShiftPicker({ storeCode: code, onPick }: { storeCode?: string; onPick(id: string): void }) {
-  const open = useLiveQuery(
+  const { user } = useSession()
+  const [failed, setFailed] = useState(false)
+  const busy = useRef(false)
+  const today = istDate(clock.now())
+  const state = useLiveQuery(
     async () => {
       if (!code) return undefined
       const shifts = await db.shifts.where('storeCode').equals(code).filter((s) => s.closedAt === undefined).toArray()
       const users = await db.users.bulkGet(shifts.map((s) => s.cashierId))
-      return shifts.map((s, i) => ({ shift: s, name: users[i]?.name ?? s.cashierId }))
+      const locked = (await db.dayCloses.get([code, today])) !== undefined
+      return { open: shifts.map((s, i) => ({ shift: s, name: users[i]?.name ?? s.cashierId })), locked }
     },
-    [code],
+    [code, today],
   )
-  if (!open) return null
-  if (open.length === 0) return <p className="empty">{t('close.noOpen')}</p>
+  if (!state) return null
+  const { open, locked } = state
+  const canLock = !locked && !open.some(({ shift }) => istDate(shift.openedAt) === today)
+  const lock = async (): Promise<void> => {
+    if (!code || busy.current) return // a double tap locks once
+    busy.current = true
+    setFailed(false)
+    try {
+      await lockDay(code, today, user?.id ?? '')
+    } catch {
+      setFailed(true)
+    } finally {
+      busy.current = false
+    }
+  }
+  const lockPart = (
+    <>
+      {locked && <p className="day-locked">{t('close.dayLocked')}</p>}
+      {canLock && (
+        <button type="button" className="pay-primary" onClick={() => void lock()}>
+          {t('close.lockDay')}
+        </button>
+      )}
+      {failed && (
+        <p className="pay-error" role="alert">
+          {t('close.lockFailed')}
+        </p>
+      )}
+    </>
+  )
+  if (open.length === 0) {
+    return (
+      <>
+        <p className="empty">{t('close.noOpen')}</p>
+        {lockPart}
+      </>
+    )
+  }
   return (
     <section className="shift-picker">
       <h2>{t('close.pick')}</h2>
@@ -69,6 +110,7 @@ function ShiftPicker({ storeCode: code, onPick }: { storeCode?: string; onPick(i
           </li>
         ))}
       </ul>
+      {lockPart}
     </section>
   )
 }

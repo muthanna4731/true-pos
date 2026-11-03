@@ -389,6 +389,35 @@ describe('close shift', () => {
   });
 });
 
+describe('lock day', () => {
+  it('offers [Lock day] once every shift of the day was ended by its cashier, and locks through the same path', async () => {
+    await db.shifts.update('SH-U1', { closedAt: '2026-10-29T06:00:00.000Z', counted: 100000, expected: 100000, diff: 0 });
+    await sell(20000, 'upi');
+    await login('U-M', '2222');
+    renderManager('/office/close');
+
+    expect(await screen.findByText('No open shifts')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Lock day' }));
+    expect(await screen.findByText(/Day locked/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lock day' })).toBeNull();
+    expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toMatchObject({ date: '2026-10-29', lockedAt: NOON_IST });
+    await expect(sell(100)).rejects.toThrow('day_closed');
+  });
+
+  it('does not offer [Lock day] while a shift is open, or when the day is already locked', async () => {
+    await login('U-M', '2222');
+    renderManager('/office/close');
+    expect(await screen.findByRole('button', { name: /Cashier 1/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Lock day' })).toBeNull();
+
+    // Shop 2 has no open shift: the day can be locked there, and only there.
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Shop' }), 'TSTS2');
+    expect(await screen.findByRole('button', { name: 'Lock day' })).toBeInTheDocument();
+    await db.dayCloses.add({ storeCode: 'TSTS2', date: '2026-10-29', lockedAt: NOON_IST, totals: {} });
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Lock day' })).toBeNull());
+  });
+});
+
 describe('bills', () => {
   it('lists today\'s bills and shows a bill\'s lines with Reprint', async () => {
     const bill = await sell(30000, 'upi', { qty: 3 });

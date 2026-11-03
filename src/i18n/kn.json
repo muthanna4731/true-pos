@@ -192,6 +192,8 @@
   "close.card": "ಕಾರ್ಡ್ ಒಟ್ಟು {amount}",
   "close.failed": "ಶಿಫ್ಟ್ ಮುಚ್ಚಲಾಗಲಿಲ್ಲ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
   "close.close": "ಮುಚ್ಚಿ",
+  "close.lockDay": "ದಿನ ಲಾಕ್ ಮಾಡಿ",
+  "close.lockFailed": "ದಿನವನ್ನು ಲಾಕ್ ಮಾಡಲು ಆಗಲಿಲ್ಲ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
   "bills.title": "ಬಿಲ್ {number}",
   "bills.empty": "ಇಂದು ಇನ್ನೂ ಬಿಲ್ ಇಲ್ಲ",
   "bills.tagVoid": "ರದ್ದು",

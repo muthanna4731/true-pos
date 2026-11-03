@@ -48,6 +48,21 @@ export interface ShiftClose {
   dayLocked: boolean;
 }
 
+/** Shifts of the shop that began on this IST day and are still open. Shifts left open from another day do not count. */
+function openShiftsOfDay(storeCode: string, day: string, exceptShiftId?: string): Promise<number> {
+  return db.shifts
+    .where('storeCode')
+    .equals(storeCode)
+    .filter((s) => s.id !== exceptShiftId && s.closedAt === undefined && istDate(s.openedAt) === day)
+    .count();
+}
+
+/** Save the day's figures and shut it to sales; a day already locked keeps its first lock. Call inside a transaction on shifts and the tables the totals read. */
+async function writeDayClose(storeCode: string, day: string, lockedAt: string): Promise<void> {
+  if (await db.dayCloses.get([storeCode, day])) return;
+  await db.dayCloses.add({ storeCode, date: day, lockedAt, totals: await loadDayTotals(storeCode, day) });
+}
+
 function validCount(n: number): boolean {
   return Number.isInteger(n) && n >= 0;
 }
@@ -78,17 +93,22 @@ export function closeShift(shiftId: string, counts: Record<number, number>, coin
 
     if ((await db.users.get(closedBy))?.role !== 'manager') return { expected, counted, diff, dayLocked: false };
 
-    // Shifts left open from another day do not hold this day's lock back.
-    const othersOpen = await db.shifts
-      .where('storeCode')
-      .equals(shift.storeCode)
-      .filter((s) => s.id !== shiftId && s.closedAt === undefined && istDate(s.openedAt) === day)
-      .count();
-    if (othersOpen > 0) return { expected, counted, diff, dayLocked: false };
+    if ((await openShiftsOfDay(shift.storeCode, day, shiftId)) > 0) return { expected, counted, diff, dayLocked: false };
 
-    if (!(await db.dayCloses.get([shift.storeCode, day]))) {
-      await db.dayCloses.add({ storeCode: shift.storeCode, date: day, lockedAt: now, totals: await loadDayTotals(shift.storeCode, day) });
-    }
+    await writeDayClose(shift.storeCode, day, now);
     return { expected, counted, diff, dayLocked: true };
+  });
+}
+
+/**
+ * A manager locks the shop's day once every shift of that day is closed (a cashier's own End shift never locks it).
+ * Refused with `shift_open` while a shift that began that day is still open, and with `not_manager` for anyone else.
+ * Safe to call twice.
+ */
+export function lockDay(storeCode: string, day: string, lockedBy: string): Promise<void> {
+  return db.transaction('rw', [db.shifts, db.users, db.bills, db.payments, db.billLines, db.products, db.dayCloses], async () => {
+    if ((await db.users.get(lockedBy))?.role !== 'manager') throw new Error('not_manager');
+    if ((await openShiftsOfDay(storeCode, day)) > 0) throw new Error('shift_open');
+    await writeDayClose(storeCode, day, clock.now());
   });
 }

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db, resetDb } from '../../src/db/db';
 import { DayClosedError, recordSale, voidBill } from '../../src/db/sales';
-import { closeShift, expectedCash, openShift } from '../../src/db/shifts';
+import { closeShift, expectedCash, lockDay, openShift } from '../../src/db/shifts';
 import { buildProduct } from '../../src/domain/catalogue';
 import type { PayMode } from '../../src/domain/types';
 
@@ -156,5 +156,53 @@ describe('closeShift', () => {
     await expect(closeShift('NOPE', {}, 0, 'M')).rejects.toThrow('shift_not_found');
     const shift = await openShift('TSTS1', 'U1', 0);
     await expect(closeShift(shift, { 100: -1 }, 0, 'M')).rejects.toThrow('bad_count');
+  });
+});
+
+describe('lockDay', () => {
+  it('locks the day by the manager once every shift was ended by its cashier, saving the totals', async () => {
+    const a = await openShift('TSTS1', 'U1', 0);
+    const b = await openShift('TSTS1', 'U2', 0);
+    await sell(a, 10000, 'cash');
+    await sell(a, 20000, 'upi');
+    expect((await closeShift(a, {}, 0, 'U1')).dayLocked).toBe(false);
+    expect((await closeShift(b, {}, 0, 'U2')).dayLocked).toBe(false);
+    expect(await db.dayCloses.count()).toBe(0);
+
+    await lockDay('TSTS1', '2026-10-29', 'M');
+    const row = await db.dayCloses.get(['TSTS1', '2026-10-29']);
+    expect(row).toMatchObject({ storeCode: 'TSTS1', date: '2026-10-29', lockedAt: NOON_IST });
+    expect(row?.totals).toMatchObject({ net: 30000, bills: 2 });
+    await expect(sell(a, 100)).rejects.toBeInstanceOf(DayClosedError);
+  });
+
+  it('refuses while a shift of that day is still open, and writes nothing', async () => {
+    const a = await openShift('TSTS1', 'U1', 0);
+    await openShift('TSTS1', 'U2', 0);
+    await closeShift(a, {}, 0, 'U1');
+    await expect(lockDay('TSTS1', '2026-10-29', 'M')).rejects.toThrow('shift_open');
+    expect(await db.dayCloses.count()).toBe(0);
+  });
+
+  it('does not wait for a shift left open on an earlier day, nor for another shop', async () => {
+    await db.shifts.add({ id: 'OLD', storeCode: 'TSTS1', cashierId: 'U9', openedAt: '2026-10-27T04:00:00.000Z', floatPaise: 0 });
+    await openShift('TSTS2', 'U2', 0);
+    await lockDay('TSTS1', '2026-10-29', 'M');
+    expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toBeDefined();
+    expect(await db.dayCloses.get(['TSTS2', '2026-10-29'])).toBeUndefined();
+  });
+
+  it('is for a manager only', async () => {
+    await expect(lockDay('TSTS1', '2026-10-29', 'U1')).rejects.toThrow('not_manager');
+    await expect(lockDay('TSTS1', '2026-10-29', 'NOBODY')).rejects.toThrow('not_manager');
+    expect(await db.dayCloses.count()).toBe(0);
+  });
+
+  it('is safe to call twice: the first lock stands', async () => {
+    await lockDay('TSTS1', '2026-10-29', 'M');
+    vi.setSystemTime(new Date('2026-10-29T08:00:00.000Z'));
+    await lockDay('TSTS1', '2026-10-29', 'M');
+    expect(await db.dayCloses.count()).toBe(1);
+    expect((await db.dayCloses.get(['TSTS1', '2026-10-29']))?.lockedAt).toBe(NOON_IST);
   });
 });

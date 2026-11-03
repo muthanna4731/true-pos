@@ -191,6 +191,8 @@
   "close.card": "Card total {amount}",
   "close.failed": "Could not close the shift, try again",
   "close.close": "Close",
+  "close.lockDay": "Lock day",
+  "close.lockFailed": "Could not lock the day, try again",
   "bills.title": "Bill {number}",
   "bills.empty": "No bills yet today",
   "bills.tagVoid": "VOID",
