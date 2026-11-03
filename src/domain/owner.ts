@@ -187,14 +187,20 @@ export interface WeekdayDelta {
   weekday: number;
 }
 
-/** The day's net sales against the same weekday a week before ("up 12% vs last Monday"). */
-export function weekdayDelta(bills: Bill[], istDay: string, scope: ShopScope): WeekdayDelta {
-  const net = (day: string): Paise => {
+/**
+ * The day's net sales against the same weekday a week before ("up 12% vs last Monday"). While `istDay` is the day of
+ * `nowIso` the comparison is like for like: last week counts only up to the same IST time of day. Past days compare whole.
+ */
+export function weekdayDelta(bills: Bill[], istDay: string, scope: ShopScope, nowIso?: string): WeekdayDelta {
+  const net = (day: string, until?: string): Paise => {
     const [from, to] = dayBounds(day);
-    return paidBetween(bills, scope, from, to).reduce((s, b) => s + b.net, 0);
+    return paidBetween(bills, scope, from, until && until < to ? until : to).reduce((s, b) => s + b.net, 0);
   };
+  const live = nowIso !== undefined && istDate(nowIso) === istDay;
+  const previousDay = addIstDays(istDay, -7);
+  const cut = live ? new Date(Date.parse(istDayStart(previousDay)) + (Date.parse(nowIso) - Date.parse(istDayStart(istDay)))).toISOString() : undefined;
   const current = net(istDay);
-  const previous = net(addIstDays(istDay, -7));
+  const previous = net(previousDay, cut);
   return { current, previous, pct: previous === 0 ? null : Math.round(((current - previous) * 100) / previous), weekday: istWeekday(istDay) };
 }
 

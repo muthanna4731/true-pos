@@ -145,6 +145,34 @@ describe('weekdayDelta', () => {
   });
 });
 
+describe('weekdayDelta, today so far', () => {
+  // Thursday 29 Oct, 12:00 IST: last Thursday counts only up to 12:00 IST.
+  const bills = [
+    bill('TSTS1', '2026-10-29', '09:00', 60000),
+    bill('TSTS1', '2026-10-22', '09:00', 50000),
+    bill('TSTS1', '2026-10-22', '11:59', 50000),
+    bill('TSTS1', '2026-10-22', '12:00', 400000), // at the cut-off: not yet sold at this time of day
+    bill('TSTS1', '2026-10-22', '18:00', 400000), // later that day
+  ];
+  it('cuts last week off at the same IST time of day while the day is today', () => {
+    expect(weekdayDelta(bills, '2026-10-29', null, at('2026-10-29', '12:00'))).toMatchObject({ current: 60000, previous: 100000, pct: -40 });
+  });
+  it('one minute before the cut-off leaves out the 11:59 bill', () => {
+    expect(weekdayDelta(bills, '2026-10-29', null, at('2026-10-29', '11:58'))).toMatchObject({ previous: 50000, pct: 20 });
+  });
+  it('cuts at IST midnight, not UTC midnight', () => {
+    const edge = [
+      { ...bill('TSTS1', '2026-10-22', '00:10', 40000), at: '2026-10-21T18:40:00.000Z' }, // 00:10 IST
+      bill('TSTS1', '2026-10-22', '00:40', 90000),
+      bill('TSTS1', '2026-10-29', '00:05', 80000),
+    ];
+    expect(weekdayDelta(edge, '2026-10-29', null, at('2026-10-29', '00:30'))).toMatchObject({ previous: 40000, current: 80000, pct: 100 });
+  });
+  it('keeps the whole day for a past day, even with a clock given', () => {
+    expect(weekdayDelta(bills, '2026-10-29', null, at('2026-10-30', '12:00'))).toMatchObject({ previous: 900000 });
+  });
+});
+
 describe('hourSales', () => {
   // 29 Oct 2026, 12:45 IST.
   const now = at('2026-10-29', '12:45');

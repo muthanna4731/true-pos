@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatINR, rupeesToPaise } from '../../src/domain/money';
+import { formatINR, formatINRWhole, rupeesToPaise } from '../../src/domain/money';
 
 describe('formatINR', () => {
   it('formats whole rupees without decimals', () => {
@@ -23,5 +23,15 @@ describe('rupeesToPaise', () => {
     expect(rupeesToPaise(1.005)).toBe(101);
     expect(rupeesToPaise(0.29)).toBe(29);
     expect(rupeesToPaise(62990)).toBe(6299000);
+  });
+});
+
+describe('formatINRWhole', () => {
+  it('rounds to whole rupees with en-IN grouping', () => {
+    expect(formatINRWhole(176781896)).toBe('₹17,67,819');
+    expect(formatINRWhole(36135)).toBe('₹361');
+    expect(formatINRWhole(36150)).toBe('₹362');
+    expect(formatINRWhole(0)).toBe('₹0');
+    expect(formatINRWhole(-17727)).toBe('-₹177');
   });
 });
