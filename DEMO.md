@@ -9,7 +9,8 @@ Product names and MRPs come from the public price list; all quantities and rupee
 - The very first visit builds the dummy shop data (about 6 seconds on a laptop). After that it opens at once.
 - Demo PINs: Cashier `1111`, Manager `2222`, Office `3333`, Owner `4444`. The login screen lists them under "Demo".
 - Hidden demo panel: press Ctrl+Shift+D, or tap the "True POS" logo three times quickly. Press Esc or Close to hide it.
-- To start over at any time: demo panel > Reset demo data.
+- To start over at any time: demo panel > Reset demo data. It signs you out and rebuilds the dummy data.
+- **Reset demo data once** on any browser that opened an earlier build (for example the presenter's laptop at localhost:4173). Such a browser keeps its old data: it still shows Manager 1 to 10 instead of the single **Manager**, and an old practice-mode switch. Press Ctrl+Shift+D (or tap the logo three times), tap **Reset demo data**, wait for the login screen. A browser that is opened for the first time needs nothing.
 
 ## The script
 
@@ -37,9 +38,9 @@ Product names and MRPs come from the public price list; all quantities and rupee
 
 The manager is one chain-wide admin with no shift of their own. Logging out does not end the cashier's shift, so the manager closes it.
 
-1. Tap **Log out**, then **Manager** and `2222`. The back-office home opens: the same to-do list as Office, with a **Manager** row of quick actions (Close shift, Bills, Prices, Shops & staff) and today at a glance. The shop picker starts on the hub, TS1.
-2. Tap **Close shift**. One shift is listed: **Cashier 1**.
-3. Tap it, count the cash with the note buttons (the screen shows "Expected cash" and whether it matches), tap **Close**. The screen says "Shift closed" and "Day locked. Today's figures are final.", because a manager closed the last open shift of the day. Tap **Done**. A cashier's own **End shift** never locks the day.
+1. Tap **Log out**, then **Manager** and `2222`. The back-office home opens: the same to-do list as Office, with a **Manager** part (the shop picker and Practice mode) and today at a glance. The shop picker starts on the hub, TS1. The other screens are on the floating side menu at the left.
+2. On the side menu tap **Close shift**. One shift is listed: **Cashier 1**.
+3. Tap it, count the cash with the note buttons (the screen shows "Expected cash" and whether it matches), tap **Close**. The screen says "Shift closed" and "Day locked. Today's figures are final.", because a manager closed the last open shift of the day. Tap **Done**. A cashier's own **End shift** never locks the day. If every cashier has already ended their own shift, the page says "No open shifts" and shows **Lock day**: the manager taps it and the day locks the same way.
 4. Go back to the home. Today's figures now say "Closed day: locked figures".
 5. Log in as **Cashier 1** and tap a bottle: instead of the pay buttons the screen says "Day closed for today. Ask your manager."
 6. Open the demo panel and tap **Next day**: billing works again.
@@ -51,18 +52,30 @@ The manager is one chain-wide admin with no shift of their own. Logging out does
    - "Transfer TR-PLANT-1 not received (2 days)" with **Call shop**
    - "Cor Premium 500 at −3 in TS1" with **Count it**
    - "Bud 650 at TS5 expires in 20 days" with **Move/Sell**
-   - "TS4 did not close yesterday" with **Remind**
+   - "TS4 did not close yesterday" (no button for Office: only the manager can close a shift or lock a day; the manager's **Remind** opens Close shift with that shop picked)
    - "4 shops low on UB Premium 650" with **Make order**
 2. Stock arrived: an order to KSBCL was placed yesterday and has not been delivered. Open **Deliveries**, pick that order in "New KSBCL delivery", type an invoice number such as `SMYH26123456`, tap **Add delivery**.
 3. Open **Stock arrived** (Office and Manager both have it, with a shop picker that starts on the hub) and tap **Count it**. Every line starts as "Matches"; change one line to show a short or broken bottle, then tap **Done**.
 4. Transfers are received at the receiving shop: in **Stock arrived**, pick **TS8** in the shop picker and tap **Receive** on `TR-PLANT-1` (the stuck transfer). The office to-do item goes away.
-5. Log in as **Manager** to show what Office does not get: **Close shift**, **Bills** (void a bill with the manager PIN), **Practice mode** for a shop, **Prices** and **Offers** (push a price, run an offer), and **Shops & staff** with **Change PIN** for each person. Office sees Products but only to read.
+5. Log in as **Manager** to show what Office does not get: **Close shift**, **Bills** (void a bill with the manager PIN), **Practice mode** for a shop, **Products** (edit a short name, push a price), **Offers** (run an offer), and **Shops & staff** with **Change PIN** for each person. All of them are on the side menu. Office sees Products but only to read, and has no Close shift, Bills, Offers or Shops & staff.
 
-### 6. The owner page and the WhatsApp preview (1 min)
+### 6. The owner app (2 min)
 
-1. Log in as **Owner** and `4444`. Every shop is one card: takings, cash/UPI/card, cash short, low stock, closed or not closed.
-2. Scroll to "WhatsApp nightly summary preview". It is the text the owner would get each night, one line per shop. Tap **Copy**. Nothing is sent anywhere in the demo.
-3. Show the downloads (excise statement, stock valuation, discounts) and **Push new prices**.
+The owner has their own phone-shaped app, centred on the laptop screen. Nothing in it sends or shares anything.
+
+1. Log out, then **Owner** and `4444`. **Today** opens on all shops: the big sales card has a delta against the same weekday last week ("vs last ...") and a **live** chip that says how long since the newest bill. Bill something as the cashier first and the chip and figures update. Below are bills, discount, top brands and what is running out. The top-right badge shows Online / Offline.
+2. Tap the shop name at the top to pick one shop (or **All shops**): the figures follow the pick.
+3. **Stock** tab: "Needs attention" lists what is low or out, and the **Daily sheet** shows open, in, out and closing for each product. **Export** downloads it.
+4. **Sales** tab: "Every bill, live", one row per bill with its counter and items.
+5. **More** tab opens the tools, each with **Back to More**:
+   - **Purchases**: deliveries and transfers, and the top suppliers.
+   - **Reports**: sales by brand, offers and the full reports.
+   - **Offers**: create and end offers.
+   - **Push new prices**: the product list with price rows, and the button to push a new price.
+   - **Downloads**: excise statement, stock valuation, discounts report.
+   - **Nightly summary**: the text the owner would get each night, one line per shop. Tap **Copy**. Nothing is sent anywhere in the demo.
+   - **Shops**: one row per shop with takings, Cash/UPI/Card, cash short, low stock, short deliveries, and Closed or Not closed; then the chain month to date.
+6. Tap **Night** for the dark theme.
 
 ### 7. Loyalty on: scan a member QR and earn points (1 min)
 
@@ -75,7 +88,7 @@ The manager is one chain-wide admin with no shift of their own. Logging out does
 
 1. Open the demo panel and tap **Loyalty OFF**.
 2. On the bill screen the customer line and "Add customer" are gone. Scanning a member QR does nothing.
-3. The only place it still shows is the read-only ON/OFF in Office > **Shops & staff**.
+3. Log in as **Manager** to see it. The only place it still shows is the read-only ON/OFF in **Shops & staff** (Manager only; Office cannot open it).
 
 ## Known limits
 

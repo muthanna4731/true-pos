@@ -25,7 +25,7 @@ End-to-end checks (Chromium, 1280 x 800). They build nothing themselves, so run 
 npm run build && npx playwright test
 ```
 
-The first visit builds the dummy data and takes a few seconds. To start over, open the demo panel (Ctrl+Shift+D, or tap the logo three times) and choose Reset demo data.
+The first visit builds the dummy data and takes a few seconds. To start over, open the demo panel (Ctrl+Shift+D, or tap the logo three times) and choose Reset demo data. A browser that opened an older build keeps its old data, so reset it once after updating.
 
 ## Demo PINs
 
