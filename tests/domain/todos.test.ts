@@ -58,7 +58,16 @@ describe('generateTodos on the seed', () => {
   it('raises the day TS4 did not close, and only TS4', () => {
     const t = ofKind('day_not_closed');
     expect(t.map((x) => x.storeCode)).toEqual(['TSTS4']);
-    expect(t[0].action.label).toBe('Remind');
+    // Remind opens the manager's Close shift page for that shop; Office cannot open it, so the button is manager-only.
+    expect(t[0].action).toEqual({ label: 'Remind', to: '/office/close', managerOnly: true });
+  });
+
+  it('points every other action at a page Office can open', () => {
+    const managerPaths = ['/office/shops', '/office/close', '/office/bills', '/office/offers'];
+    for (const todo of todos.filter((x) => x.kind !== 'day_not_closed')) {
+      expect(todo.action.managerOnly).toBeUndefined();
+      expect(managerPaths.some((p) => todo.action.to.startsWith(p))).toBe(false);
+    }
   });
 
   it('groups low stock per product and only for products that sell at that shop', () => {

@@ -119,5 +119,5 @@ export async function downloadPriceList(day: string): Promise<void> {
   downloadCsv(t('ow.priceTitle'), [{ key: 'product', label: t('del.product') }, { key: 'shortName', label: t('prod.shortName') }, { key: 'mrp', label: t('ow.mrpLabel'), kind: 'money' }], rows)
 }
 
-/** Closing stock at MRP for the stock tab's [Export]: the valuation file. */
+/** The stock tab's [Export]: the stock valuation file, closing stock at landed cost. */
 export const downloadStock = downloadValuation

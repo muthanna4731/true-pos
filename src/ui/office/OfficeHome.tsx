@@ -10,7 +10,7 @@ import { t } from '../../i18n'
 import { useLang } from '../../i18n/useLang'
 import ReportTable from '../common/ReportTable'
 import ManagerPanel from '../manager/ManagerPanel'
-import { useSession } from '../shell/session'
+import { setWorkShop, useSession } from '../shell/session'
 
 /** Low-stock items shown before [Show all]: one product can be low in several shops, and there can be dozens of products. */
 const LOW_SHOWN = 5
@@ -107,9 +107,18 @@ export default function OfficeHome() {
           {shown.map((todo) => (
             <li key={`${todo.kind}|${todo.ref}`} className={`todo todo-${todo.kind}`}>
               <span className="todo-text">{todo.text}</span>
-              <button type="button" onClick={() => navigate(todo.action.to)}>
-                {todo.action.label}
-              </button>
+              {(!todo.action.managerOnly || user?.role === 'manager') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    // A manager-only action works on one shop: that shop is the one picked when the page opens.
+                    if (todo.action.managerOnly) setWorkShop(todo.storeCode)
+                    navigate(todo.action.to)
+                  }}
+                >
+                  {todo.action.label}
+                </button>
+              )}
             </li>
           ))}
         </ul>

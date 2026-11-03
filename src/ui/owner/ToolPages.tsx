@@ -11,7 +11,6 @@ import { downloadDiscounts, downloadExcise, downloadValuation } from './download
 import Offers from './Offers'
 import { Chevron, Empty, NameRow, Pill, SubPage } from './parts'
 import { useDownload } from './useDownload'
-import { useOwner } from './ownerContext'
 
 /* The owner's existing tools, each inside the owner app with a way back to More. */
 
@@ -103,7 +102,6 @@ export function SummaryPage() {
 /** Each shop's day: sales, closed or not, cash short, low stock and short deliveries; and the chain month to date. */
 export function ShopsPage() {
   useLang()
-  useOwner()
   const today = istDate(clock.now())
   const data = useLiveQuery(() => loadShopSummaries(null), [today])
   if (!data) return <SubPage title={t('ow.shops')} sub={t('ow.shopsSub')}>{null}</SubPage>
@@ -115,7 +113,12 @@ export function ShopsPage() {
           <NameRow
             key={r.storeCode}
             name={r.name}
-            sub={`${t('owner.bills')}: ${r.bills} · ${t('owner.cashShort')}: ${formatINR(r.cashShort)} · ${t('owner.lowStock')}: ${r.lowStock}`}
+            sub={
+              <>
+                <span className="ow-line">{`${t('owner.cash')} ${formatINR(r.byMode.cash)} · ${t('owner.upi')} ${formatINR(r.byMode.upi)} · ${t('owner.card')} ${formatINR(r.byMode.card)}`}</span>
+                <span className="ow-line">{`${t('owner.bills')}: ${r.bills} · ${t('owner.cashShort')}: ${formatINR(r.cashShort)} · ${t('owner.lowStock')}: ${r.lowStock} · ${t('owner.deliveryShort')}: ${r.deliveryShort}`}</span>
+              </>
+            }
           >
             <span style={{ display: 'grid', justifyItems: 'end', gap: 5 }}>
               <span className="ow-amt">{formatINR(r.net)}</span>

@@ -281,6 +281,10 @@ describe('the owner tools', () => {
     expect(await screen.findByText('True Spirits 1', undefined, { timeout: 15000 })).toBeInTheDocument();
     expect(screen.getByText('True Spirits 4')).toBeInTheDocument();
     expect(screen.getByText('Chain, month to date')).toBeInTheDocument();
+    // Each row carries the Cash/UPI/Card split and the short deliveries.
+    const row = screen.getByText('True Spirits 1').closest('.ow-row') as HTMLElement;
+    expect(row.textContent).toMatch(/Cash ₹[\d,]+ · UPI ₹[\d,]+ · Card ₹[\d,]+/);
+    expect(row.textContent).toMatch(/Short deliveries: \d+/);
 
     renderOwner('/owner/more/summary');
     const preview = await screen.findByLabelText('WhatsApp nightly summary preview');

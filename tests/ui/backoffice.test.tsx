@@ -96,6 +96,14 @@ describe('manager login', () => {
   });
 });
 
+/** TS2 sold yesterday and never locked the day: the home raises "did not close yesterday" for it. */
+async function yesterdayUnclosedAtTs2() {
+  await db.bills.add({
+    number: 'TSTS2/2627/000001', clientId: 'y1', storeCode: 'TSTS2', counter: 1, cashierId: 'U2', shiftId: 'SH-Y',
+    at: '2026-10-28T08:00:00.000Z', gross: 10000, discount: 0, tax: 0, net: 10000, status: 'paid',
+  });
+}
+
 describe('office', () => {
   beforeEach(async () => {
     await login('U-OFFICE', '3333');
@@ -120,6 +128,14 @@ describe('office', () => {
     // The side menu is the only way to the other screens: the home has no tab row of its own.
     expect(screen.queryByRole('navigation', { name: 'Today' })).toBeNull();
     expect(within(screen.getByRole('navigation', { name: 'Menu' })).getByRole('link', { name: 'Stock arrived' })).toBeInTheDocument();
+  });
+
+  it('still sees the "did not close yesterday" to-do, but has no Remind button for it', async () => {
+    await yesterdayUnclosedAtTs2();
+    renderAt('/office');
+    const item = (await screen.findByText(/TS2 did not close/)).closest('li') as HTMLElement;
+    expect(within(item).queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Remind' })).toBeNull();
   });
 
   it.each(MANAGER_ONLY_PATHS)('is sent home from %s by a direct URL', async (path) => {
@@ -197,6 +213,15 @@ describe('manager', () => {
     // They are on the side menu.
     await user.click(within(screen.getByRole('navigation', { name: 'Menu' })).getByRole('link', { name: 'Shops & staff' }));
     await waitFor(() => expect(where()).toBe('/office/shops'));
+  });
+
+  it('Remind on "did not close yesterday" opens Close shift with that shop picked', async () => {
+    await yesterdayUnclosedAtTs2();
+    renderAt('/office');
+    const item = (await screen.findByText(/TS2 did not close/)).closest('li') as HTMLElement;
+    await user.click(within(item).getByRole('button', { name: 'Remind' }));
+    await waitFor(() => expect(where()).toBe('/office/close'));
+    expect(await screen.findByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS2');
   });
 
   it.each([

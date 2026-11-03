@@ -189,7 +189,7 @@ export function Seg<K extends string>({ label, value, options, onChange }: { lab
 }
 
 /** A name with a small line under it, then whatever sits on the right. */
-export function NameRow({ name, sub, rank, children }: { name: string; sub?: string; rank?: number; children?: ReactNode }) {
+export function NameRow({ name, sub, rank, children }: { name: string; sub?: ReactNode; rank?: number; children?: ReactNode }) {
   return (
     <div className="ow-row">
       {rank !== undefined && <span className="ow-rank">{rank}</span>}

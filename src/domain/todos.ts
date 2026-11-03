@@ -13,7 +13,8 @@ export interface Todo {
   /** What it is about (product, delivery, transfer...), so one item has one stable key. */
   ref: string;
   text: string;
-  action: { label: string; to: string };
+  /** `managerOnly`: the page behind `to` is the manager's, so Office is not shown the button. */
+  action: { label: string; to: string; managerOnly?: boolean };
 }
 
 export interface TodoInput {
@@ -208,7 +209,7 @@ export function generateTodos(input: TodoInput): Todo[] {
       storeCode: s.code,
       ref: `${s.code}|${yesterday}`,
       text: t('todo.dayNotClosed', { shop: shop(s.code) }),
-      action: { label: t('todo.act.remind'), to: '/office/shops' },
+      action: { label: t('todo.act.remind'), to: '/office/close', managerOnly: true },
     });
   }
 
