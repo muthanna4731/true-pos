@@ -221,7 +221,9 @@ describe('roles', () => {
     renderAt('/login');
     await loginAs(user, /^Owner /, '4444');
     await waitFor(() => expect(where()).toBe('/owner'));
-    await user.click(screen.getByRole('button', { name: 'Log out' }));
+    // The owner's app keeps log out under More.
+    await user.click(await screen.findByRole('link', { name: 'More' }));
+    await user.click(await screen.findByRole('button', { name: 'Log out' }));
     await waitFor(() => expect(where()).toBe('/login'));
   });
 
@@ -256,11 +258,11 @@ describe('language toggle', () => {
 });
 
 describe('sync badge', () => {
-  async function badgeAtOwnerScreen() {
+  async function badgeAtBackOffice() {
     const user = userEvent.setup();
     renderAt('/login');
-    await loginAs(user, /^Owner /, '4444');
-    await waitFor(() => expect(where()).toBe('/owner'));
+    await loginAs(user, /^Office /, '3333');
+    await waitFor(() => expect(where()).toBe('/office'));
   }
 
   afterEach(async () => {
@@ -269,7 +271,7 @@ describe('sync badge', () => {
   });
 
   it('shows how many bills wait while offline, and sends them when back online', async () => {
-    await badgeAtOwnerScreen();
+    await badgeAtBackOffice();
     expect(screen.getByRole('status')).toHaveTextContent('● Online');
 
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
