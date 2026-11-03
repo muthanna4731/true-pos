@@ -46,6 +46,22 @@ export function formatDate(iso: string): string {
   return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
 }
 
+/** `2 Nov` for an IST day `YYYY-MM-DD`. */
+export function formatDayMonth(istDay: string): string {
+  const [, month, day] = istDay.split('-');
+  return `${Number(day)} ${MONTHS[Number(month) - 1]}`;
+}
+
+/** An IST day from user input (a query string): `raw` when it is a real `YYYY-MM-DD` day no later than `today`, else `today`. */
+export function dayOrToday(raw: string | null | undefined, today: string): string {
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return today;
+  try {
+    return addIstDays(raw, 0) === raw && raw <= today ? raw : today;
+  } catch {
+    return today; // 2026-02-30 and the like
+  }
+}
+
 /** `2:31 PM` in IST. */
 export function formatTime(iso: string): string {
   const d = new Date(iso);

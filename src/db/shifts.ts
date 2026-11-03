@@ -112,3 +112,15 @@ export function lockDay(storeCode: string, day: string, lockedBy: string): Promi
     await writeDayClose(storeCode, day, clock.now());
   });
 }
+
+/**
+ * Whether the manager may be offered [Lock day] for this shop and day: the day is not locked yet and no shift that
+ * began on it is still open. For today there must also have been a shift, so a shop before its opening cannot be
+ * locked by one tap; a past day is the manager's call (the shop's bills flagged it).
+ */
+export async function dayLockable(storeCode: string, day: string): Promise<boolean> {
+  if (await db.dayCloses.get([storeCode, day])) return false;
+  if ((await openShiftsOfDay(storeCode, day)) > 0) return false;
+  if (day !== istDate(clock.now())) return true;
+  return (await db.shifts.where('storeCode').equals(storeCode).filter((s) => istDate(s.openedAt) === day).count()) > 0;
+}

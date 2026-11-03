@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db, resetDb } from '../../src/db/db';
 import { DayClosedError, recordSale, voidBill } from '../../src/db/sales';
-import { closeShift, expectedCash, lockDay, openShift } from '../../src/db/shifts';
+import { closeShift, dayLockable, expectedCash, lockDay, openShift } from '../../src/db/shifts';
 import { buildProduct } from '../../src/domain/catalogue';
+import { generateTodos } from '../../src/domain/todos';
 import type { PayMode } from '../../src/domain/types';
 
 // 29 Oct 2026, 12:00 IST.
@@ -204,5 +205,75 @@ describe('lockDay', () => {
     await lockDay('TSTS1', '2026-10-29', 'M');
     expect(await db.dayCloses.count()).toBe(1);
     expect((await db.dayCloses.get(['TSTS1', '2026-10-29']))?.lockedAt).toBe(NOON_IST);
+  });
+});
+
+/** A paid bill of TSTS1 on 28 Oct (yesterday), so the shop "sold yesterday". */
+async function billYesterday(): Promise<void> {
+  await db.bills.add({
+    number: 'TSTS1/2627/000001', clientId: 'y1', storeCode: 'TSTS1', counter: 1, cashierId: 'U1', shiftId: 'SH-Y',
+    at: '2026-10-28T08:00:00.000Z', gross: 10000, discount: 0, tax: 0, net: 10000, status: 'paid',
+  });
+}
+
+describe('locking a past day', () => {
+  const dayNotClosed = async () => {
+    const todos = generateTodos({
+      stores: [{ code: 'TSTS1', number: '01', name: 'Hebbal', branchSlug: null, isHub: true, upiVpa: 'x@upi', licenceNo: 'L1' }],
+      products: [], movements: [], grns: [], transfers: [], counts: [], claims: [],
+      bills: await db.bills.toArray(),
+      dayCloses: await db.dayCloses.toArray(),
+      nowIso: clockNow(),
+    });
+    return todos.filter((t) => t.kind === 'day_not_closed');
+  };
+  const clockNow = () => new Date().toISOString();
+
+  it('clears the "did not close yesterday" to-do for that shop and day, and leaves today unlocked', async () => {
+    await billYesterday();
+    const [todo] = await dayNotClosed();
+    expect(todo).toMatchObject({ storeCode: 'TSTS1', ref: 'TSTS1|2026-10-28', action: { to: '/office/close?day=2026-10-28' } });
+
+    await lockDay('TSTS1', '2026-10-28', 'M');
+    expect(await dayNotClosed()).toEqual([]);
+    expect(await db.dayCloses.get(['TSTS1', '2026-10-28'])).toMatchObject({ date: '2026-10-28' });
+    expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toBeUndefined();
+    const a = await openShift('TSTS1', 'U1', 0);
+    await expect(sell(a, 100)).resolves.toBeDefined(); // today still sells
+  });
+
+  it('refuses a past day while a shift left open on that day, and for a cashier', async () => {
+    await db.shifts.add({ id: 'Y-OPEN', storeCode: 'TSTS1', cashierId: 'U1', openedAt: '2026-10-28T04:00:00.000Z', floatPaise: 0 });
+    await expect(lockDay('TSTS1', '2026-10-28', 'M')).rejects.toThrow('shift_open');
+    await expect(lockDay('TSTS1', '2026-10-28', 'U1')).rejects.toThrow('not_manager');
+    expect(await db.dayCloses.count()).toBe(0);
+  });
+});
+
+describe('dayLockable', () => {
+  it('is false for today when the shop has had no shift today', async () => {
+    expect(await dayLockable('TSTS1', '2026-10-29')).toBe(false);
+    await db.shifts.add({ id: 'OLD', storeCode: 'TSTS1', cashierId: 'U1', openedAt: '2026-10-27T04:00:00.000Z', floatPaise: 0, closedAt: '2026-10-27T15:00:00.000Z' });
+    expect(await dayLockable('TSTS1', '2026-10-29')).toBe(false); // an earlier day's shift does not count
+  });
+
+  it('is true for today once a shift began today and none is open, false while one is open', async () => {
+    const a = await openShift('TSTS1', 'U1', 0);
+    expect(await dayLockable('TSTS1', '2026-10-29')).toBe(false);
+    await closeShift(a, {}, 0, 'U1');
+    expect(await dayLockable('TSTS1', '2026-10-29')).toBe(true);
+  });
+
+  it('is false once the day is locked', async () => {
+    const a = await openShift('TSTS1', 'U1', 0);
+    await closeShift(a, {}, 0, 'U1');
+    await lockDay('TSTS1', '2026-10-29', 'M');
+    expect(await dayLockable('TSTS1', '2026-10-29')).toBe(false);
+  });
+
+  it('is true for a past day with no open shift on it, even with no shift record', async () => {
+    expect(await dayLockable('TSTS1', '2026-10-28')).toBe(true);
+    await db.shifts.add({ id: 'Y-OPEN', storeCode: 'TSTS1', cashierId: 'U1', openedAt: '2026-10-28T04:00:00.000Z', floatPaise: 0 });
+    expect(await dayLockable('TSTS1', '2026-10-28')).toBe(false);
   });
 });

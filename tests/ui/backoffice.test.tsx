@@ -15,7 +15,13 @@ const NOON_IST = '2026-10-29T06:30:00.000Z';
 const product = buildProduct({ subcategory: 'WHISKY', description: 'ROYAL STAG DELUXE WHISKY 750 - BTL', mrpRupees: 0 }, 1);
 
 function Where() {
-  return <div data-testid="where">{useLocation().pathname}</div>;
+  const loc = useLocation();
+  return (
+    <>
+      <div data-testid="where">{loc.pathname}</div>
+      <div data-testid="search">{loc.search}</div>
+    </>
+  );
 }
 const where = () => screen.getByTestId('where').textContent;
 
@@ -221,7 +227,13 @@ describe('manager', () => {
     const item = (await screen.findByText(/TS2 did not close/)).closest('li') as HTMLElement;
     await user.click(within(item).getByRole('button', { name: 'Remind' }));
     await waitFor(() => expect(where()).toBe('/office/close'));
+    expect(screen.getByTestId('search').textContent).toBe('?day=2026-10-28'); // the day the to-do flagged: yesterday
     expect(await screen.findByRole('combobox', { name: 'Shop' })).toHaveValue('TSTS2');
+    // The page offers to lock that day, named by its date.
+    await user.click(await screen.findByRole('button', { name: 'Lock 28 Oct' }));
+    expect(await screen.findByText(/Day locked/)).toBeInTheDocument();
+    expect(await db.dayCloses.get(['TSTS2', '2026-10-28'])).toBeDefined();
+    expect(await db.dayCloses.get(['TSTS2', '2026-10-29'])).toBeUndefined();
   });
 
   it.each([

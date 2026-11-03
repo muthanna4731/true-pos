@@ -40,7 +40,7 @@ The manager is one chain-wide admin with no shift of their own. Logging out does
 
 1. Tap **Log out**, then **Manager** and `2222`. The back-office home opens: the same to-do list as Office, with a **Manager** part (the shop picker and Practice mode) and today at a glance. The shop picker starts on the hub, TS1. The other screens are on the floating side menu at the left.
 2. On the side menu tap **Close shift**. One shift is listed: **Cashier 1**.
-3. Tap it, count the cash with the note buttons (the screen shows "Expected cash" and whether it matches), tap **Close**. The screen says "Shift closed" and "Day locked. Today's figures are final.", because a manager closed the last open shift of the day. Tap **Done**. A cashier's own **End shift** never locks the day. If every cashier has already ended their own shift, the page says "No open shifts" and shows **Lock day**: the manager taps it and the day locks the same way.
+3. Tap it, count the cash with the note buttons (the screen shows "Expected cash" and whether it matches), tap **Close**. The screen says "Shift closed" and "Day locked. Today's figures are final.", because a manager closed the last open shift of the day. Tap **Done**. A cashier's own **End shift** never locks the day. If every cashier has already ended their own shift, the page says "No open shifts" and shows **Lock day**: the manager taps it and the day locks the same way. (A shop that has had no shift today shows no **Lock day**.)
 4. Go back to the home. Today's figures now say "Closed day: locked figures".
 5. Log in as **Cashier 1** and tap a bottle: instead of the pay buttons the screen says "Day closed for today. Ask your manager."
 6. Open the demo panel and tap **Next day**: billing works again.
@@ -52,12 +52,12 @@ The manager is one chain-wide admin with no shift of their own. Logging out does
    - "Transfer TR-PLANT-1 not received (2 days)" with **Call shop**
    - "Cor Premium 500 at −3 in TS1" with **Count it**
    - "Bud 650 at TS5 expires in 20 days" with **Move/Sell**
-   - "TS4 did not close yesterday" (no button for Office: only the manager can close a shift or lock a day; the manager's **Remind** opens Close shift with that shop picked)
+   - "TS4 did not close yesterday" (no button for Office: only the manager can lock a day; see step 5)
    - "4 shops low on UB Premium 650" with **Make order**
 2. Stock arrived: an order to KSBCL was placed yesterday and has not been delivered. Open **Deliveries**, pick that order in "New KSBCL delivery", type an invoice number such as `SMYH26123456`, tap **Add delivery**.
 3. Open **Stock arrived** (Office and Manager both have it, with a shop picker that starts on the hub) and tap **Count it**. Every line starts as "Matches"; change one line to show a short or broken bottle, then tap **Done**.
 4. Transfers are received at the receiving shop: in **Stock arrived**, pick **TS8** in the shop picker and tap **Receive** on `TR-PLANT-1` (the stuck transfer). The office to-do item goes away.
-5. Log in as **Manager** to show what Office does not get: **Close shift**, **Bills** (void a bill with the manager PIN), **Practice mode** for a shop, **Products** (edit a short name, push a price), **Offers** (run an offer), and **Shops & staff** with **Change PIN** for each person. All of them are on the side menu. Office sees Products but only to read, and has no Close shift, Bills, Offers or Shops & staff.
+5. Log in as **Manager** to show what Office does not get: **Close shift**, **Bills** (void a bill with the manager PIN), **Practice mode** for a shop, **Products** (edit a short name, push a price), **Offers** (run an offer), and **Shops & staff** with **Change PIN** for each person. All of them are on the side menu. Office sees Products but only to read, and has no Close shift, Bills, Offers or Shops & staff. Then clear the TS4 to-do: on the home tap **Remind** on "TS4 did not close yesterday". Close shift opens with TS4 picked and the button names yesterday's date, for example **Lock 2 Nov**. Tap it: the page says "Day locked. 2 Nov's figures are final." Go back to the home and the to-do is gone. Today stays open for billing.
 
 ### 6. The owner app (2 min)
 

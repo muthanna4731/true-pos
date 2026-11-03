@@ -209,7 +209,7 @@ export function generateTodos(input: TodoInput): Todo[] {
       storeCode: s.code,
       ref: `${s.code}|${yesterday}`,
       text: t('todo.dayNotClosed', { shop: shop(s.code) }),
-      action: { label: t('todo.act.remind'), to: '/office/close', managerOnly: true },
+      action: { label: t('todo.act.remind'), to: `/office/close?day=${yesterday}`, managerOnly: true },
     });
   }
 

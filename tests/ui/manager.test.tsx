@@ -410,11 +410,51 @@ describe('lock day', () => {
     expect(await screen.findByRole('button', { name: /Cashier 1/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Lock day' })).toBeNull();
 
-    // Shop 2 has no open shift: the day can be locked there, and only there.
+    // Shop 2 had a shift today and has none open: the day can be locked there, and only there.
+    await db.shifts.add({ id: 'SH-U2', storeCode: 'TSTS2', cashierId: 'U2', openedAt: '2026-10-29T04:00:00.000Z', floatPaise: 0, closedAt: '2026-10-29T06:00:00.000Z', counted: 0, expected: 0, diff: 0 });
     await user.selectOptions(screen.getByRole('combobox', { name: 'Shop' }), 'TSTS2');
     expect(await screen.findByRole('button', { name: 'Lock day' })).toBeInTheDocument();
     await db.dayCloses.add({ storeCode: 'TSTS2', date: '2026-10-29', lockedAt: NOON_IST, totals: {} });
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Lock day' })).toBeNull());
+  });
+});
+
+describe('lock a past day', () => {
+  it('shows no [Lock day] for a shop that has had no shift today', async () => {
+    await login('U-M', '2222');
+    renderManager('/office/close');
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Shop' }), 'TSTS2');
+    expect(await screen.findByText('No open shifts')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Lock/ })).toBeNull();
+  });
+
+  it('?day= names the day: the button says "Lock 28 Oct" and locks that day, not today', async () => {
+    await login('U-M', '2222');
+    renderManager('/office/close?day=2026-10-28');
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Shop' }), 'TSTS2');
+    expect(screen.queryByRole('button', { name: 'Lock day' })).toBeNull();
+    await user.click(await screen.findByRole('button', { name: 'Lock 28 Oct' }));
+    expect(await screen.findByText(/Day locked/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Lock/ })).toBeNull();
+    expect(await db.dayCloses.get(['TSTS2', '2026-10-28'])).toMatchObject({ date: '2026-10-28' });
+    expect(await db.dayCloses.get(['TSTS2', '2026-10-29'])).toBeUndefined();
+  });
+
+  it('a past day with a shift still open on it cannot be locked, and the other shifts stay listed', async () => {
+    await db.shifts.add({ id: 'SH-OLD', storeCode: 'TSTS1', cashierId: 'U1', openedAt: '2026-10-28T04:00:00.000Z', floatPaise: 0 });
+    await login('U-M', '2222');
+    renderManager('/office/close?day=2026-10-28');
+    expect(await screen.findAllByRole('button', { name: /Cashier 1/ })).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /^Lock/ })).toBeNull();
+  });
+
+  it.each(['garbage', '2026-02-30', '2026-11-05', ''])('falls back to today for ?day=%s', async (bad) => {
+    await db.shifts.update('SH-U1', { closedAt: '2026-10-29T06:00:00.000Z', counted: 100000, expected: 100000, diff: 0 });
+    await login('U-M', '2222');
+    renderManager(`/office/close?day=${bad}`);
+    await user.click(await screen.findByRole('button', { name: 'Lock day' }));
+    expect(await screen.findByText(/Day locked/)).toBeInTheDocument();
+    expect(await db.dayCloses.get(['TSTS1', '2026-10-29'])).toBeDefined();
   });
 });
 

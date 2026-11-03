@@ -58,8 +58,9 @@ describe('generateTodos on the seed', () => {
   it('raises the day TS4 did not close, and only TS4', () => {
     const t = ofKind('day_not_closed');
     expect(t.map((x) => x.storeCode)).toEqual(['TSTS4']);
-    // Remind opens the manager's Close shift page for that shop; Office cannot open it, so the button is manager-only.
-    expect(t[0].action).toEqual({ label: 'Remind', to: '/office/close', managerOnly: true });
+    // Remind opens the manager's Close shift page on the flagged day (the ref holds `shop|day`); Office cannot open it, so the button is manager-only.
+    expect(t[0].ref).toBe('TSTS4|2026-10-28');
+    expect(t[0].action).toEqual({ label: 'Remind', to: '/office/close?day=2026-10-28', managerOnly: true });
   });
 
   it('points every other action at a page Office can open', () => {
