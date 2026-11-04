@@ -7,7 +7,9 @@ import AsOf from './AsOf'
 import { printAs } from './print'
 
 export type ColumnKind = 'text' | 'date' | 'number' | 'money' | 'litres'
-export type Column = { key: string; label: string; kind?: ColumnKind }
+export type Tone = 'ok' | 'warn' | 'bad'
+/** `tone` shows a cell as a green, orange or red status pill (screen only; print and CSV keep the plain text). */
+export type Column = { key: string; label: string; kind?: ColumnKind; tone?: (row: Record<string, unknown>) => Tone | undefined }
 type Row = Record<string, unknown>
 /** Any row object; interfaces such as LitreRow have no index signature, so cells are read through `cellOf`. */
 type RowLike = object
@@ -107,11 +109,14 @@ export default function ReportTable({
                 },
               })}
             >
-              {columns.map((c) => (
-                <td key={c.key} className={numeric(c) ? 'num' : undefined}>
-                  {display(cellOf(r, c.key), c.kind)}
-                </td>
-              ))}
+              {columns.map((c) => {
+                const tone = c.tone?.(r as Row)
+                return (
+                  <td key={c.key} className={numeric(c) ? 'num' : undefined}>
+                    {tone ? <span className={`status-pill pill-${tone}`}>{display(cellOf(r, c.key), c.kind)}</span> : display(cellOf(r, c.key), c.kind)}
+                  </td>
+                )
+              })}
               {rowAction && <td className="row-action">{rowAction.render(r as Row)}</td>}
             </tr>
           ))}

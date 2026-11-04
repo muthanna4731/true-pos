@@ -60,6 +60,18 @@ h1,
   font-size: 20px;
 }
 
+/* Dropdowns draw their own arrow, set in from the edge (the browser's own sits too close to it). */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 52px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23651c32' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 22px center;
+  background-size: 12px 8px;
+  cursor: pointer;
+}
+
 /* Visible focus on every control: burgundy on light surfaces (the header sets its own). */
 :focus-visible {
   outline: 3px solid var(--brand);

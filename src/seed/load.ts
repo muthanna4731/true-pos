@@ -1,5 +1,6 @@
 import { resetDb, type TruePosDB } from '../db/db';
 import { clock, istDate } from '../domain/time';
+import { untracked } from '../sync/track';
 import { generateSeed, type SeedData } from './generate';
 
 /** The fixed seed behind the demo data: every fresh browser gets the same shops, stock and bills. */
@@ -31,6 +32,7 @@ export async function loadSeedIfEmpty(db: TruePosDB, opts: { seed?: number; days
   clock.setOffsetDays(0);
   const data = generateSeed({ seed: opts.seed ?? DEMO_SEED, today: istDate(clock.now()), days: opts.days });
   await db.transaction('rw', db.tables, async () => {
+    untracked(); // dummy data never leaves the device
     if ((await db.stores.count()) > 0) return; // another tab got there first
     for (const table of db.tables) {
       const rows = data[table.name as keyof SeedData] as unknown[];

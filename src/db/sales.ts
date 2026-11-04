@@ -1,6 +1,7 @@
 import { billNumber, practiceBillNumber } from '../domain/billNumber';
 import { clock, financialYear, istDate } from '../domain/time';
 import type { Bill, BillLine, PayMode, Paise, Payment, StockMovement } from '../domain/types';
+import { untracked } from '../sync/track';
 import { db } from './db';
 
 export class DayClosedError extends Error {
@@ -37,8 +38,10 @@ export function recordSale(input: SaleInput): Promise<Bill> {
 
   return db.transaction(
     'rw',
-    [db.bills, db.billLines, db.payments, db.movements, db.counters, db.outbox, db.loyaltyQueue, db.dayCloses, db.kv],
+    [db.bills, db.billLines, db.payments, db.movements, db.counters, db.loyaltyQueue, db.dayCloses, db.kv],
     async () => {
+      // Practice bills are training: they stay on this device.
+      if (input.practice) untracked();
       const existing = await db.bills.where('clientId').equals(input.clientId).first();
       if (existing) return existing;
 
@@ -102,7 +105,6 @@ export function recordSale(input: SaleInput): Promise<Bill> {
           at,
         }));
         await db.movements.bulkAdd(movements);
-        await db.outbox.add({ kind: 'bill', ref: number, at, synced: 0 });
         if (input.memberCode && (await db.kv.get('loyalty'))?.value === true) {
           await db.loyaltyQueue.add({
             memberCode: input.memberCode,
@@ -121,7 +123,7 @@ export function recordSale(input: SaleInput): Promise<Bill> {
 export function voidBill(number: string, _managerId: string): Promise<void> {
   return db.transaction(
     'rw',
-    [db.bills, db.billLines, db.movements, db.outbox, db.loyaltyQueue],
+    [db.bills, db.billLines, db.movements, db.loyaltyQueue],
     async () => {
       const bill = await db.bills.get(number);
       if (!bill) throw new Error('bill_not_found');
@@ -133,7 +135,6 @@ export function voidBill(number: string, _managerId: string): Promise<void> {
       await db.movements.bulkAdd(
         lines.map((l) => ({ storeCode: bill.storeCode, productId: l.productId, qty: l.qty, kind: 'void' as const, ref: number, at })),
       );
-      await db.outbox.add({ kind: 'void', ref: number, at, synced: 0 });
       if (bill.memberCode) await db.loyaltyQueue.add({ reverse: number });
     },
   );

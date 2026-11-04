@@ -1,0 +1,220 @@
+/*
+ * Charts for the back office and the owner app (src/ui/common/Charts.tsx). Plain HTML marks: columns and bars at most
+ * 24 px thick with a 4 px rounded data end, square at the baseline; hairline baseline; text in ink tokens, never in the
+ * data colour. Colours come from the screen's own tokens (--brand, --card, --bad), so each app keeps its palette.
+ */
+
+.chart {
+  --chart-ink: var(--brand);
+  --chart-soft: color-mix(in srgb, var(--brand) 34%, var(--card));
+  --chart-line: color-mix(in srgb, var(--ink) 14%, transparent);
+  --chart-muted: color-mix(in srgb, var(--ink) 62%, transparent);
+  margin: 0;
+}
+
+/* ---------- Columns ---------- */
+
+.chart-plot {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-bottom: 1px solid var(--chart-line);
+}
+
+.chart-slot {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  outline: none;
+}
+
+.chart-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 168px;
+  padding-top: 24px;
+}
+
+.chart-col {
+  position: relative;
+  width: min(24px, 70%);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--chart-soft);
+}
+
+.chart-slot.current .chart-col {
+  background: var(--chart-ink);
+}
+
+.chart-value {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chart-x {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  color: var(--chart-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.chart-columns {
+  padding-bottom: 28px;
+}
+
+/* Hover or keyboard focus shows the column's own figure above it. */
+.chart-tip {
+  position: absolute;
+  bottom: calc(100% - 16px);
+  left: 50%;
+  z-index: 2;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--card);
+  font-size: 12.5px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.chart-tip b {
+  font-size: 14px;
+}
+
+.chart-slot:hover .chart-tip,
+.chart-slot:focus-visible .chart-tip {
+  display: flex;
+}
+
+.chart-slot:hover .chart-col,
+.chart-slot:focus-visible .chart-col {
+  background: var(--chart-ink);
+}
+
+.chart-slot:focus-visible .chart-area {
+  border-radius: 8px;
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---------- Horizontal bars ---------- */
+
+.chart-bars {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.chart-bars li {
+  display: grid;
+  grid-template-columns: minmax(80px, 140px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-name {
+  color: var(--chart-muted);
+}
+
+.bar-track {
+  display: flex;
+  height: 14px;
+}
+
+.bar-fill {
+  border-radius: 0 4px 4px 0;
+  background: var(--chart-ink);
+}
+
+.tone-bad .bar-fill {
+  background: var(--bad);
+}
+
+.bar-value {
+  min-width: 3ch;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------- One whole in parts ---------- */
+
+.split-track {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.split-track i {
+  flex: 1 1 0;
+  min-width: 4px;
+}
+
+.split-track.is-empty {
+  background: var(--chart-line);
+}
+
+.split-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--chart-muted);
+  font-size: 14px;
+}
+
+.split-keys li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.split-keys li > i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.split-keys b {
+  color: var(--ink);
+}
+
+/* ---------- Panels that hold a chart ---------- */
+
+.chart-panel {
+  margin: 0 0 24px;
+  padding: 20px 24px 16px;
+  border: 1px solid var(--hair, var(--rose));
+  border-radius: var(--r-panel, var(--r-card));
+  background: var(--card);
+}
+
+.chart-panel > h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}

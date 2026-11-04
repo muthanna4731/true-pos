@@ -5,7 +5,7 @@ h1 {
   font-size: 36px;
 }
 
-/* Secondary button: an outline pill on cream. Coral is kept for the one main action (see .pay-primary). */
+/* Secondary button: an outline pill on the off-white. Coral is kept for the one main action (see .pay-primary). */
 button {
   min-height: var(--touch);
   padding: 0 24px;
@@ -51,6 +51,24 @@ button:disabled {
   border-color: var(--on-dark);
   background: transparent;
   color: var(--on-dark);
+}
+
+.sync-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sync-busy .sync-icon {
+    animation: sync-turn 0.9s linear infinite;
+  }
+}
+
+@keyframes sync-turn {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .logo {
@@ -233,6 +251,37 @@ button:disabled {
   border-color: transparent;
   background: transparent;
   text-decoration: underline;
+}
+
+.device-line {
+  margin-top: 16px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.device-line .link-button {
+  margin-top: 0;
+}
+
+.device-connect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 16px;
+}
+
+.device-connect label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.device-connect [role='alert'] {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--bad);
 }
 
 .loading {

@@ -210,20 +210,19 @@ describe('the owner app', () => {
     expect(root).toHaveAttribute('data-theme', 'light');
   });
 
-  it('follows the device colour scheme until the owner picks', async () => {
-    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('dark'), media: q, addEventListener: () => {}, removeEventListener: () => {} }));
-    renderOwner('/owner/more');
-    await screen.findByRole('group', { name: 'Colour theme' });
-    expect(document.querySelector('.owner-app')).toHaveAttribute('data-theme', 'dark');
-    expect(localStorage.getItem('ownerTheme')).toBeNull();
-  });
-
-  it('uses a remembered pick over the device', async () => {
-    localStorage.setItem('ownerTheme', 'light');
+  it('opens in day even on a dark device, until the owner picks night', async () => {
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('dark'), media: q, addEventListener: () => {}, removeEventListener: () => {} }));
     renderOwner('/owner/more');
     await screen.findByRole('group', { name: 'Colour theme' });
     expect(document.querySelector('.owner-app')).toHaveAttribute('data-theme', 'light');
+    expect(localStorage.getItem('ownerTheme')).toBeNull();
+  });
+
+  it('uses a remembered night pick', async () => {
+    localStorage.setItem('ownerTheme', 'dark');
+    renderOwner('/owner/more');
+    await screen.findByRole('group', { name: 'Colour theme' });
+    expect(document.querySelector('.owner-app')).toHaveAttribute('data-theme', 'dark');
   });
 
   it('has no share, send, broadcast or WhatsApp link anywhere', async () => {

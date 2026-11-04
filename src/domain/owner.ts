@@ -254,6 +254,15 @@ export function dailyUnits(bills: Bill[], lines: BillLine[], productId: string, 
   return out;
 }
 
+/** Net sales on each of the `days` IST days ending on `endDay`, oldest first, with the day each figure belongs to. */
+export function dailyNet(bills: Bill[], endDay: string, scope: ShopScope, days = 8): { day: string; net: Paise }[] {
+  return Array.from({ length: days }, (_, i) => {
+    const day = addIstDays(endDay, i - (days - 1));
+    const [from, to] = dayBounds(day);
+    return { day, net: paidBetween(bills, scope, from, to).reduce((s, b) => s + b.net, 0) };
+  });
+}
+
 /** Up, flat or down: the last three days of a series against the first three, with a 15% band counted as flat. */
 export function trendOf(series: number[]): 'up' | 'flat' | 'down' {
   const k = Math.min(3, Math.floor(series.length / 2));

@@ -4,6 +4,7 @@ import { currentShift, openShift } from '../../db/shifts'
 import { sha256Hex } from '../../domain/hash'
 import type { Role, Store, User } from '../../domain/types'
 import { requestLoyaltyRefresh } from '../../loyalty/flags'
+import { currentDevice } from '../../sync/client'
 
 export interface SessionData {
   user: User | null
@@ -80,8 +81,10 @@ export async function login(userId: string, pin: string): Promise<boolean> {
       })
     }
   }
+  // A connected device bills under its own counter, so two devices at one shop never make the same bill number.
+  const counter = (await currentDevice())?.counter ?? 1
   // The PIN hash has done its job; it doesn't need to sit in sessionStorage.
-  setState({ user: { ...user, pinHash: '' }, store, counter: 1, shiftId, workShop: HUB_SHOP })
+  setState({ user: { ...user, pinHash: '' }, store, counter, shiftId, workShop: HUB_SHOP })
   requestLoyaltyRefresh()
   return true
 }

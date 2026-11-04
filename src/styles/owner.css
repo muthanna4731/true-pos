@@ -1,6 +1,6 @@
 /*
- * The owner app. It has its own look (warm paper by day, warm dark grey by night, oxblood and amber, Instrument
- * Sans and Serif), so everything here hangs off `.owner-app` and its `ow-` classes. The Ghia back office and the
+ * The owner app. It has its own look (warm off-white by day, warm dark grey by night, oxblood and amber, Instrument
+ * Sans and Serif, with headings in Oswald, the True POS face), so everything here hangs off `.owner-app` and its `ow-` classes. The Ghia back office and the
  * till never see these tokens.
  */
 @import '@fontsource/instrument-sans/400.css';
@@ -15,7 +15,7 @@
   inherits: false;
 }
 
-/* ── Day (default): warm paper, for daylight in the shop ── */
+/* ── Day (default): warm off-white, for daylight in the shop ── */
 .owner-app {
   --void: #f7f3ee;
   --surface: #ffffff;
@@ -32,8 +32,13 @@
   --ink-2: #6b5a50;
   --ink-3: #8c7b70;
 
-  --up: #3f7d57;
-  --down: #a82a24;
+  /* Status: plain green, orange and red, with a darker ink of each for text on a tint. */
+  --up: #2e7d32;
+  --down: #d32f2f;
+  --caution: #ef6c00;
+  --up-ink: #1b5e20;
+  --caution-ink: #a84300;
+  --down-ink: #b71c1c;
 
   --bloom: rgba(168, 42, 36, 0.09);
   --tabbg: rgba(255, 255, 255, 0.82);
@@ -45,6 +50,7 @@
   --r-pill: 999px;
 
   --sans: 'Instrument Sans', 'Noto Sans Kannada', system-ui, -apple-system, sans-serif;
+  --heading: 'Oswald', 'Noto Sans Kannada', 'Arial Narrow', sans-serif;
   --serif: 'Instrument Serif', 'Noto Sans Kannada', Georgia, serif;
   --num: lining-nums tabular-nums;
 
@@ -87,8 +93,12 @@
   --ink-2: #a79c93;
   --ink-3: #6b615a;
 
-  --up: #5fa97a;
-  --down: #c4362f;
+  --up: #4caf50;
+  --down: #ef5350;
+  --caution: #ff9800;
+  --up-ink: #81c784;
+  --caution-ink: #ffb74d;
+  --down-ink: #ef9a9a;
 
   --bloom: rgba(196, 54, 47, 0.16);
   --tabbg: rgba(27, 23, 22, 0.82);
@@ -162,10 +172,10 @@ body:has(.owner-app[data-theme='dark']) {
   letter-spacing: 0.02em;
 }
 .ow-wordmark {
-  font-family: var(--serif);
+  font-family: var(--heading);
   font-size: 23px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   line-height: 1;
   color: var(--ink);
 }
@@ -211,11 +221,35 @@ button.ow-outlet {
   color: var(--up);
 }
 .ow-syncbadge.offline {
-  color: var(--amber);
+  color: var(--caution-ink);
 }
 .ow-syncbadge.problem {
   color: var(--down);
   font-weight: 600;
+}
+.ow-syncnow {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.ow-syncnow:hover {
+  color: var(--oxblood);
+}
+.ow-syncnow.sync-done {
+  border-color: var(--up);
+  color: var(--up);
+}
+.ow-syncnow.sync-later {
+  border-color: var(--caution);
+  color: var(--caution);
 }
 .ow-avatar {
   width: 36px;
@@ -486,10 +520,10 @@ button.ow-outlet {
   margin: 26px 4px 11px;
 }
 .ow-sec h2 {
-  font-family: var(--serif);
+  font-family: var(--heading);
   font-size: 18px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   margin: 0;
   text-transform: none;
 }
@@ -597,19 +631,19 @@ button.ow-outlet {
   white-space: nowrap;
 }
 .ow-pill.low {
-  background: rgba(232, 163, 61, 0.13);
-  color: var(--amber);
-  border: 1px solid rgba(232, 163, 61, 0.2);
+  background: rgba(239, 108, 0, 0.13);
+  color: var(--caution-ink);
+  border: 1px solid rgba(239, 108, 0, 0.22);
 }
 .ow-pill.out {
-  background: rgba(196, 54, 47, 0.14);
-  color: var(--pill-out-text);
-  border: 1px solid rgba(196, 54, 47, 0.24);
+  background: rgba(211, 47, 47, 0.12);
+  color: var(--down-ink);
+  border: 1px solid rgba(211, 47, 47, 0.24);
 }
 .ow-pill.ok {
-  background: rgba(95, 169, 122, 0.13);
-  color: var(--up);
-  border: 1px solid rgba(95, 169, 122, 0.2);
+  background: rgba(46, 125, 50, 0.12);
+  color: var(--up-ink);
+  border: 1px solid rgba(46, 125, 50, 0.22);
 }
 .ow-pill.flat {
   background: var(--hair);
@@ -1013,9 +1047,9 @@ button.ow-outlet {
   padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
 }
 .ow-sheet h2 {
-  font-family: var(--serif);
+  font-family: var(--heading);
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 500;
   margin: 0 4px 10px;
   text-transform: none;
 }
@@ -1033,10 +1067,10 @@ button.ow-outlet {
 .ow-page h1,
 .ow-page h2,
 .ow-page h3 {
-  font-family: var(--serif);
-  font-weight: 400;
+  font-family: var(--heading);
+  font-weight: 500;
   text-transform: none;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   color: var(--ink);
 }
 .ow-page h2 {
@@ -1064,12 +1098,16 @@ button.ow-outlet {
   padding: 0 14px;
   border: 1px solid var(--hair-2);
   border-radius: var(--r-inner);
-  background: var(--surface);
+  background-color: var(--surface);
   color: var(--ink);
   font: inherit;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0;
+}
+.ow-page select {
+  padding-right: 40px;
+  background-position: right 16px center;
 }
 .ow-page button:not(.link-button) {
   min-height: 44px;
@@ -1223,4 +1261,19 @@ button.ow-outlet {
   color: var(--pill-out-text);
   font-size: 13px;
   font-weight: 500;
+}
+
+/* ── the 8-day sales chart on Today ── */
+.ow-chart {
+  margin: 0 0 4px;
+  padding: 16px 16px 4px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-card);
+  background: var(--surface);
+}
+.ow-chart .chart-area {
+  height: 132px;
+}
+.ow-chart .chart-col {
+  width: min(22px, 70%);
 }

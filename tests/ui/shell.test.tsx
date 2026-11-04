@@ -285,9 +285,9 @@ describe('sync badge', () => {
     act(() => {
       window.dispatchEvent(new Event('offline'));
     });
-    await db.outbox.add({ kind: 'bill', ref: 'B1', at: clock.now(), synced: 0 });
+    await db.outbox.add({ tx: 't1', table: 'bills', ops: [], at: clock.now(), synced: 0 });
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('● Offline · 1 bill will sync'));
-    await db.outbox.add({ kind: 'bill', ref: 'B2', at: clock.now(), synced: 0 });
+    await db.outbox.add({ tx: 't2', table: 'bills', ops: [], at: clock.now(), synced: 0 });
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('● Offline · 2 bills will sync'));
 
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);

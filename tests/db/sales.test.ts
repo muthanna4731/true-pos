@@ -78,7 +78,7 @@ describe('recordSale', () => {
     expect(await db.bills.count()).toBe(1);
     expect(await db.movements.where('kind').equals('sale').count()).toBe(1);
     expect(await db.payments.count()).toBe(1);
-    expect(await db.outbox.count()).toBe(1);
+    expect(await pendingCount()).toBe(1);
     expect(await db.loyaltyQueue.count()).toBe(1);
     expect(await stock()).toBe(-5);
   });

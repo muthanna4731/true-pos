@@ -1,0 +1,11 @@
+{
+  // Nightly copy of the Supabase change log into KV. Deploy from this folder:
+  //   CLOUDFLARE_ACCOUNT_ID=<True-spirits> npx wrangler deploy
+  //   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY   (once; never commit it)
+  "name": "true-pos-backup",
+  "main": "index.ts",
+  "compatibility_date": "2026-11-02",
+  "triggers": { "crons": ["30 21 * * *"] }, // 03:00 IST
+  "vars": { "SUPABASE_URL": "https://dldlzwbrtropnhhgnnfu.supabase.co" },
+  "kv_namespaces": [{ "binding": "BACKUP", "id": "c760196d1403465abf436aa4b2c65874" }]
+}

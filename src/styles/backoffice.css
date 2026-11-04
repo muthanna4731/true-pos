@@ -1,46 +1,233 @@
 /*
- * The back office of Office and Manager: a floating pill menu on the left and a compact desktop/tablet scale.
- * Everything here hangs off .backoffice (set by RoleScreen), so the cashier till keeps its 56 px touch size
- * and the owner screens are untouched. Loaded last so it wins over the shared rules.
+ * The back office of Office and Manager: a light header, a floating rounded menu on the left, white panels on the
+ * owner app's warm off-white, and a compact desktop/tablet scale. Everything here hangs off .backoffice (set by
+ * RoleScreen), so the cashier till keeps its 56 px touch size and the owner screens are untouched. Loaded after the
+ * shared rules so it wins over them.
  */
 
-/* ---------- Compact scale: buttons, pills and fields are 40 px, text 15 px ---------- */
+/* ---------- Palette: the off-white canvas, white panels, burgundy hairlines, plain green / orange / red for status ---------- */
 
 .backoffice {
+  --bg: #f7f3ee;
+  --card: #ffffff;
+  --surface: #ffffff;
+  --rose: rgba(101, 28, 50, 0.1);
+  --hair: rgba(101, 28, 50, 0.1);
+  --hair-2: rgba(101, 28, 50, 0.18);
+  --muted: #8a6470;
+  --r-panel: 18px;
+  --r-item: 12px;
+
+  /* Status: green is done or fine, orange needs a look, red is wrong. Each has a tint for pill backgrounds and a darker ink for text on it. */
+  --ok: #2e7d32;
+  --warn: #ef6c00;
+  --bad: #d32f2f;
+  --ok-tint: rgba(46, 125, 50, 0.12);
+  --warn-tint: rgba(239, 108, 0, 0.14);
+  --bad-tint: rgba(211, 47, 47, 0.12);
+  --ok-ink: #1b5e20;
+  --warn-ink: #a84300;
+  --bad-ink: #b71c1c;
+
+  /* Payment split (cash, UPI, card), checked for colour-blind separation on white. */
+  --pay-cash: #9b2c48;
+  --pay-upi: #e0607a;
+  --pay-card: #2f86c4;
+
   --touch: 40px;
+  min-height: 100%;
+  background: var(--bg);
   font-size: 15px;
 }
+
+/* The page behind the frame (overscroll, short screens) matches the canvas. */
+body:has(.backoffice) {
+  background: #f7f3ee;
+}
+
+/* ---------- Header: light, on the canvas, with a hairline under it ---------- */
+
+.backoffice .shell-header {
+  gap: 16px;
+  min-height: 72px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--hair);
+  background: transparent;
+  color: var(--brand);
+}
+
+.backoffice .shell-header :focus-visible {
+  outline-color: var(--brand);
+}
+
+.backoffice .shell-header button {
+  min-height: 38px;
+  padding: 0 16px;
+  border-color: var(--hair-2);
+  background: var(--card);
+  color: var(--brand);
+  font-size: 14px;
+}
+
+.backoffice .shell-header button:hover {
+  border-color: var(--brand);
+}
+
+.backoffice .logo {
+  font-size: 28px;
+}
+
+.backoffice .who {
+  padding-left: 16px;
+  border-left: 1px solid var(--hair-2);
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* The sync badge: a soft tint with a coloured dot instead of a solid block. */
+.backoffice .sync-badge {
+  min-height: 38px;
+  font-size: 14px;
+}
+
+.backoffice .sync-ok {
+  background: var(--ok-tint);
+  color: var(--ok-ink);
+}
+
+.backoffice .sync-offline {
+  background: var(--warn-tint);
+  color: var(--warn-ink);
+}
+
+.backoffice .sync-problem {
+  background: var(--bad-tint);
+  color: var(--bad-ink);
+}
+
+/* [Sync now]: an outlined button with the two arrows; they turn while it works. */
+.backoffice .shell-header .sync-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backoffice .shell-header .sync-done {
+  border-color: var(--ok);
+  color: var(--ok-ink);
+}
+
+.backoffice .shell-header .sync-later {
+  border-color: var(--warn);
+  color: var(--warn-ink);
+}
+
+/* ---------- Controls: hairline outlines on white; burgundy marks the chosen one ---------- */
 
 .backoffice button {
   padding: 0 16px;
   font-size: 15px;
 }
 
-.backoffice .link-button {
-  margin-top: 0;
-  padding: 0 8px;
+/* :where keeps these at element weight, so a component's own button colours (the coral main action) still win. */
+:where(.backoffice) button {
+  border-color: var(--hair-2);
+  background: var(--card);
 }
 
-.backoffice :where(input:not([type]), input[type='text'], input[type='number'], input[type='date'], input[type='search'], select) {
+:where(.backoffice) button:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+
+:where(.backoffice) button[aria-pressed='true'] {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: var(--on-dark);
+}
+
+:where(.backoffice) button.danger {
+  border-color: var(--bad);
+}
+
+.backoffice .link-button {
+  min-height: 32px;
+  margin-top: 0;
+  padding: 0 8px;
+  border-color: transparent;
+  background: transparent;
+  text-underline-offset: 3px;
+}
+
+.backoffice .link-button:hover:not(:disabled) {
+  border-color: transparent;
+  text-decoration-thickness: 2px;
+}
+
+.backoffice :where(input:not([type]), input[type='text'], input[type='number'], input[type='date'], input[type='month'], input[type='search'], select) {
+  min-height: var(--touch);
   padding: 0 16px;
+  border: 1px solid var(--hair-2);
+  border-radius: var(--pill);
+  color: var(--ink);
+  font: inherit;
+  border-color: var(--hair-2);
+  background-color: var(--card);
   font-size: 15px;
 }
 
+.backoffice select {
+  padding-right: 44px;
+  background-position: right 18px center;
+}
+
+.backoffice :where(input, select):hover {
+  border-color: var(--brand);
+}
+
+/* ---------- Page type ---------- */
+
 .backoffice h1 {
-  margin: 12px 0 12px;
+  margin: 0;
   font-size: 34px;
+  letter-spacing: 0.01em;
+}
+
+/* Plain section headings in a page; the panels below set their own. */
+:where(.backoffice .role-main) h2 {
+  margin: 32px 0 12px;
+  font-size: 20px;
 }
 
 .backoffice .page-header {
   flex-wrap: wrap;
-  gap: 4px 12px;
+  gap: 8px 16px;
+  margin-bottom: 24px;
 }
 
-.backoffice .page-header h1 {
-  margin: 12px 0;
+/* Back: a quiet chip beside the title. */
+.backoffice .page-header .link-button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--hair-2);
+  background: var(--card);
+  font-size: 14px;
+  text-decoration: none;
 }
 
-/* The shop picker rides in the page header (shop screens) or the manager's action row. */
+.backoffice .page-header .link-button:hover {
+  border-color: var(--brand);
+}
+
+.backoffice .office-top {
+  align-items: baseline;
+  margin-bottom: 24px;
+}
+
+.backoffice .office-top > span {
+  color: var(--muted);
+}
+
+/* The shop picker rides in the page header (shop screens) or the manager's heading. */
 .backoffice .shop-pick {
   margin: 0;
 }
@@ -48,153 +235,427 @@
 .backoffice .shop-pick label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 700;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 400;
 }
 
 .backoffice .header-pick {
   margin-left: auto;
 }
 
-/* The manager's part of the home: a small heading with the shop picker, then the glance card */
+.backoffice .as-of {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.backoffice .as-of.locked {
+  background: var(--warn-tint);
+  color: var(--warn-ink);
+  font-weight: 700;
+}
+
+/* ---------- Status colours: pills, edges and figures ---------- */
+
+.status-pill,
+.backoffice .order-status,
+.backoffice .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border: 0;
+  border-radius: var(--pill);
+  background: var(--hair);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-pill::before,
+.backoffice .order-status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pill-ok,
+.backoffice .order-received {
+  background: var(--ok-tint);
+  color: var(--ok-ink);
+}
+
+.pill-warn,
+.backoffice :is(.order-placed, .order-paid, .order-dispatched),
+.backoffice .tag-practice {
+  background: var(--warn-tint);
+  color: var(--warn-ink);
+}
+
+.pill-bad,
+.backoffice .tag-void {
+  background: var(--bad-tint);
+  color: var(--bad-ink);
+}
+
+.backoffice .order-draft {
+  color: var(--muted);
+}
+
+.backoffice .receive-status,
+.backoffice .status-extra .receive-status {
+  color: var(--warn-ink);
+}
+
+.backoffice .status-match .receive-status {
+  color: var(--ok-ink);
+}
+
+.backoffice .status-short .receive-status,
+.backoffice .diff.off {
+  color: var(--bad-ink);
+}
+
+.backoffice .close-diff.ok {
+  color: var(--ok);
+}
+
+.backoffice .close-diff.off {
+  color: var(--bad);
+}
+
+.backoffice .day-locked {
+  background: var(--warn-tint);
+  color: var(--warn-ink);
+}
+
+.backoffice .notice {
+  border-color: var(--ok);
+  color: var(--ok-ink);
+}
+
+.backoffice .field-error {
+  color: var(--bad-ink);
+}
+
+/* ---------- To-dos and orders: one white list, rows split by hairlines, a status dot leading each ---------- */
+
+.backoffice .todo-list,
+.backoffice .order-list {
+  gap: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-panel);
+  background: var(--card);
+}
+
+.backoffice .todo,
+.backoffice .order-row {
+  min-height: 60px;
+  padding: 10px 16px 10px 20px;
+  gap: 8px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  border-radius: 0;
+  background: transparent;
+}
+
+.backoffice .todo:last-child,
+.backoffice .order-row:last-child {
+  border-bottom: 0;
+}
+
+.backoffice .todo-text {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 400;
+}
+
+.backoffice .todo-text::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hair-2);
+}
+
+.backoffice :is(.todo-low_stock, .todo-delivery_short, .todo-transfer_stuck, .todo-negative_stock, .todo-day_not_closed) .todo-text::before {
+  content: '';
+  background: var(--bad);
+}
+
+.backoffice :is(.todo-beer_expiry, .todo-count_off) .todo-text::before {
+  content: '';
+  background: var(--warn);
+}
+
+.backoffice .todo button,
+.backoffice .order-row button {
+  min-height: 34px;
+  font-size: 14px;
+}
+
+.backoffice .todo-empty {
+  margin: 0;
+  padding: 24px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-panel);
+  background: var(--card);
+  font-size: 17px;
+}
+
+.backoffice .office-home > .link-button {
+  margin-top: 12px;
+}
+
+.backoffice .order-list {
+  margin-bottom: 16px;
+}
+
+.backoffice .badge {
+  padding: 2px 10px;
+  border-width: 1px;
+  font-size: 13px;
+}
+
+/* ---------- Manager part of the home: a heading with the shop picker, then the glance panel ---------- */
+
 .backoffice .manager-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
-  margin: 16px 0 4px;
+  margin: 40px 0 12px;
 }
 
 .backoffice .manager-head h2 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 20px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .backoffice .glance {
-  margin: 12px 0 16px;
-  padding: 12px 20px 14px;
+  margin: 0 0 16px;
+  padding: 20px 24px 24px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-panel);
 }
 
 .backoffice .glance h2 {
-  margin-bottom: 4px;
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .backoffice .glance-line {
-  margin-bottom: 8px;
-  font-size: 16px;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+.backoffice .glance-line strong {
+  margin-right: 8px;
+  font-size: 30px;
 }
 
 .backoffice .glance-grid {
-  gap: 4px 24px;
+  gap: 0 40px;
 }
 
 .backoffice .glance dl > div {
-  padding: 3px 0;
+  padding: 9px 0;
+  border-bottom-color: var(--hair);
 }
 
-.backoffice .as-of {
+.backoffice .glance dl > div:last-child {
+  border-bottom: 0;
+}
+
+.backoffice .glance dt {
+  color: var(--muted);
+}
+
+.backoffice .home-links {
+  margin-bottom: 8px;
+}
+
+/* ---------- Reports and tables: white panels, quiet headers, hairline rows ---------- */
+
+.backoffice .report {
+  margin: 32px 0 0;
+  padding: 20px 24px 8px;
+  overflow-x: auto;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-panel);
+  background: var(--card);
+}
+
+.backoffice .report-head {
+  gap: 4px 16px;
+  margin-bottom: 8px;
+}
+
+.backoffice .report-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.backoffice .report-head .report-actions button {
+  min-height: 34px;
   font-size: 14px;
 }
 
-/* To-do cards about 56 px */
-.backoffice .todo,
-.backoffice .order-row {
-  min-height: 56px;
-  padding: 8px 16px;
-  gap: 8px 12px;
+/* A table outside a report panel is its own panel. */
+.backoffice .orders-table,
+.backoffice .deliveries-table {
+  border: 1px solid var(--hair);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--r-panel);
+  overflow: hidden;
 }
 
-.backoffice .todo-list,
-.backoffice .order-list {
-  gap: 6px;
+.backoffice .report .report-table {
+  border: 0;
+  border-radius: 0;
 }
 
-.backoffice .todo-empty {
-  font-size: 18px;
-}
-
-/* Filters and tabs */
-.backoffice .filters,
-.backoffice .transfers .tabs,
-.backoffice .reports .tabs,
-.backoffice .deliveries .tabs,
-.backoffice .orders .order-actions {
-  gap: 8px;
-  margin: 8px 0 12px;
-}
-
-.backoffice .filters button,
-.backoffice .tabs button {
-  min-height: 40px;
-}
-
-/* Tables: rows about 40 px */
-.backoffice .report-table th,
-.backoffice .report-table td,
-.backoffice .deliveries-table th,
-.backoffice .deliveries-table td,
-.backoffice .orders-table th,
-.backoffice .orders-table td {
-  padding: 9px 12px;
+.backoffice :is(.report-table, .deliveries-table, .orders-table) :is(th, td) {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--hair);
   font-size: 15px;
   line-height: 1.3;
 }
 
-.backoffice .orders-table input,
-.backoffice .receive-count input,
-.backoffice .count-line input {
+.backoffice .report .report-table :is(th, td):first-child {
+  padding-left: 0;
+}
+
+.backoffice .report .report-table :is(th, td):last-child {
+  padding-right: 0;
+}
+
+.backoffice :is(.report-table, .deliveries-table, .orders-table) th {
+  border-bottom: 1px solid var(--hair-2);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.backoffice :is(.report-table, .deliveries-table, .orders-table) tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.backoffice .report-table tfoot td {
+  border-top: 1px solid var(--hair-2);
+  border-bottom: 0;
+}
+
+.backoffice .row-tap:hover {
+  background: var(--bg);
+}
+
+.backoffice :is(.orders-table, .receive-count, .count-line) input {
   width: 88px;
-  min-height: 36px;
+  min-height: 34px;
   padding: 0 12px;
 }
 
-.backoffice .report {
-  margin-bottom: 16px;
+/* ---------- Filters and tabs ---------- */
+
+.backoffice :is(.filters, .transfers .tabs, .reports .tabs, .deliveries .tabs, .orders .order-actions) {
+  gap: 8px;
+  margin: 0 0 16px;
 }
 
-.backoffice .report-head {
-  margin-bottom: 4px;
+.backoffice .orders .order-actions {
+  margin-top: 16px;
 }
 
-.backoffice .report-head .report-actions button {
-  min-height: 36px;
+.backoffice :is(.filters, .tabs) button {
+  min-height: 38px;
 }
 
-/* Wide tables scroll inside their card, never the page. */
-.backoffice .report {
-  overflow-x: auto;
+/* ---------- Manager screens: rows are white cards with a hairline ---------- */
+
+.backoffice :is(.waiting-list, .receive-lines, .count-lines, .bills-list, .shift-list) {
+  gap: 8px;
 }
 
-/* Manager screens */
+.backoffice :is(.waiting-row, .shift-row, .receive-line, .count-line, .bill-row) {
+  border: 1px solid var(--hair);
+  border-radius: var(--r-item);
+  background: var(--card);
+}
+
 .backoffice .waiting-row,
 .backoffice .shift-row {
-  min-height: 56px;
-  padding: 6px 16px;
+  min-height: 60px;
+  padding: 8px 20px;
 }
 
 .backoffice .receive-line,
 .backoffice .count-line {
-  padding: 8px 16px;
+  padding: 10px 16px;
+}
+
+/* The receive status keeps its colour as a slim edge. */
+.backoffice .receive-line {
+  border-left: 4px solid var(--hair-2);
+}
+
+.backoffice .receive-line.status-match {
+  border-left-color: var(--ok);
+}
+
+.backoffice .receive-line.status-short {
+  border-left-color: var(--bad);
+}
+
+.backoffice .receive-line.status-extra {
+  border-left-color: var(--warn);
 }
 
 .backoffice .bill-row {
-  padding: 6px 16px;
+  padding: 8px 20px;
 }
 
 .backoffice .notice {
-  padding: 8px 16px;
+  padding: 10px 16px;
+  background: var(--ok-tint);
+  border-width: 1px;
+  border-radius: var(--r-item);
 }
 
 .backoffice .empty {
+  padding: 24px;
+  border: 1px dashed var(--hair-2);
+  border-radius: var(--r-panel);
+  color: var(--muted);
   font-size: 16px;
 }
 
+.backoffice :is(.claim-note, .close-dialog, .bill-dialog, .demo-panel) {
+  border-color: var(--hair);
+  border-radius: var(--r-panel);
+}
+
 .backoffice .claim-note {
-  padding: 16px 20px;
+  padding: 20px 24px;
 }
 
 /* ---------- Layout: side menu and content ---------- */
@@ -202,36 +663,38 @@
 .backoffice .role-body {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 16px 16px 0;
+  gap: 32px;
+  padding: 24px 24px 0;
 }
 
 .backoffice .role-main {
   flex: 1 1 0;
   min-width: 0;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 0 32px;
+  max-width: 1160px;
+  margin: 0;
+  padding: 8px 0 48px;
 }
 
-/* ---------- The floating capsule ---------- */
+/* ---------- The floating menu: a white rounded rectangle ---------- */
 
 .side-nav {
   position: sticky;
-  top: 16px;
+  top: 24px;
   z-index: 5;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  width: 188px;
-  max-height: calc(100vh - 32px);
-  padding: 34px 12px;
+  gap: 2px;
+  width: 224px;
+  max-height: calc(100vh - 48px);
+  padding: 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  border: 1px solid var(--rose);
-  border-radius: var(--pill);
+  border: 1px solid var(--hair, rgba(101, 28, 50, 0.1));
+  border-radius: var(--r-panel, 18px);
   background: var(--card);
+  box-shadow: 0 1px 2px rgba(101, 28, 50, 0.04), 0 8px 24px rgba(101, 28, 50, 0.04);
 }
 
 .side-nav::-webkit-scrollbar {
@@ -242,12 +705,11 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: var(--pill);
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: var(--r-item, 12px);
   color: var(--brand);
-  font-weight: 700;
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
@@ -255,6 +717,7 @@
 
 .side-icon {
   flex: 0 0 auto;
+  opacity: 0.8;
 }
 
 .side-link:hover {
@@ -265,6 +728,11 @@
 .side-link[aria-current='page'] {
   background: var(--brand);
   color: var(--on-dark);
+  font-weight: 700;
+}
+
+.side-link.active .side-icon {
+  opacity: 1;
 }
 
 .side-link:focus-visible {
@@ -276,11 +744,99 @@
   outline-color: var(--on-dark);
 }
 
-/* Tablet and narrow: icons only. The labels stay as each link's aria-label and title. */
-@media (max-width: 899px) {
+/* The collapse switch sits at the top of the menu, right-aligned when open and centred when collapsed. */
+.side-nav .side-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  width: 42px;
+  min-height: 34px;
+  margin-bottom: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-item, 12px);
+  background: transparent;
+  color: var(--muted, var(--brand));
+}
+
+.backoffice .side-toggle:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--brand);
+}
+
+.side-toggle:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
   .side-nav {
-    width: 64px;
-    padding: 26px 9px;
+    transition: width 0.18s ease;
+  }
+}
+
+/* Collapsed by choice on a laptop: icons only, like the tablet rail. */
+.side-nav.collapsed {
+  width: 66px;
+  padding: 12px 10px;
+}
+
+.side-nav.collapsed .side-toggle {
+  align-self: center;
+}
+
+.side-nav.collapsed .side-link {
+  justify-content: center;
+  padding: 0;
+}
+
+.side-nav.collapsed .side-label {
+  display: none;
+}
+
+/* An icon's name, popped out to its right on hover or focus where the labels are hidden. */
+.side-tip {
+  position: fixed;
+  z-index: 20;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--brand);
+  color: var(--on-dark);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgba(101, 28, 50, 0.18);
+}
+
+.side-tip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* Tablet and narrow: icons only. The labels stay as each link's aria-label, and pop out on hover. */
+@media (max-width: 899px) {
+  .side-toggle {
+    display: none;
+  }
+
+  .backoffice .role-body {
+    gap: 20px;
+    padding: 20px 16px 0;
+  }
+
+  .side-nav {
+    width: 66px;
+    padding: 10px;
   }
 
   .side-link {
@@ -293,15 +849,28 @@
   }
 }
 
-/* Phone: the capsule floats along the bottom and scrolls sideways inside itself. */
+/* Phone: the menu floats along the bottom and scrolls sideways inside itself. */
 @media (max-width: 599px) {
+  .backoffice .shell-header {
+    gap: 8px 12px;
+    padding: 10px 16px;
+  }
+
+  .backoffice .who {
+    padding-left: 12px;
+  }
+
   .backoffice .role-body {
     display: block;
-    padding: 8px 12px 0;
+    padding: 16px 16px 0;
   }
 
   .backoffice .role-main {
-    padding-bottom: 96px;
+    padding-bottom: 104px;
+  }
+
+  .backoffice .report {
+    padding: 16px 16px 4px;
   }
 
   .side-nav {
@@ -314,14 +883,172 @@
     width: max-content;
     max-width: calc(100vw - 24px);
     max-height: none;
-    padding: 6px 24px;
+    padding: 6px 20px;
     overflow: auto hidden;
     transform: translateX(-50%);
+    box-shadow: 0 8px 24px rgba(101, 28, 50, 0.12);
     /* The ends fade out, so a cut-off item reads as "more this way". */
-    mask-image: linear-gradient(to right, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+  }
+
+  .side-nav.collapsed {
+    width: max-content;
+    padding: 6px 20px;
   }
 
   .side-link {
     min-width: 44px;
+  }
+}
+
+/* ---------- Losses: the form beside the month at a glance ---------- */
+
+.backoffice .loss-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 32px;
+}
+
+.backoffice .loss-form,
+.backoffice .loss-month,
+.backoffice :is(.losses, .products) section.report {
+  display: block;
+  margin: 0;
+  padding: 20px 24px 24px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-panel);
+  background: var(--card);
+}
+
+.backoffice .loss-form h2,
+.backoffice .loss-month h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.backoffice .loss-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.backoffice .loss-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.backoffice .loss-fields label.wide {
+  grid-column: 1 / -1;
+}
+
+.backoffice .loss-fields :is(input, select) {
+  width: 100%;
+  color: var(--ink);
+}
+
+.backoffice .loss-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-top: 20px;
+}
+
+.backoffice .loss-actions p {
+  margin: 0;
+  color: var(--ok-ink);
+  font-weight: 700;
+}
+
+/* The one main action on a form: solid burgundy. */
+.backoffice button.primary {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: var(--on-dark);
+}
+
+.backoffice .loss-month header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.backoffice .loss-month header h2 {
+  margin: 0;
+}
+
+.backoffice .loss-month header label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.backoffice .loss-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.backoffice .loss-kpis > div {
+  padding: 12px 16px;
+  border-radius: var(--r-item);
+  background: var(--bad-tint);
+}
+
+.backoffice .loss-kpis dt {
+  color: var(--bad-ink);
+  font-size: 14px;
+}
+
+.backoffice .loss-kpis dd {
+  margin: 2px 0 0;
+  color: var(--bad-ink);
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.backoffice .loss-month h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.backoffice .loss-none {
+  margin: 0;
+  color: var(--muted);
+}
+
+.backoffice .glance .chart-split {
+  margin: 0 0 20px;
+}
+
+@media (max-width: 1099px) {
+  .backoffice .loss-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 599px) {
+  .backoffice .loss-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* On paper a report is just the table. */
+@media print {
+  .backoffice .report {
+    padding: 0;
   }
 }

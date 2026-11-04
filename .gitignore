@@ -35,3 +35,9 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# Supabase CLI link state
+supabase/.temp/
+
+# Local Worker secrets
+.dev.vars

@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { flushOutbox, pendingCount } from '../../db/outbox'
+import { subscribeSync, syncStatus } from '../../sync/engine'
 import { syncState } from './syncState'
 
 /** Top-right badge: online or offline, how many bills wait, and a problem notice if sending fails. `owner` dresses it in the owner app's palette. */
@@ -8,6 +9,8 @@ export default function SyncBadge({ owner = false }: { owner?: boolean }) {
   const [online, setOnline] = useState(() => navigator.onLine)
   const [error, setError] = useState<string | undefined>(undefined)
   const pending = useLiveQuery(pendingCount, [], 0)
+  // Background syncs (timer, reconnect) report here too, not only the ones this badge starts.
+  const engine = useSyncExternalStore(subscribeSync, syncStatus)
 
   useEffect(() => {
     const up = () => setOnline(true)
@@ -32,7 +35,7 @@ export default function SyncBadge({ owner = false }: { owner?: boolean }) {
     }
   }, [online, pending])
 
-  const { tone, text } = syncState(online, pending, error)
+  const { tone, text } = syncState(online, pending, error ?? (engine.state === 'error' ? engine.error : undefined))
   return (
     <span className={owner ? `ow-syncbadge ${tone}` : `sync-badge sync-${tone}`} role="status">
       {text}

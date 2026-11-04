@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import type { Role } from '../../domain/types'
 import { t } from '../../i18n'
@@ -83,32 +83,98 @@ function Icon({ name }: { name: string }) {
   )
 }
 
+const COLLAPSED_KEY = 'navCollapsed'
+
+function storedCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+interface Tip {
+  label: string
+  top: number
+  left: number
+}
+
 /**
- * The back office's floating pill menu (office and manager). Each item is a NavLink, so the active one follows the route,
- * nested pages included. Narrow screens show icons only (labels stay as the accessible name), phones get it at the bottom.
- * A role with no back-office links gets no menu at all.
+ * The back office's floating menu (office and manager). Each item is a NavLink, so the active one follows the route,
+ * nested pages included. On a laptop it can be collapsed to icons (remembered); tablets always show icons, and an icon
+ * shows its name to its right on hover or focus. Phones get the menu along the bottom. A role with no back-office links
+ * gets no menu at all.
  */
 export default function SideNav({ role }: { role: Role }) {
   const links = backOfficeLinks(role)
   const nav = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
+  const [collapsed, setCollapsed] = useState(storedCollapsed)
+  const [tip, setTip] = useState<Tip | null>(null)
   // On a phone the capsule scrolls sideways; centre the current page in it. Setting scrollLeft moves only the capsule
   // (scrollIntoView would also nudge the window), and it does nothing where the capsule is a column.
   useEffect(() => {
     const box = nav.current
     const current = box?.querySelector<HTMLElement>('[aria-current="page"]')
     if (box && current) box.scrollLeft = current.offsetLeft - (box.clientWidth - current.offsetWidth) / 2
+    setTip(null)
   }, [pathname])
   if (links.length === 0) return null
   const items = [{ path: '', label: t('nav.home') }, ...links]
+
+  const toggle = (): void => {
+    setCollapsed(!collapsed)
+    setTip(null)
+    try {
+      localStorage.setItem(COLLAPSED_KEY, collapsed ? '0' : '1')
+    } catch {
+      // The choice just won't be remembered.
+    }
+  }
+
+  // The name pops out only where the labels are hidden, and not on the phone bar along the bottom.
+  const showTip = (e: SyntheticEvent<HTMLElement>, label: string): void => {
+    const link = e.currentTarget
+    const text = link.querySelector('.side-label')
+    if (!text || getComputedStyle(text).display !== 'none') return
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 599px)').matches) return
+    const box = link.getBoundingClientRect()
+    setTip({ label, top: box.top + box.height / 2, left: box.right + 12 })
+  }
+  const hideTip = (): void => setTip(null)
+
   return (
-    <nav className="side-nav" aria-label={t('nav.menu')} ref={nav}>
-      {items.map((item) => (
-        <NavLink key={item.path} to={item.path ? `/office/${item.path}` : '/office'} end={item.path === ''} className="side-link" aria-label={item.label} title={item.label}>
-          <Icon name={item.path} />
-          <span className="side-label">{item.label}</span>
-        </NavLink>
-      ))}
-    </nav>
+    <>
+      <nav className={collapsed ? 'side-nav collapsed' : 'side-nav'} aria-label={t('nav.menu')} ref={nav} onScroll={hideTip}>
+        <button type="button" className="side-toggle" aria-expanded={!collapsed} aria-label={collapsed ? t('nav.expand') : t('nav.collapse')} title={collapsed ? t('nav.expand') : t('nav.collapse')} onClick={toggle}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+            <rect x="3.5" y="4.5" width="17" height="15" rx="3" />
+            <path d="M9.5 4.5v15" />
+            <path d={collapsed ? 'M13.5 10l2 2-2 2' : 'M16 10l-2 2 2 2'} />
+          </svg>
+        </button>
+        {items.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path ? `/office/${item.path}` : '/office'}
+            end={item.path === ''}
+            className="side-link"
+            aria-label={item.label}
+            onMouseEnter={(e) => showTip(e, item.label)}
+            onMouseLeave={hideTip}
+            onFocus={(e) => showTip(e, item.label)}
+            onBlur={hideTip}
+          >
+            <Icon name={item.path} />
+            <span className="side-label">{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+      {tip && (
+        <span className="side-tip" style={{ top: tip.top, left: tip.left }} aria-hidden="true">
+          {tip.label}
+        </span>
+      )}
+    </>
   )
 }

@@ -71,6 +71,7 @@ export default function Transfers() {
         to: label(x.toStore),
         permit: x.permitNo,
         status: t(`tr.${x.status}`),
+        state: x.status,
       }
     })
 
@@ -196,7 +197,7 @@ export default function Transfers() {
           { key: 'from', label: t('tr.from') },
           { key: 'to', label: t('tr.to') },
           { key: 'permit', label: t('tr.permit') },
-          { key: 'status', label: t('tr.status') },
+          { key: 'status', label: t('tr.status'), tone: (r) => (r.state === 'received' ? 'ok' : r.state === 'in_transit' ? 'warn' : undefined) },
         ]}
         rows={rows}
       />

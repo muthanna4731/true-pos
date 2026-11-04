@@ -12,6 +12,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Our own worker (src/sw.ts): the precache as before, plus Background Sync for the outbox.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'True POS',
@@ -29,13 +33,11 @@ export default defineConfig({
           { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
+      injectManifest: {
         // Every built asset, fonts included, so a reload with no network still opens the app.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,json,woff2}'],
         // Headroom: the main chunk (catalogue included) is under 1 MiB today, but a file over the limit is skipped silently and offline breaks.
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        navigateFallback: 'index.html',
-        cleanupOutdatedCaches: true,
       },
     }),
   ],

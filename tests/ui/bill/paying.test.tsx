@@ -251,6 +251,7 @@ describe('bill screen: paying', () => {
     await db.kv.put({ key: 'practice:TSTS1', value: true });
     await renderBill();
     expect(await screen.findByText("PRACTICE — bills don't count")).toBeInTheDocument();
+    const queued = await db.outbox.count();
     await tap(tile(OC.shortName));
     await tap(await payButton('Card ₹55'));
     const r = await screen.findByRole('dialog', { name: 'Receipt' });
@@ -258,7 +259,8 @@ describe('bill screen: paying', () => {
     const [bill] = await newBills();
     expect(bill.status).toBe('practice');
     expect(await stockOf(OC.id)).toBe(100);
-    expect(await db.outbox.count()).toBe(0);
+    // nothing of the practice bill is queued for the cloud
+    expect(await db.outbox.count()).toBe(queued);
   });
 
   it('shows no practice band when practice mode is off', async () => {

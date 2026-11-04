@@ -61,3 +61,14 @@ CLOUDFLARE_ACCOUNT_ID=<True-spirits account id> npx wrangler deploy
 ```
 
 `npx wrangler whoami` lists the account ids. After a deploy, open the URL on a tablet, install it as an app, turn the wifi off, and check that billing still works.
+
+## Cloud sync
+
+Every device writes to its own IndexedDB first, so billing never waits for the internet. Each write to a shared table (bills, stock movements, shifts, deliveries, transfers, prices and the rest; see `SYNCED_TABLES` in `src/sync/track.ts`) also goes into an outbox, in the same transaction. A connected device sends the outbox to Supabase and fetches other devices' changes. This happens 2 seconds after a write, when the network comes back, when the app comes to the front, every minute, and through Background Sync in the service worker (Chrome and Edge). Changes made offline wait on the device until it is online again.
+
+- **Server:** the Supabase project `true-pos` (Mumbai, free plan). It holds one append-only `changes` table and two functions, `push_changes` and `pull_changes`, in `supabase/migrations/`. Pushing the same change twice stores it once. Rows are kept apart by tenant (the shop chain), and the tenant is taken from the device's login.
+- **Conflicts:** bills and stock movements are only ever added. For a row edited on two devices, the change that reached the cloud last wins on every device. A device never overwrites a change of its own that hasn't been sent yet.
+- **Devices:** each tablet or PC gets its own login, with its shop and counter, so two devices never make the same bill number. Make one with `scripts/add-device.mts` (it needs the service-role key, which never goes in this repo), then type the email and password once under "Connect this device" on the login screen.
+- **The demo stays local.** A build without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (in `.env.production.local`, which is not committed), or a device that isn't connected, never sends anything. Dummy seed data and practice bills are never sent either.
+- **Backups:** the `backup/` Worker copies new changes to Workers KV every night at 03:00 IST. That also keeps the free project from pausing.
+- **Live test:** `E2E_DEVICE_A=email:password E2E_DEVICE_B=email:password npx playwright test cloud`, with two devices of a test tenant (never the shop's own), against a build made with the Supabase settings.

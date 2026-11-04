@@ -1,12 +1,12 @@
 :root {
-  /* Surfaces: aperitivo cream canvas, bone cards, burgundy ink */
-  --bg: #f2e2d5;
-  --card: #fef6ee;
-  --surface: #fef6ee;
+  /* Surfaces: warm off-white canvas, white cards, burgundy ink */
+  --bg: #f7f3ee;
+  --card: #ffffff;
+  --surface: #ffffff;
   --brand: #651c32;
   --ink: #651c32;
   --accent: #ef6079;
-  --on-dark: #fef6ee;
+  --on-dark: #ffffff;
   --scrim: rgba(101, 28, 50, 0.6);
 
   /* Lines, soft accents */

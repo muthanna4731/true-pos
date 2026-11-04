@@ -4,6 +4,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { db } from '../../db/db'
 import type { Role, User } from '../../domain/types'
 import { t } from '../../i18n'
+import DeviceConnect from './DeviceConnect'
 import { homeFor } from './homes'
 import LangToggle from './LangToggle'
 import Logo from './Logo'
@@ -71,6 +72,7 @@ export default function Login() {
             <strong>{t('login.demo')}</strong> {t('role.cashier')} 1111 · {t('role.manager')} 2222 · {t('role.office')} 3333 ·{' '}
             {t('role.owner')} 4444
           </p>
+          <DeviceConnect />
         </section>
       )}
     </main>

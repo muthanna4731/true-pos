@@ -6,9 +6,10 @@ import Logo from './Logo'
 import { useSession } from './session'
 import SideNav from './SideNav'
 import SyncBadge from './SyncBadge'
+import SyncButton from './SyncButton'
 
 /**
- * The frame every role screen sits in: logo, who and where, language toggle, log out, sync badge. Office and manager
+ * The frame every role screen sits in: logo, who and where, language toggle, log out, [Sync now] and the sync badge. Office and manager
  * also get the floating side menu and the compact `backoffice` sizing. `wide` lets a working screen (the bill) use the full width.
  */
 export default function RoleScreen({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
@@ -27,6 +28,7 @@ export default function RoleScreen({ children, wide = false }: { children: React
         <button type="button" className="header-button" onClick={logout}>
           {t('logout')}
         </button>
+        <SyncButton />
         <SyncBadge />
       </header>
       <div className="role-body">

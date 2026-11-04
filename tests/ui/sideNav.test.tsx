@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import SideNav from '../../src/ui/shell/SideNav';
@@ -25,11 +25,11 @@ describe('SideNav', () => {
     expect(names().slice(11)).toEqual(['Bills', 'Close shift', 'Offers', 'Shops & staff']);
   });
 
-  it('gives each item an icon and a visible label, and the label as its title', () => {
+  it('gives each item an icon and a visible label, and the label as its accessible name', () => {
     renderAt('/office', 'office');
     const link = screen.getByRole('link', { name: 'Orders' });
     expect(link.querySelector('svg')).not.toBeNull();
-    expect(link).toHaveAttribute('title', 'Orders');
+    expect(link).toHaveAttribute('aria-label', 'Orders');
     expect(within(link).getByText('Orders')).toBeInTheDocument();
   });
 
@@ -45,6 +45,19 @@ describe('SideNav', () => {
   ])('marks %s as %s only', (path, label) => {
     renderAt(path, 'manager');
     expect(current()).toEqual([label]);
+  });
+
+  it('collapses to icons and remembers it', async () => {
+    localStorage.removeItem('navCollapsed');
+    renderAt('/office', 'office');
+    const toggle = screen.getByRole('button', { name: 'Collapse menu' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(toggle);
+    expect(screen.getByRole('navigation', { name: 'Menu' })).toHaveClass('collapsed');
+    expect(screen.getByRole('button', { name: 'Expand menu' })).toHaveAttribute('aria-expanded', 'false');
+    expect(localStorage.getItem('navCollapsed')).toBe('1');
+    fireEvent.click(screen.getByRole('button', { name: 'Expand menu' }));
+    expect(localStorage.getItem('navCollapsed')).toBe('0');
   });
 
   it.each(['cashier', 'owner'] as const)('renders nothing for a %s', (role) => {

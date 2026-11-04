@@ -2,12 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { db } from '../../db/db'
 import { istDayRange, loadDayTotals } from '../../db/dayData'
+import { formatINR } from '../../domain/money'
 import { priceRowsInForce } from '../../domain/prices'
 import { dailyLitreStatement, exciseLitreStatement, isDayTotals, lossesReport, remittance, valuation } from '../../domain/reports'
-import { formatDate, formatTime, istDate, istDayStart } from '../../domain/time'
+import { formatDate, formatDayMonth, formatTime, istDate, istDayStart } from '../../domain/time'
 import { shopLabel } from '../../domain/todos'
 import { t } from '../../i18n'
 import { useLang } from '../../i18n/useLang'
+import { ColumnChart } from '../common/Charts'
 import ReportTable from '../common/ReportTable'
 import PageHeader from '../manager/PageHeader'
 import { nameOf, nowMinute, shopMovements, ShopSelect } from './shared'
@@ -100,6 +102,10 @@ export default function Reports() {
 
       {tab === 'sales' && (
         <>
+          <section className="chart-panel" aria-label={t('chart.dailySales')}>
+            <h2>{t('chart.dailySales')}</h2>
+            <ColumnChart title={t('chart.dailySales')} points={data.tally.map((d) => ({ key: d.day, label: formatDayMonth(d.day), value: d.totals.net, text: formatINR(d.totals.net) }))} />
+          </section>
           <ReportTable
             title={t('rep.dailySales')}
             asOf={salesAsOf}
@@ -120,9 +126,9 @@ export default function Reports() {
               { key: 'number', label: t('rep.bill') },
               { key: 'time', label: t('rep.time') },
               { key: 'net', label: t('del.net'), kind: 'money' },
-              { key: 'status', label: t('tr.status') },
+              { key: 'status', label: t('tr.status'), tone: (r) => (r.state === 'paid' ? 'ok' : r.state === 'void' ? 'bad' : 'warn') },
             ]}
-            rows={data.bills.map((b) => ({ number: b.number, time: formatTime(b.at), net: b.net, status: t(`bills.status.${b.status}`) }))}
+            rows={data.bills.map((b) => ({ number: b.number, time: formatTime(b.at), net: b.net, status: t(`bills.status.${b.status}`), state: b.status }))}
           />
         </>
       )}

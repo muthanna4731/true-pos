@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 export type OwnerTheme = 'light' | 'dark'
 
@@ -13,29 +13,12 @@ function stored(): OwnerTheme | null {
   }
 }
 
-const darkQuery = (): MediaQueryList | null => {
-  try {
-    return typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null
-  } catch {
-    return null
-  }
-}
-
 /**
- * Day or night for the owner app. It follows the device (`prefers-color-scheme`) until the owner picks one;
- * the pick is remembered in localStorage (and the app still works where storage is blocked).
+ * Day or night for the owner app. It opens in day (light) until the owner picks night; the pick is remembered in
+ * localStorage (and the app still works where storage is blocked).
  */
 export function useOwnerTheme(): { theme: OwnerTheme; pick(theme: OwnerTheme): void } {
   const [picked, setPicked] = useState<OwnerTheme | null>(stored)
-  const [system, setSystem] = useState<OwnerTheme>(() => (darkQuery()?.matches ? 'dark' : 'light'))
-
-  useEffect(() => {
-    const query = darkQuery()
-    if (!query) return
-    const onChange = (e: MediaQueryListEvent): void => setSystem(e.matches ? 'dark' : 'light')
-    query.addEventListener('change', onChange)
-    return () => query.removeEventListener('change', onChange)
-  }, [])
 
   const pick = (theme: OwnerTheme): void => {
     setPicked(theme)
@@ -45,5 +28,5 @@ export function useOwnerTheme(): { theme: OwnerTheme; pick(theme: OwnerTheme): v
       // The pick just won't be remembered.
     }
   }
-  return { theme: picked ?? system, pick }
+  return { theme: picked ?? 'light', pick }
 }

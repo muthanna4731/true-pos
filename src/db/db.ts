@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { trackChanges, type SyncOp } from '../sync/track';
 import type {
   Bill,
   BillLine,
@@ -31,11 +32,15 @@ export interface CounterRow {
   next: number;
 }
 
-/** A change waiting to be sent to the server. `synced` is 0 or 1 (booleans are not index keys). */
+/**
+ * One write waiting to be sent to the cloud, added by the sync middleware (`src/sync/track.ts`). Rows of one
+ * transaction share `tx`. `synced` is 0 or 1 (booleans are not index keys).
+ */
 export interface OutboxRow {
   id?: number;
-  kind: 'bill' | 'void';
-  ref: string;
+  tx: string;
+  table: string;
+  ops: SyncOp[];
   at: string;
   synced: 0 | 1;
 }
@@ -107,6 +112,11 @@ export class TruePosDB extends Dexie {
       loyaltyLedger: '++id, memberCode, [storeCode+fy+billRef]',
       rewards: 'id',
     });
+    // v2: the outbox holds real row changes for cloud sync. The v1 rows were demo markers that never left the device.
+    this.version(2)
+      .stores({ outbox: '++id, synced, tx' })
+      .upgrade((tx) => tx.table('outbox').clear());
+    this.use(trackChanges);
   }
 }
 

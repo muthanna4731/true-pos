@@ -9,6 +9,7 @@ import type { Store } from '../../domain/types'
 import { t } from '../../i18n'
 import { usePractice } from '../bill/usePractice'
 import AsOf from '../common/AsOf'
+import { SplitBar } from '../common/Charts'
 import ShopScope, { ShopPicker } from '../office/ShopScope'
 
 const billsText = (n: number): string => (n === 1 ? t('glance.billOne') : t('glance.billMany', { n }))
@@ -47,21 +48,15 @@ function ShopToday({ store }: { store: Store }) {
               <strong>{t('glance.line', { net: formatINR(totals.net), bills: billsText(totals.bills), avg: formatINR(totals.avgBill) })}</strong>{' '}
               <AsOf dayClose={dayClose ?? undefined} now={clock.now()} />
             </p>
+            <SplitBar
+              title={t('chart.payModes')}
+              parts={[
+                { key: 'cash', label: t('cash'), value: totals.byMode.cash, text: formatINR(totals.byMode.cash), color: 'var(--pay-cash)' },
+                { key: 'upi', label: t('upi'), value: totals.byMode.upi, text: formatINR(totals.byMode.upi), color: 'var(--pay-upi)' },
+                { key: 'card', label: t('card'), value: totals.byMode.card, text: formatINR(totals.byMode.card), color: 'var(--pay-card)' },
+              ]}
+            />
             <div className="glance-grid">
-              <dl>
-                <div>
-                  <dt>{t('cash')}</dt>
-                  <dd>{formatINR(totals.byMode.cash)}</dd>
-                </div>
-                <div>
-                  <dt>{t('upi')}</dt>
-                  <dd>{formatINR(totals.byMode.upi)}</dd>
-                </div>
-                <div>
-                  <dt>{t('card')}</dt>
-                  <dd>{formatINR(totals.byMode.card)}</dd>
-                </div>
-              </dl>
               <dl>
                 <div>
                   <dt>{t('glance.alc')}</dt>

@@ -5,6 +5,7 @@ import { t } from './i18n'
 import { useLang } from './i18n/useLang'
 import { AppRoutes } from './routes'
 import { loadSeedIfEmpty } from './seed/load'
+import { startSync } from './sync/start'
 import { SeedOptionsContext } from './ui/shell/demoPanelState'
 
 type SeedOptions = { seed?: number; days?: number }
@@ -29,7 +30,11 @@ export function SeedGate({ seed = {}, children }: { seed?: SeedOptions; children
     let alive = true
     setState('loading')
     loadOnce(seed).then(
-      () => alive && setState('ready'),
+      () => {
+        // After the seed, so pulled rows never land in an empty database the seed would then skip.
+        void startSync()
+        if (alive) setState('ready')
+      },
       () => alive && setState('failed'),
     )
     return () => {
