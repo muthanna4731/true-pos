@@ -2,6 +2,14 @@
   // Static deploy of the built PWA (npm run build → dist). No server code.
   "name": "true-pos",
   "compatibility_date": "2026-11-02",
+  // pos.truespirits.in: the truespirits.in zone lives in the same True-spirits
+  // account, so Cloudflare creates the DNS record and certificate itself.
+  // workers.dev stays on so devices already set up there keep working
+  // (their local data is per-origin and does not move to the new domain).
+  "routes": [{ "pattern": "pos.truespirits.in", "custom_domain": true }],
+  "workers_dev": true,
+  // Matches the dashboard setting, so deploys do not flip it back.
+  "observability": { "enabled": false },
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
